@@ -1,0 +1,1 @@
+有mel和py两个版本，mel的是旧版，拖拽Install.py到maya视图自动安装到maya。
