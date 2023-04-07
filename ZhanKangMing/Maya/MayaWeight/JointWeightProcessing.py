@@ -169,6 +169,7 @@ class ZKM_JointWeightProcessingClass:
         if not os.path.exists(path + '\scripts\MayaWeightExportImportWeightProvisionalFolder'):
             os.mkdir(path + '\scripts\MayaWeightExportImportWeightProvisionalFolder')
         # 清理与即将生成的文件重名的文件
+        #print (MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder')
         if any(name.endswith(('.xml')) for name in
                os.listdir(MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/')):
             my_path = (MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/')
@@ -179,14 +180,19 @@ class ZKM_JointWeightProcessingClass:
                     os.remove(my_path + file_name)
         # 按名字创建文本
         for MD in Model:
-            Joint = pm.skinCluster(MD, q=1, inf=1)
-            file = open((path + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\' + MD + '.txt'), "w")
-            for Jon in Joint:
-                file.write(Jon + '\n')
-            file.close()
             SkinCluster = pm.mel.findRelatedSkinCluster(MD)
-            pm.mel.eval(
-                'deformerWeights -export -deformer \"' + SkinCluster + '\" -format \"XML\" -path \"' + MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/' + '\" \"' + MD + '.xml\";')
+            if not SkinCluster:
+                break
+        for MD in Model:
+            SkinCluster = pm.mel.findRelatedSkinCluster(MD)
+            if SkinCluster:
+                Joint = pm.skinCluster(MD, q=1, inf=1)
+                file = open((path + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\' + MD + '.txt'), "w")
+                for Jon in Joint:
+                    file.write(Jon + '\n')
+                file.close()
+                pm.mel.eval(
+                    'deformerWeights -export -deformer \"' + SkinCluster + '\" -format \"XML\" -path \"' + MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/' + '\" \"' + MD + '.xml\";')
 
     # 导入权重
     # noinspection PyTypeChecker
@@ -205,30 +211,33 @@ class ZKM_JointWeightProcessingClass:
         else:
             AllNodes = pm.ls(type='joint')
             for MD in Model:
-                fo = open(path + "\scripts\MayaWeightExportImportWeightProvisionalFolder\\" + MD + ".txt", "r")
-                lines = [l.split() for l in fo if l.strip()]
-                fo.close()
-                for i in range(0, len(lines)):
-                    lines[i] = str(lines[i])[2:-2]
-                addJoint = [x for x in lines if x not in AllNodes]  # 筛选出需要补充创建的骨骼
-                for J in addJoint:  # 补充骨骼
-                    pm.select(cl=1)
-                    pm.joint(p=(0, 0, 0), n=J)
-                try:
-                    HaveSkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询是否有蒙皮节点
-                except:
-                    HaveSkinCluster = []
-                if HaveSkinCluster:
-                    pm.select(MD, r=1)
-                    pm.mel.DetachSkin()
-                pm.select(lines, MD)
-                pm.mel.SmoothBindSkin()
-                pm.select(MD)
-                SkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询蒙皮节点
-                pm.deformerWeights((MD + ".xml"),
-                                   path=(MayaPath + "/scripts/MayaWeightExportImportWeightProvisionalFolder/"), im=1,
-                                   method="index", deformer=SkinCluster)
-                print('\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\n')
+                if not os.path.exists(path + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ MD + ".xml"):
+                    print('\n没有找到本插件的权重存放文件夹，请先导出权重。\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ str(MD) + ".xml"+'\n')
+                else:
+                    fo = open(path + "\scripts\MayaWeightExportImportWeightProvisionalFolder\\" + MD + ".txt", "r")
+                    lines = [l.split() for l in fo if l.strip()]
+                    fo.close()
+                    for i in range(0, len(lines)):
+                        lines[i] = str(lines[i])[2:-2]
+                    addJoint = [x for x in lines if x not in AllNodes]  # 筛选出需要补充创建的骨骼
+                    for J in addJoint:  # 补充骨骼
+                        pm.select(cl=1)
+                        pm.joint(p=(0, 0, 0), n=J)
+                    try:
+                        HaveSkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询是否有蒙皮节点
+                    except:
+                        HaveSkinCluster = []
+                    if HaveSkinCluster:
+                        pm.select(MD, r=1)
+                        pm.mel.DetachSkin()
+                    pm.select(lines, MD)
+                    pm.mel.SmoothBindSkin()
+                    pm.select(MD)
+                    SkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询蒙皮节点
+                    pm.deformerWeights((MD + ".xml"),
+                                       path=(MayaPath + "/scripts/MayaWeightExportImportWeightProvisionalFolder/"), im=1,
+                                       method="index", deformer=SkinCluster)
+                    #print('\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\n如果没有导入请确认是否重名或者名称不一样\n')
 
     # 转移权重
     def TransferWeight(self, Model):

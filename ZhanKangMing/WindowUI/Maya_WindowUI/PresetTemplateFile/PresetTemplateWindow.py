@@ -33,7 +33,7 @@ class PresetTemplateWindowClass:
         form = cmds.formLayout()
         tabs = cmds.tabLayout(innerMarginWidth=5, innerMarginHeight=5)
         cmds.formLayout(form, edit=True,attachForm=((tabs, 'top', 0), (tabs, 'left', 0), (tabs, 'bottom', 0), (tabs, 'right', 0)))
-    ################################
+        # 表情驱动
         child1 = cmds.rowColumnLayout(nc=2,adj=2)
         cmds.formLayout()
         cmds.paneLayout('modelPanel_paneLayout',w=400, h=400)
@@ -156,13 +156,14 @@ class PresetTemplateWindowClass:
         cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\'' + self.file_path + '\Py_PresetTemplate_Material\AutomaticSynchronizationSettings\')')
         cmds.setParent('..')
         cmds.rowColumnLayout(nc=3, adj=4)
-        cmds.button(l='删除无变化驱动', command='ZKM_PresetTemplate().OpenMouldLoc()')
-        cmds.button(l='打直所有驱动', command='ZKM_PresetTemplate().OpenMouldLoc()')
-        cmds.button(l='清理多余节点', command='ZKM_PresetTemplate().OpenMouldLoc()')
+        cmds.button(l='删除无变化驱动', command='ZKM_PresetTemplate().DeleteUnchangedDrive()')
+        cmds.button(l='打直所有驱动', command='ZKM_PresetTemplate().StraightenAllDrives()')
+        cmds.button(l='清理多余节点', command='ZKM_PresetTemplate().DeleteUselessNodes()')
         cmds.setParent('..')
         cmds.setParent('..')
         cmds.setParent('..')
-    ################################
+
+        # 手部驱动
         child2 = cmds.rowColumnLayout(nc=1,adj=2)
         cmds.rowColumnLayout(nc=2, adj=5)
         PictureFormLayout=cmds.formLayout()
@@ -173,7 +174,7 @@ class PresetTemplateWindowClass:
         PictureFormLayoutMiddleFingerButton=cmds.button(l='中指',bgc=(1,1,1))
         PictureFormLayoutRingFingerButton=cmds.button(l='无名指',bgc=(1,1,1))
         PictureFormLayoutLittleFingerButton = cmds.button(l='小拇指',bgc=(1,1,1))
-        PictureFormLayoutSulcusBoneButton = cmds.button(l='沟骨',bgc=(1,1,1))
+        PictureFormLayoutSulcusBoneButton = cmds.button(l='钩骨',bgc=(1,1,1))
         cmds.setParent('..')
         pm.formLayout(PictureFormLayout,
                       edit=1,
@@ -193,20 +194,20 @@ class PresetTemplateWindowClass:
                                   (PictureFormLayoutSulcusBoneButton, "left", 60)])
         cmds.rowColumnLayout(nc=1, adj=5)
         cmds.rowColumnLayout(nc=2,adj=6)
-        cmds.button(l='手腕骨骼:')
-        cmds.textFieldButtonGrp(cw3=(0,130,0),l='',text='',bl='加载骨骼')
-        cmds.button(l='大拇指样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
-        cmds.button(l='食指样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
-        cmds.button(l='中指样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
-        cmds.button(l='无名指样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
-        cmds.button(l='小拇指样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
-        cmds.button(l='沟骨样条:')
-        cmds.textFieldButtonGrp(cw3=(0, 130, 0), l='', text='', bl='加载骨骼')
+        cmds.button(l='手腕骨骼:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveWristJoint\')')
+        cmds.textFieldButtonGrp('ArmDriveWristJoint',cw3=(0,130,0),l='',text='',bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveWristJoint\')')
+        cmds.button(l='大拇指样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveThumbCurve\')')
+        cmds.textFieldButtonGrp('ArmDriveThumbCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveThumbCurve\')')
+        cmds.button(l='食指样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveIndexFingerCurve\')')
+        cmds.textFieldButtonGrp('ArmDriveIndexFingerCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveIndexFingerCurve\')')
+        cmds.button(l='中指样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveMiddleFingerCurve\')')
+        cmds.textFieldButtonGrp('ArmDriveMiddleFingerCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveMiddleFingerCurve\')')
+        cmds.button(l='无名指样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveRingFingerCurve\')')
+        cmds.textFieldButtonGrp('ArmDriveRingFingerCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveRingFingerCurve\')')
+        cmds.button(l='小拇指样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDrivePinkieCurve\')')
+        cmds.textFieldButtonGrp('ArmDrivePinkieCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDrivePinkieCurve\')')
+        cmds.button(l='钩骨样条:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveUncinateCurve\')')
+        cmds.textFieldButtonGrp('ArmDriveUncinateCurve',cw3=(0, 130, 0), l='', text='', bl='加载骨骼',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveUncinateCurve\')')
         cmds.setParent('..')
         cmds.rowColumnLayout(nc=2, adj=3)
         pm.text(l='沟骨朝向：')
@@ -243,20 +244,109 @@ class PresetTemplateWindowClass:
         pm.radioCollection('PresetTemplateHandDriveSpread', edit=1, select="PresetTemplateHandDrive_Spread_Z")
         cmds.setParent('..')
         cmds.setParent('..')
+        cmds.textFieldButtonGrp('ArmDrivePrefix',cw3=(0, 200, 50), l='', text='', bl='加载前缀',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDrivePrefix\')')
+        cmds.rowColumnLayout(nc=2, adj=2)
+        cmds.button(l='生成手部驱动',c='ZKM_PresetTemplateHandDrive().PresetTemplateCreateHandDrive()')
+        cmds.button(l='删除驱动（需加载前缀）',c='ZKM_PresetTemplateHandDrive().PresetTemplateDeleteHandDrive()')
+        cmds.setParent('..')
+        cmds.setParent('..')
+        cmds.setParent('..')
+        cmds.setParent('..')
+
+        # 翅膀驱动
+        child3 = cmds.rowColumnLayout(numberOfColumns=2)
+        cmds.rowColumnLayout(nc=2, adj=7)
+        PictureFormLayout1 = cmds.formLayout()
+        cmds.picture(
+            i=(self.file_pathReversion + "/Py_PresetTemplate_Material/PresetTemplate_PictureMaterial/翅膀驱动BGC.png"))
+        PictureFormLayoutWingHandButton = cmds.button(l='手臂驱动', bgc=(1, 1, 1))
+        PictureFormLayoutWingMarginButton = cmds.button(l='翼缘覆羽驱动', bgc=(1, 1, 1))
+        PictureFormLayoutWingThumbButton = cmds.button(l='大拇指', bgc=(1, 1, 1))
+        PictureFormLayoutWingPrimaryButton = cmds.button(l='初级飞羽驱动', bgc=(1, 1, 1))
+        PictureFormLayoutWingSecondaryButton = cmds.button(l='次级飞羽驱动', bgc=(1, 1, 1))
+        PictureFormLayoutWingThreeButton = cmds.button(l='三级飞羽驱动', bgc=(1, 1, 1))
+        cmds.setParent('..')
+        pm.formLayout(PictureFormLayout1,
+                      edit=1,
+                      attachPosition=[(PictureFormLayoutWingHandButton, "top", 120, 0),
+                                      (PictureFormLayoutWingMarginButton, "top", 30, 0),
+                                      (PictureFormLayoutWingThumbButton, "top", 30, 0),
+                                      (PictureFormLayoutWingPrimaryButton, "top", 300, 0),
+                                      (PictureFormLayoutWingSecondaryButton, "top", 320, 0),
+                                      (PictureFormLayoutWingThreeButton, "top", 360, 0)],
+                      attachForm=[(PictureFormLayoutWingHandButton, "left", 10),
+                                  (PictureFormLayoutWingMarginButton, "left", 15),
+                                  (PictureFormLayoutWingThumbButton, "left", 370),
+                                  (PictureFormLayoutWingPrimaryButton, "left", 540),
+                                  (PictureFormLayoutWingSecondaryButton, "left", 250),
+                                  (PictureFormLayoutWingThreeButton, "left", 80)])
+        cmds.rowColumnLayout(nc=1, adj=5)
+        cmds.rowColumnLayout(nc=2, adj=4)
+        cmds.button(l='肩部样条:')
+        cmds.textFieldButtonGrp('WingDriveShoulderCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveShoulderCurve\')')
+        cmds.button(l='手肘样条:')
+        cmds.textFieldButtonGrp('WingDriveElbowCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveElbowCurve\')')
+        cmds.button(l='手腕样条:')
+        cmds.textFieldButtonGrp('WingDriveWristCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveWristCurve\')')
+        cmds.button(l='大拇指样条:')
+        cmds.textFieldButtonGrp('WingDriveThumbCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveThumbCurve\')')
+        cmds.setParent('..')
+        cmds.text(l='各个部分朝向样条顺序保持一致')
+        cmds.rowColumnLayout(nc=2, adj=6)
+        cmds.button(l='初级飞羽样条:')
+        cmds.textFieldButtonGrp('WingDrivePrimaryFlyingFeatherCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDrivePrimaryFlyingFeatherCurve\')')
+        cmds.button(l='次级飞羽样条:')
+        cmds.textFieldButtonGrp('WingDriveSecondaryFeatherCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveSecondaryFeatherCurve\')')
+        cmds.button(l='三级飞羽样条:')
+        cmds.textFieldButtonGrp('WingDriveLevelThreeFlyingFeatherCurve', cw3=(0, 130, 0), l='', text='', bl='加载样条',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'WingDriveLevelThreeFlyingFeatherCurve\')')
+        cmds.setParent('..')
+        cmds.rowColumnLayout(nc=1, adj=5)
+        pm.intSliderGrp('KZQDX', l='翼缘覆羽驱动单边骨骼数', min=1, max=10, v=6, f=1, cc="KZQDX", cw3=(120, 20, 100))
+        cmds.text(l='控制器对应的末端骨骼保持顺序一致')
+        cmds.textFieldButtonGrp(cw3=(0, 200, 0), l='', text='', bl='加载样条')
+        cmds.rowColumnLayout(nc=2, adj=1)
+        cmds.button(l='将控制器关联到样条')
+        cmds.button(l='将末端骨骼关联到样条')
+        cmds.button(l='选择样条对应的控制器')
+        cmds.button(l='选择样条对应的末端骨骼')
+        cmds.setParent('..')
+        cmds.setParent('..')
+        cmds.rowColumnLayout(nc=2, adj=3)
+
+        pm.text(l='羽毛朝向：')
+        pm.rowColumnLayout(numberOfColumns=6)
+        cmds.radioCollection('PresetTemplateHandDriveWuZhi2')
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_X2', label="X")
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_fX2', label="-X")
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_Y2', label="Y")
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_fY2', label="-Y")
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_Z2', label="Z")
+        cmds.radioButton('PresetTemplateHandDrive_WuZhi_fZ2', label="-Z")
+        pm.radioCollection('PresetTemplateHandDriveWuZhi2', edit=1, select="PresetTemplateHandDrive_WuZhi_Y2")
+        cmds.setParent('..')
+        pm.text(l='Spread朝向：')
+        pm.rowColumnLayout(numberOfColumns=6)
+        cmds.radioCollection('PresetTemplateHandDriveSpread3')
+        cmds.radioButton('PresetTemplateHandDrive_Spread_X3', label="X")
+        cmds.radioButton('PresetTemplateHandDrive_Spread_fX3', label="-X")
+        cmds.radioButton('PresetTemplateHandDrive_Spread_Y3', label="Y")
+        cmds.radioButton('PresetTemplateHandDrive_Spread_fY3', label="-Y")
+        cmds.radioButton('PresetTemplateHandDrive_Spread_Z3', label="Z")
+        cmds.radioButton('PresetTemplateHandDrive_Spread_fZ3', label="-Z")
+        pm.radioCollection('PresetTemplateHandDriveSpread3', edit=1, select="PresetTemplateHandDrive_Spread_Z3")
+        cmds.setParent('..')
+        cmds.setParent('..')
         cmds.textFieldButtonGrp(cw3=(0, 200, 50), l='', text='', bl='加载前缀')
         cmds.rowColumnLayout(nc=2, adj=2)
-        cmds.button(l='生成手部驱动')
-        cmds.button(l='删除驱动（需加载前缀）')
+        cmds.button(l='生成翅膀驱动')
+        cmds.button(l='删除翅膀（需加载前缀）')
         cmds.setParent('..')
         cmds.setParent('..')
         cmds.setParent('..')
         cmds.setParent('..')
-    #########################################
-        child3 = cmds.rowColumnLayout(numberOfColumns=2)
-        cmds.button()
-        cmds.button()
-        cmds.button()
-        cmds.setParent('..')
+
+
+
 
         child4 = cmds.rowColumnLayout(numberOfColumns=2)
         cmds.button()
@@ -275,8 +365,14 @@ class PresetTemplateWindowClass:
         cmds.button()
         cmds.button()
         cmds.setParent('..')
+        #########################################
+        child7 = cmds.rowColumnLayout(numberOfColumns=2)
+        cmds.button()
+        cmds.button()
+        cmds.button()
+        cmds.setParent('..')
 
-        cmds.tabLayout(tabs, edit=True, tabLabel=[(child1, '表情驱动'), (child2, '手部驱动'), (child3, '翅膀驱动'), (child4, '轮胎自动'), (child5, '履带自动'), (child6, '裙子驱动')])
+        cmds.tabLayout(tabs, edit=True, tabLabel=[(child1, '表情驱动'), (child2, '手部驱动'), (child3, '翅膀驱动'), (child4, '轮胎自动'), (child5, '履带自动'), (child6, '裙子驱动'), (child7, '眼镜嘴巴生成')])
 
         cmds.showWindow()
 if __name__ =='__main__':
@@ -288,6 +384,13 @@ if __name__ =='__main__':
         pass
     PresetTemplateWindowClass().PresetTemplateWindow()
     PresetTemplate.ZKM_PresetTemplate().AutomaticSynchronizationSettings()
+
+
+
+def PresetTemplateCreateWingDrive():
+
+    pass
+
 
 
 

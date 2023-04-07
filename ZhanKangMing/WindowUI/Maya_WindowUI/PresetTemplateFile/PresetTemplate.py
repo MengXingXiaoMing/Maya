@@ -17,6 +17,8 @@ sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaUI')
 from LoadText import *
 # 毛囊约束
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaCommon')
+#导入清理库
+from CleanMayaFiles import *
 from Follicle import *
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaBS')
 from BsConversionDrive import *
@@ -411,7 +413,176 @@ class ZKM_PresetTemplate:
     def Open_DifferentTopologyTransfer_BS(self):
         ZKM_WindowBsChuLiWindowClass().ZKM_WindowBsChuLi()
     #删除无变化驱动和无影响中间帧
-    def DeleteN(self):
-        ZKM_WindowBsChuLiWindowClass().ZKM_WindowBsChuLi()
+    def DeleteUnchangedDrive(self):
+        ZKM_CleanMayaFilesClass().ZKM_DeleteNoImpactDrive()
+        ZKM_CleanMayaFilesClass().ClearDriveInvalidIntermediateFrame(['animCurveUL'])
+    #打直所有驱动
+    def StraightenAllDrives(self):
+        pm.select(pm.ls(type='animCurveUL'))
+        pm.keyTangent(itt='linear', ott='linear')
+    #删除无用节点
+    def DeleteUselessNodes(self):
+        pm.mel.hyperShadePanelMenuCommand("", "deleteUnusedNodes")
+class ZKM_PresetTemplateHandDrive:
+    # 生成驱动
+    def PresetTemplateCreateHandDrive(self):
+        # 填写需加载的物体
+        WristJoint = cmds.textFieldButtonGrp('ArmDriveWristJoint', q=1, text=1)
+        ThumbCurve = cmds.textFieldButtonGrp('ArmDriveThumbCurve', q=1, text=1)
+        IndexFingerCurve = cmds.textFieldButtonGrp('ArmDriveIndexFingerCurve', q=1, text=1)
+        MiddleFingerCurve = cmds.textFieldButtonGrp('ArmDriveMiddleFingerCurve', q=1, text=1)
+        RingFingerCurve = cmds.textFieldButtonGrp('ArmDriveRingFingerCurve', q=1, text=1)
+        PinkieCurve = cmds.textFieldButtonGrp('ArmDrivePinkieCurve', q=1, text=1)
+        UncinateCurve = cmds.textFieldButtonGrp('ArmDriveUncinateCurve', q=1, text=1)
+        Prefix = cmds.textFieldButtonGrp('ArmDrivePrefix', q=1, text=1)
+        # 确认轴向
+        Finger = pm.radioCollection('PresetTemplateHandDriveWuZhi', q=1, select=1)
+        Spread = pm.radioCollection('PresetTemplateHandDriveSpread', q=1, select=1)
+        Uncinate = pm.radioCollection('PresetTemplateHandDriveGougu', q=1, select=1)
+        # 创建基本控制器
+        pm.curve(
+            p=[(-0.0802771, 0.808959, -0.00156141), (-0.205819, 0.813425, -0.00156118),
+               (-0.481402, 0.823226, -0.00156066),
+               (-0.923595, 0.794387, -0.00156366), (-1.404015, 0.658486, -0.00156178),
+               (-1.875404, 0.455414, -0.00156253),
+               (-2.209698, -0.0402005, -0.00156228), (-1.891837, -0.551885, -0.00156258),
+               (-1.396865, -0.723865, -0.00156178), (-0.903385, -0.792109, -0.00156372),
+               (-0.489295, -0.82554, -0.00156076),
+               (-0.207328, -0.807377, -0.00156135), (-0.0796345, -0.802575, -0.0015614),
+               (-0.0422571, -0.80117, -0.00156141)], n=(Prefix + 'Fingers'))
+        GeneralControl = pm.ls(sl=1)
+        GeneralControlGrp = pm.rename(pm.mel.doGroup(0, 1, 1), (Prefix + 'FingersGrp'))
+        pm.setAttr((Prefix + 'Fingers.tx'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.ty'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.tz'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.rx'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.ry'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.rz'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.sx'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.sy'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.sz'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((Prefix + 'Fingers.v'), lock=True, channelBox=False, keyable=False)
+        pm.setAttr((GeneralControl[0] + '.overrideEnabled'), 1)
+        pm.setAttr((GeneralControl[0] + '.overrideColor'), 17)
+        pm.parentConstraint(WristJoint, GeneralControlGrp, weight=1)
+        pm.scaleConstraint(WristJoint, GeneralControlGrp, weight=1, offset=(1, 1, 1))
+        # 添加Spread驱动
+        if IndexFingerCurve or RingFingerCurve or PinkieCurve:
+            # 创建Spread属性
+            pm.addAttr((Prefix + 'Fingers'), ln='spread', max=10, dv=0, at='double', min=-5)
+            pm.setAttr((Prefix + 'Fingers.spread'), e=1, keyable=True)
+            if Spread == 'PresetTemplateHandDrive_Spread_fX' or Spread == 'PresetTemplateHandDrive_Spread_fY' or Spread == 'PresetTemplateHandDrive_Spread_fZ':
+                Multiplying = -1
+            else:
+                Multiplying = 1
+            # 对每一个控制器添加驱动
+            for sel in [IndexFingerCurve, RingFingerCurve, PinkieCurve]:
+                if sel:
+                    if not pm.objExists(Prefix + sel + '_FingerDrverGrp'):
+                        pm.select(sel)
+                        pm.pickWalk(d='up')
+                        pm.mel.doGroup(0, 1, 1)
+                        pm.rename(pm.ls(sl=1), (Prefix + sel + '_FingerDrverGrp'))
+                    # 创建数值重映射节点
+                    ten = 0
+                    if sel == IndexFingerCurve:
+                        ten = 40
+                    if sel == RingFingerCurve:
+                        ten = -30
+                    if sel == PinkieCurve:
+                        ten = -60
+                    shadingNode = pm.shadingNode('remapValue', asUtility=1)
+                    pm.setAttr((shadingNode + ".inputMin"), (-5 * Multiplying))
+                    pm.setAttr((shadingNode + ".inputMax"), (10 * Multiplying))
+                    pm.setAttr((shadingNode + ".outputMin"), (-0.5 * ten * Multiplying))
+                    pm.setAttr((shadingNode + ".outputMax"), (ten * Multiplying))
+                    pm.connectAttr((Prefix + 'Fingers.spread'), (shadingNode + ".inputValue"), f=1)
+                    pm.connectAttr((shadingNode + ".outValue"),
+                                   (Prefix + sel + '_FingerDrverGrp.rotate.rotate' + Spread[-1:]), f=1)
+        # 添加UncinateCurve驱动
+        if UncinateCurve:
+            # 创建UncinateCurve属性
+            pm.addAttr((Prefix + 'Fingers'), ln='cup', max=10, dv=0, at='double', min=0)
+            pm.setAttr((Prefix + 'Fingers.cup'), e=1, keyable=True)
+            if Uncinate == 'PresetTemplateHandDrive_Gougu_fX' or Uncinate == 'PresetTemplateHandDrive_Gougu_fY' or Uncinate == 'PresetTemplateHandDrive_Gougu_fZ':
+                Multiplying = -1
+            else:
+                Multiplying = 1
+            if not pm.objExists(Prefix + UncinateCurve + '_FingerDrverGrp'):
+                pm.select(UncinateCurve)
+                pm.pickWalk(d='up')
+                pm.mel.doGroup(0, 1, 1)
+                pm.rename(pm.ls(sl=1), (Prefix + UncinateCurve + '_FingerDrverGrp'))
+            # 创建数值重映射节点
+            shadingNode = pm.shadingNode('remapValue', asUtility=1)
+            pm.setAttr((shadingNode + ".inputMin"), (0 * Multiplying))
+            pm.setAttr((shadingNode + ".inputMax"), (10 * Multiplying))
+            pm.setAttr((shadingNode + ".outputMin"), (0 * Multiplying))
+            pm.setAttr((shadingNode + ".outputMax"), (65 * Multiplying))
+            pm.connectAttr((Prefix + 'Fingers.cup'), (shadingNode + ".inputValue"), f=1)
+            pm.connectAttr((shadingNode + ".outValue"),
+                           (Prefix + UncinateCurve + '_FingerDrverGrp.rotate.rotate' + Uncinate[-1:]), f=1)
+        # 添加五指驱动
+        for sel in [IndexFingerCurve, MiddleFingerCurve, RingFingerCurve, PinkieCurve, ThumbCurve]:
+            if sel:
+                pm.select(sel)
+                pm.mel.SelectHierarchy()
+                pm.select(pm.ls(sl=1, type='nurbsCurve'))
+                pm.pickWalk(d='up')
+                AllCurve = pm.ls(sl=1)
+                # 创建对应属性
+                AttributeName = ''
+                if sel == IndexFingerCurve:
+                    AttributeName = 'indexCurl'
+                if sel == MiddleFingerCurve:
+                    AttributeName = 'middleCurl'
+                if sel == RingFingerCurve:
+                    AttributeName = 'pinkyCurl'
+                if sel == PinkieCurve:
+                    AttributeName = 'ringCurl'
+                if sel == ThumbCurve:
+                    AttributeName = 'thumbCurl'
+                pm.addAttr((Prefix + 'Fingers'), ln=AttributeName, max=10, dv=0, at='double', min=-2)
+                pm.setAttr((Prefix + 'Fingers.' + AttributeName), e=1, keyable=True)
+                # 查询是否相反
+                if Finger == 'PresetTemplateHandDrive_Gougu_fX' or Finger == 'PresetTemplateHandDrive_Gougu_fY' or Finger == 'PresetTemplateHandDrive_Gougu_fZ':
+                    Multiplying = -1
+                else:
+                    Multiplying = 1
+                # 创建数值重映射节点
+                shadingNode = pm.shadingNode('remapValue', asUtility=1)
+                pm.setAttr((shadingNode + ".inputMin"), (-2 * Multiplying))
+                pm.setAttr((shadingNode + ".inputMax"), (10 * Multiplying))
+                pm.setAttr((shadingNode + ".outputMin"), (-18 * Multiplying))
+                pm.setAttr((shadingNode + ".outputMax"), (90 * Multiplying))
+                pm.connectAttr((Prefix + 'Fingers.' + AttributeName), (shadingNode + ".inputValue"), f=1)
+                # 对每个曲线建立驱动
+                for C in AllCurve:
+                    if not pm.objExists(Prefix + C + '_FingerDrverGrp'):
+                        pm.select(C)
+                        pm.pickWalk(d='up')
+                        pm.mel.doGroup(0, 1, 1)
+                        pm.rename(pm.ls(sl=1), (Prefix + C + '_FingerDrverGrp'))
+                    # 链接对应数值
+                    pm.connectAttr((shadingNode + ".outValue"),
+                                   (Prefix + C + '_FingerDrverGrp.rotate.rotate' + Finger[-1:]), f=1)
+
+    # 删除对应前缀的驱动
+    def PresetTemplateDeleteHandDrive(self):
+        Prefix = cmds.textFieldButtonGrp('ArmDrivePrefix', q=1, text=1)
+        AllRemapValue = pm.listConnections((Prefix + 'Fingers'), scn=1, type='remapValue')
+        pm.delete((Prefix + 'FingersGrp'))
+        for RemapValue in AllRemapValue:
+            NeedDelete = pm.listConnections(RemapValue, scn=1, type="transform")
+            for Delete in NeedDelete:
+                C = pm.listRelatives(Delete, c=1)
+                P = pm.listRelatives(Delete, p=1)
+                for c in C:
+                    pm.parent(c, P[0])
+                pm.delete(Delete)
+        pm.delete(AllRemapValue)
+class ZKM_PresetTemplateWingDrive:
+    pass
+
 
 

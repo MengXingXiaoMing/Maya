@@ -156,14 +156,18 @@ class ZKM_QvanZhongChuLiCommandsClass:
 
     # 导出权重
     def ExportWeights(self):
-        pm.mel.RemoveUnusedInfluences()
         Model = pm.ls(sl=1)
-        ZKM_JointWeightProcessingClass().ExportWeight(Model)
+        MD = []
+        for M in Model:
+            if pm.mel.findRelatedSkinCluster(M):
+                MD.append(M)
+                pm.mel.RemoveUnusedInfluences(M)
+        ZKM_JointWeightProcessingClass().ExportWeight(MD)
 
     # 导入权重
     def ImportWeights(self):
         Model = pm.ls(sl=1)
-        pm.mel.RemoveUnusedInfluences()
+
         ZKM_JointWeightProcessingClass().ImportWeight(Model)
 
     # 转移权重
