@@ -33,10 +33,10 @@ def getFaceIDbyMouseCursor(mesh_name):
         unit = om.MScriptUtil()
         int_ptr = unit.asIntPtr()
 
-        selectionList = om.MSelectionList()
-        selectionList.add(mesh_name)
-        dagPath = om.MDagPath()
-        selectionList.getDagPath(0, dagPath)
+        selectionList = om.MSelectionList()#创建空列表
+        selectionList.add(mesh_name)#把元素添加到列表
+        dagPath = om.MDagPath()#创建地址路径
+        selectionList.getDagPath(0, dagPath)#获取地址路径给列表
         fnMesh = om.MFnMesh(dagPath)
 
         intersection = fnMesh.closestIntersection(om.MFloatPoint(pos2),om.MFloatVector(dir),None,None,False,

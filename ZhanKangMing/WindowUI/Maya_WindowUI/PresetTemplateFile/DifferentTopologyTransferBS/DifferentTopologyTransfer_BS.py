@@ -13,6 +13,7 @@ sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaBS')
 from BsModelEdit import *
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaWeight')
 from JointWeightProcessing import *
+import webbrowser
 
 class ZKM_WindowBsChuLiWindowClass:
     def __init__(self):
@@ -32,12 +33,13 @@ class ZKM_WindowBsChuLiWindowClass:
         pm.columnLayout()
         pm.rowColumnLayout(nc=2, adj=1)
         pm.rowColumnLayout(nc=1, adj=2)
-        pm.rowColumnLayout(nc=5, adj=1)
+        pm.rowColumnLayout(nc=6, adj=1)
         pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_OpenWrap4D()', l="选择模型开始创建中间态模型(先选模板模型)")
         pm.button(c='ZKM_WindowBsChuLiWindowClass().ImportIntermediate()', l="导入中间态模型")
         pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_TransferUV()', l="传递UV（先选中间态模型，再选目标模型）")
         pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_SelectPointCorrectUV()', l="选择点修正UV(不能重叠，只修正飞点部分)")
-        pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_UsingHelp()', bgc=(1, 1, 1), l="使用帮助")
+        pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_TestTemplate()', bgc=(1, 1, 1), l="模板")
+        pm.button(c='ZKM_WindowBsChuLiWindowClass().BsCL_UsingHelp()', bgc=(1, 1, 1), l="帮助")
         pm.setParent('..')
         pm.rowColumnLayout(nc=8, adj=8)
         pm.text(l="异拓补传递BS：")
@@ -133,11 +135,17 @@ class ZKM_WindowBsChuLiWindowClass:
         pm.select(Model[0], r=1)
         pm.DeleteHistory()
 
+    # 测试模板
+    def BsCL_TestTemplate(self):
+        os.startfile(self.file_path + '\ZKM_TransferDifferentTopologies_BS.mb')
+        print ('\n使用教程视频链接：\nhttps://space.bilibili.com/173984578')
+        webbrowser.open("https://space.bilibili.com/173984578")
+
     # 使用帮助
     def BsCL_UsingHelp(self):
         os.startfile(self.file_path + '\help.png')
         print ('\n使用教程视频链接：\nhttps://space.bilibili.com/173984578')
-
+        webbrowser.open("https://space.bilibili.com/173984578")
     # 不同拓补传递BS
     def TransferDifferentTopologies_BS(self):
         TransmitSource = str(pm.textFieldButtonGrp('BsCL_TransmitSource', q=1, text=1))
@@ -145,19 +153,22 @@ class ZKM_WindowBsChuLiWindowClass:
         IntermediateState = str(pm.textFieldButtonGrp('BsCL_IntermediateState', q=1, text=1))
         ZKM_DifferentTopologiesBSClass().ZKM_TransferDifferentTopologies_BS(TransmitSource, TransmitTarget, IntermediateState)
 
+
     # 烘焙BS
     def BakingBS(self):
         BakingModel = str(pm.textFieldButtonGrp('BsCL_BakingModel', q=1, text=1))
         BakingModel_BS = str(pm.textFieldButtonGrp('BsCL_BakingModel_BS', q=1, text=1))
         BakingBsAttribute = str(pm.textFieldButtonGrp('BsCL_BakingBsAttribute', q=1, text=1))
-        ZKM_DifferentTopologiesBSClass().ZKM_BakingBS(BakingModel, BakingModel_BS,BakingBsAttribute)
+        BakingBsAttributeAll = BakingBsAttribute.split(",")
+        ZKM_DifferentTopologiesBSClass().ZKM_BakingBS(BakingModel, BakingModel_BS,BakingBsAttributeAll)
 
     # 分解BS
     def DecomposeBS(self):
         DecomposeSource = str(pm.textFieldButtonGrp('BsCL_DecomposeSource', q=1, text=1))
         DecomposeSource_BS = str(pm.textFieldButtonGrp('BsCL_DecomposeSource_BS', q=1, text=1))
         DecomposereFerence = str(pm.textFieldButtonGrp('BsCL_DecomposereFerence', q=1, text=1))
-        ZKM_DifferentTopologiesBSClass().ZKM_DecomposeBS(DecomposeSource,DecomposeSource_BS,DecomposereFerence)
+        DecomposeSourceAll = DecomposeSource_BS.split(",")
+        ZKM_DifferentTopologiesBSClass().ZKM_DecomposeBS(DecomposeSource,DecomposeSourceAll,DecomposereFerence)
 
     # UV拷贝权重
     def UVCopyWeight(self):

@@ -160,7 +160,8 @@ class ZKM_PresetTemplate:
         if Keep<1:
             if pm.objExists('FaceTemplate_Grp'):
                 pm.delete('FaceTemplate_Grp')
-        ZKM_FileProcessingClass().ZKM_ImportFile(self.file_path,self.file_pathA,FileName, AdditionalPath,1,'.ma','mayaAscii')
+        name = pm.optionMenu(FileName, q=1, value=1)
+        ZKM_FileProcessingClass().ZKM_ImportFile(name, (self.file_pathA + '/' + AdditionalPath),1,'mayaAscii')
         pm.select('FaceTemplate_Grp')
         pm.select('FaceTemplate_Grp', r=1)
 
@@ -272,10 +273,11 @@ class ZKM_PresetTemplate:
         pm.parent(w=1)
         pm.setAttr("FaceTemplate_LocGrp.translateX", 0)
         NameFile = pm.optionMenu('LoadBsModelTemplate', q=1, value=1)
-        ZKM_FileProcessingClass().ZKM_ImportFile(self.file_path,self.file_pathA,'GenerateLocatorScheme', ('Py_PresetTemplate_Material/PresetTemplate_TemplateMaterial/'+NameFile+'_Programme'), 0, '.ma', 'mayaAscii')
+        name = pm.optionMenu('GenerateLocatorScheme', q=1, value=1)
+        ZKM_FileProcessingClass().ZKM_ImportFile(name, (self.file_pathA + '/' + 'Py_PresetTemplate_Material/PresetTemplate_TemplateMaterial/'+NameFile+'_Programme'), 0,  'mayaAscii')
         pm.parent('FaceTemplate_LocGrp','FaceTemplate_Grp')
         pm.setAttr("FaceTemplate_LocGrp.translateX", 0)
-    #生成控制器
+    #生成控制器(如果报错要打开matrixNodes插件)
     def CreateController(self):
         GetModel = cmds.textFieldButtonGrp('LoadName', q=1, text=1)  # 获取模型
         if not GetModel:
@@ -352,7 +354,7 @@ class ZKM_PresetTemplate:
         AllConstraintGrp = pm.listRelatives('Face_Grp',c=1)
         BS = cmds.textFieldButtonGrp('LoadBS', q=1,text=1)
         bs = BS.split(',')
-        ZKM_Bs().ZKM_BsConvertControllerDrive(AllConstraintGrp,bs)
+        ZKM_BsConvert().ZKM_BsConvertControllerDrive(AllConstraintGrp, bs)
     #补充次级骨骼以及控制器
     def SupplementJointController(self):
         pm.select(cl=1)
@@ -415,7 +417,7 @@ class ZKM_PresetTemplate:
     #删除无变化驱动和无影响中间帧
     def DeleteUnchangedDrive(self):
         ZKM_CleanMayaFilesClass().ZKM_DeleteNoImpactDrive()
-        ZKM_CleanMayaFilesClass().ClearDriveInvalidIntermediateFrame(['animCurveUL'])
+        ZKM_CleanMayaFilesClass().ZKM_ClearDriveInvalidIntermediateFrame(['animCurveUL'])
     #打直所有驱动
     def StraightenAllDrives(self):
         pm.select(pm.ls(type='animCurveUL'))
@@ -582,7 +584,23 @@ class ZKM_PresetTemplateHandDrive:
                 pm.delete(Delete)
         pm.delete(AllRemapValue)
 class ZKM_PresetTemplateWingDrive:
-    pass
+    # 修改属性
+    def PresetTemplateWingAddAttributesCurve(self):
+        Curve = cmds.textFieldGrp('WingDriveAddAttributeCurve', q=1, text=1)
+        sel = pm.ls(sl=1)
+        Attributes = ''
+        for s in sel:
+            Attributes = Attributes + str(s) + ':'
+        if pm.ls(sel[0], type='joint'):
+            if pm.objExists(Curve + '.Joint'):
+                pm.catch(pm.deleteAttr(Curve, attribute='Joint'))
+            pm.addAttr(Curve, ln='Joint', en=Attributes, at="enum")
+            pm.setAttr((Curve + '.Joint'), e=1, keyable=True)
+        else:
+            if pm.objExists(Curve + '.Curve'):
+                pm.catch(pm.deleteAttr(Curve, attribute='Curve'))
+            pm.addAttr(Curve, ln='Curve', en=Attributes, at="enum")
+            pm.setAttr((Curve + '.Curve'), e=1, keyable=True)
 
 
 

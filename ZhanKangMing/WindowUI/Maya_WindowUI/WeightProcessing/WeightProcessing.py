@@ -167,7 +167,6 @@ class ZKM_QvanZhongChuLiCommandsClass:
     # 导入权重
     def ImportWeights(self):
         Model = pm.ls(sl=1)
-
         ZKM_JointWeightProcessingClass().ImportWeight(Model)
 
     # 转移权重
