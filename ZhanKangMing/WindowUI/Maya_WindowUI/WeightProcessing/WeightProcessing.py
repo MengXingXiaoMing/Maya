@@ -31,7 +31,7 @@ class ZKM_QvanZhongChuLiWindowClass:
         # 通过self向新建的对象中初始化属性
         self.file_path = file_path
         self.file_pathReversion = file_pathReversion
-    def ZKM_WindowQvanZhongChuLiWindow(self):
+    def ZKM_Window(self):
         if pm.window('WindowQvanZhongChuLiPY', ex=1):
             pm.deleteUI('WindowQvanZhongChuLiPY')
 
@@ -53,7 +53,7 @@ class ZKM_QvanZhongChuLiWindowClass:
         pm.rowColumnLayout(nc=2, adj=2)
         pm.button(c='pm.mel.CopyVertexWeights()', l='复制顶点权重')
         pm.button(c='pm.mel.PasteVertexWeights()', l='粘贴顶点权重')
-        pm.button(c='pm.mel.RemoveUnusedInfluences()', l='移除无权重骨骼')
+        pm.button(c='pm.mel.removeUnusedInfluences()', l='移除无权重骨骼')
         #pm.button(c='ZKM_QvanZhongChuLiCommandsClass().AbsolutePositionMirrorWeight()', l='绝对位置镜像权重(停用)')
         pm.setParent('..')
         pm.rowColumnLayout(nc=7, adj=1)
@@ -161,7 +161,8 @@ class ZKM_QvanZhongChuLiCommandsClass:
         for M in Model:
             if pm.mel.findRelatedSkinCluster(M):
                 MD.append(M)
-                pm.mel.RemoveUnusedInfluences(M)
+                pm.select(M)
+                pm.mel.removeUnusedInfluences()
         ZKM_JointWeightProcessingClass().ExportWeight(MD)
 
     # 导入权重
@@ -182,6 +183,6 @@ class ZKM_QvanZhongChuLiCommandsClass:
         sel = pm.ls(sl=1)
         ZKM_RegenerateExistingModelClass().GeneratingSimpleModule(sel, FaceNum, ModelMirror, ReduceDetail, Smoothness)
 
-
+ShowWindow = ZKM_QvanZhongChuLiWindowClass()
 if __name__ == '__main__':
-    ZKM_QvanZhongChuLiWindowClass().ZKM_WindowQvanZhongChuLiWindow()
+    ShowWindow.ZKM_Window()

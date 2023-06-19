@@ -12,8 +12,10 @@ pm.melGlobals.initVar('string', 'gShelfTopLevel')
 currentShelf=str(pm.tabLayout(pm.melGlobals['gShelfTopLevel'], query=1, selectTab=1))
 pm.setParent(currentShelf)
 pm.shelfButton(sourceType='python',
-	image=(file_pathA+'/PresetTemplateIcon.png'),
-	label='预置模板',
+	image=(file_pathA+'/ControllerIcon.png'),
+	label='控制器处理',
 	iol=(''),
-	command=('import sys\nsys.path.append(\"'+file_path+'\")\nimport PresetTemplateWindow\nfrom PresetTemplateWindow import *\nShowWindow.ZKM_Window()'),
-	annotation='预置模板')
+	command=('import sys\nsys.path.append(\"'+file_path+'\")\nimport ControllerProcessingWindow\nfrom ControllerProcessingWindow import *\nShowWindow.ZKM_Window()'),
+	image1=(file_pathA+'/ControllerIcon.png'),
+	annotation='控制器处理')
+print file_pathA+'/ControllerIcon.png'

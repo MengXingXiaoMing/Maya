@@ -1,0 +1,256 @@
+//去掉母代名称,例如"a|ab|abc"会得到"abc"//
+global proc string lastName_pro(string $name1)
+{
+    if(`gmatch $name1 "*|*"`)
+    {
+        $name1 = `match "|.*" $name1`;
+        $name1 = `substring $name1 2 (size($name1))`;
+        $name1 = `lastName_pro $name1`;
+    }
+    return $name1;
+}
+
+//去掉名称后面的数字,例如"abc01"会得到"abc","01"//
+global proc string[] endCharName_pro(string $str1[])
+{
+    string $lastChar = endString($str1[0], 1);
+    if(`gmatch $lastChar "[0-9]"`)
+    {
+        $str1[0] = `substring $str1[0] 1 (size($str1[0])-1)`;
+        $str1[1] = $lastChar + $str1[1];
+        $str1 = `endCharName_pro $str1`;
+    }
+    return $str1;
+}
+
+
+//在数组内查找名称最高版本号,前提是数组内有元素匹配$str
+//例如有数组$array={"abc1,abc2,abc5,abcd1,abcde2,abcdef3"};
+//int $max = size($array)-1;
+//输入findMax_pro($array,"abc",0,$max),会得到"abc5"
+global proc string findMax_pro(string $array[],string $str,int $min,int $max)
+{
+    int $middle = ($max-$min)/2+$min;
+    $array[$middle] = lastName_pro($array[$middle]);
+    string $tempStrs[] = endCharName_pro({$array[$middle]});
+    if($middle!=$min)
+    {
+        if($str==$tempStrs[0])
+            $min = $middle;
+        else
+            $max = $middle;
+        $tempStrs[0] = findMax_pro($array,$str,$min,$max);
+    }
+    else
+    {
+        $array[$max] = lastName_pro($array[$max]);
+        $tempStrs = endCharName_pro({$array[$max]});
+        if($str==$tempStrs[0])
+            $tempStrs[0] = $array[$max];
+        else
+            $tempStrs[0] = $array[$middle];
+    }
+    return $tempStrs[0];
+}
+
+
+//获取该物体名字在场景内最大版本号+1
+global proc string getObjMaxVersion_pro(string $objName)
+{
+    $objName = lastName_pro($objName);
+    string $tempStrs[] = endCharName_pro({$objName});
+    string $array[] = `ls ($tempStrs[0] + "*")`;
+    if(size($array))
+    {
+        $objName = findMax_pro($array,$tempStrs[0],0,(size($array)-1));
+        $tempStrs = endCharName_pro({$objName});
+    }
+    $objName = $tempStrs[0] + (int($tempStrs[1])+1);
+    return $objName;
+}
+
+
+//根据母代名称的多少来排序,例如"a|ab|abc"会相对排在前面,"a|ab"会相对排在后面//
+global proc string[] sortName_pro(string $allName[])
+{
+    int $i,$j,$temp_num,$numTokens1,$numTokens2;
+    string $temp_name,$buffer[];
+    for($i=0;$i<size($allName);$i++)
+    {
+        $numTokens1 = `tokenize $allName[$i] "|" $buffer`;
+        for($j=0;$j<size($allName);$j++)
+        {
+            $numTokens2 = `tokenize $allName[$j] "|" $buffer`;
+            if($numTokens1>$numTokens2)
+            {
+                $temp_num = $numTokens1; $numTokens1 = $numTokens2; $numTokens2 = $temp_num;
+                $temp_name = $allName[$i]; $allName[$i] = $allName[$j]; $allName[$j] = $temp_name;
+            }
+        }
+    }
+    return $allName;
+}
+
+
+global proc string rejiggerName_pro(string $allName[],string $nameType,int $amount)
+{
+    string $againName[];
+    int $j=0;
+    for($i=0;$i<size($allName);$i++)
+    {
+        if(`gmatch $allName[$i] "*|*"`)
+        {
+            $againName[$j] = $allName[$i];
+            $j++;
+        }
+        $amount += 3.0*$i/size($allName);
+        progressWindow -edit
+            -progress $amount
+            -status ("====正在检测并且重新命名场景内所有的重名物体和节点: "+$amount+"%====");
+    }
+    if(!$j)
+    {
+        $amount += 30;
+        progressWindow -edit
+                -progress $amount
+                -status ("====正在检测并且重新命名场景内所有的重名物体和节点: "+$amount+"%====");
+        return "";
+    }
+
+    $againName = `sortName_pro $againName`;
+
+    string $temp_name;
+    string $failNames[],$loseName[],$str1[];
+    int $k=0,$l=0;
+    for($i=0;$i<size($againName);$i++)
+    {
+        if ( `progressWindow -query -isCancelled` )
+        {
+            break;
+            return "";
+        }
+        if(`gmatch $againName[$i] "*|*"`)
+        {
+            $againName[$i] = longNameOf($againName[$i]);
+            if($nameType=="Shape节点")
+            {
+                $temp_name = firstParentOf($againName[$i]);
+                $temp_name = `lastName_pro $temp_name`;
+                $str1 = `endCharName_pro {$temp_name}`;
+                $temp_name = $str1[0] + "Shape\#";
+            }
+            else
+            {
+                $temp_name = `lastName_pro $againName[$i]`;
+                $str1 = `endCharName_pro {$temp_name}`;
+                $temp_name = $str1[0] + "\#";
+            }
+
+            if(catchQuiet($temp_name=`rename $againName[$i] $temp_name`))
+            {
+                $failNames[$k] = $againName[$i];
+                $k++;
+            }
+            else
+            {
+                if(`gmatch $temp_name "*|*"`)
+                {
+                    $loseName[$l] = longNameOf($temp_name);
+                    $l++;
+                }
+            }
+            $amount += 10.0*$i/size($againName);
+            progressWindow -edit
+                -progress $amount
+                -status ("====正在检测并且重新命名场景内所有的重名物体和节点: "+$amount+"%====");
+        }
+    }
+
+    if($l)
+    {
+        $l = 0;
+        for($i=0;$i<size($loseName);$i++)
+        {
+            $temp_name = getObjMaxVersion_pro($loseName[$i]);
+            catchQuiet($loseName[$i]=`rename $loseName[$i] $temp_name`);
+            if(`gmatch $loseName[$i] "*|*"`)
+            {
+                $str1[$l] = $loseName[$i];
+                $l++;
+            }
+            $amount += 20.0*$i/size($loseName);
+            progressWindow -edit
+                -progress $amount
+                -status ("====正在检测并且重新命名场景内所有的重名物体和节点: "+$amount+"%====");
+        }
+    }
+
+    $temp_name = "场景内共找到" + $j + "个重名的" + $nameType + "!\n";
+    $j = $j - $k;
+    if($j)
+    {
+        $temp_name = $temp_name + "场景内" + $j + "个重名的" + $nameType + "已经全部重新更改名称!\n";
+    }
+    if($k)
+    {
+        $temp_name = $temp_name + "场景内" + $k + "个重名的" + $nameType + "重新更改名称失败,请检查是否有reference物体或者被lockNode锁定的物体!\n";
+        print ("场景内" + $k + "个重名的" + $nameType + ",重新更改名称失败的物体为:\n");
+        print $failNames;
+    }
+    if($l)
+    {
+        $temp_name = $temp_name + "场景内" + $l + "个重名的" + $nameType + ",二次重新命名失败,请检查是否有关联物体或者共用相同shape节点的物体!\n";
+        print ("场景内" + $l + "个重名的" + $nameType + ",二次重新命名失败,请检查是否有关联或者共用相同shape节点的物体:\n");
+        print $str1;
+    }
+    return $temp_name;
+}
+
+global proc detectionOfTheSameNameMain()
+{
+    timer -s;
+    string $scripName = "检测全部重名节点\@zj_v14";
+    int $amount = 0;
+    progressWindow
+        -title $scripName
+        -progress $amount
+        -status "====正在检测并且重新命名场景内所有的重名物体和节点: 0%===="
+        -isInterruptable true;
+
+    string $allName[] = `ls -tr`;
+    string $nameType = "模型或者组";
+    string $temp_name = `rejiggerName_pro $allName $nameType $amount`;
+
+    if ( !`progressWindow -query -isCancelled` )
+    {
+        $amount = 33;
+        $allName = `ls -s`;
+        $nameType = "Shape节点";
+        $temp_name = $temp_name + "\n" + `rejiggerName_pro $allName $nameType $amount`;
+    }
+
+    if ( !`progressWindow -query -isCancelled` )
+    {
+        $amount = 67;
+        $allName = `ls`;
+        //string $items[] = `ls -tr`;
+        //$allName = stringArrayRemove($items, $allName);
+        //$items = `ls -s`;
+        //$allName = stringArrayRemove($items, $allName);
+        $nameType = "其它节点";
+        $temp_name = $temp_name + "\n" + `rejiggerName_pro $allName $nameType $amount`;
+    }
+    else
+        $temp_name = "程序已经被终止运行.";
+
+    if($temp_name=="\n\n")
+        $temp_name = "GOOD!,场景内没有找到任何重名的物体和节点.";
+
+    progressWindow -endProgress;
+    print("此次运行时间为:"+`timer -e`+"秒.\n");
+
+    confirmDialog -title $scripName -message $temp_name
+        -button "谢谢使用" -defaultButton "谢谢使用"
+        -cancelButton "谢谢使用" -dismissString "谢谢使用";
+}
+detectionOfTheSameNameMain();

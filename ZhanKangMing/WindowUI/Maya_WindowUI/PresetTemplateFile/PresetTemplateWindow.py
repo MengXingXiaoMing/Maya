@@ -25,7 +25,7 @@ class PresetTemplateWindowClass:
         file_pathReversion = os.path.join(cur_dirA)  # 获取文件路径A
         self.file_path = file_path
         self.file_pathReversion = file_pathReversion
-    def PresetTemplateWindow(self):#窗口
+    def ZKM_Window(self):#窗口
         if cmds.window('PresetTemplate', ex=1):
             cmds.deleteUI('PresetTemplate')
             ZKM_PresetTemplate().CleanWindow()
@@ -432,6 +432,7 @@ class PresetTemplateWindowClass:
         cmds.tabLayout(tabs, edit=True, tabLabel=[(child1, '表情驱动'), (child2, '手部驱动'), (child3, '翅膀驱动'), (child4, '车辆生成'), (child5, '履带自动'), (child6, '裙子驱动'), (child7, '眼镜嘴巴生成')])
 
         cmds.showWindow()
+ShowWindow = PresetTemplateWindowClass()
 if __name__ =='__main__':
     global file_path
     global file_pathA
@@ -439,7 +440,7 @@ if __name__ =='__main__':
         ZKM_PresetTemplate().DeleteScriptJob(jobNum)
     except:
         pass
-    PresetTemplateWindowClass().PresetTemplateWindow()
+    ShowWindow.ZKM_Window()
     PresetTemplate.ZKM_PresetTemplate().AutomaticSynchronizationSettings()
 
 def PresetTemplateWingCreateWingDrive():
