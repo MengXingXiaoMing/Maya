@@ -2,7 +2,7 @@
 import pymel.core as pm
 class ZKM_BsIntermediateFrame:
     # 按对应名称规范添加bs中间帧
-    # AsSpecificationsAddBSIntermediateFrame('blendShape1', 'face_base', '_bt')
+    # ZKM_BsIntermediateFrame().ZKM_AsSpecificationsAddBSIntermediateFrame('face_bs', 'face_base', '_bt_')
     def ZKM_AsSpecificationsAddBSIntermediateFrame(self,BsName, BaseBsGrp, Specifications):
         # 查询按规范对应的bs(末尾必定要是数字)
         pm.select(BaseBsGrp, hierarchy=1)
@@ -28,6 +28,7 @@ class ZKM_BsIntermediateFrame:
                     pm.setAttr(BsName + '.' + BsNameIntermediateFrame, 0)
                     pm.delete(sel)
     # 清理Bs中间帧
+    # ZKM_BsIntermediateFrame().ZKM_ClearBsIntermediateFrame('blendShape1')
     def ZKM_ClearBsIntermediateFrame(self,BsName):
         #AllBsName = pm.listAttr((BsName + '.w'), k=True, m=True)
         # 获取所有主要bs的对应数字
@@ -35,14 +36,12 @@ class ZKM_BsIntermediateFrame:
         i = 0
         AllBsNum = []
         while i < len(AllNum):
-            AllBsNum.append(int(AllNum[i][-2:-1]))
+            AllBsNum.append(int(AllNum[i].split('[')[-1][:-1]))
             i = i + 12
-        for i in range(1, len(AllBsNum)):
+        for i in range(0, len(AllBsNum)):
             # 获取中间帧
-            if pm.objExists(
-                    BsName + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName'):
-                IntermediateFrameName = pm.mel.eval('getAttr \"' + str(BsName) + '.inbetweenInfoGroup[' + str(
-                    AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName\" ;')
+            if pm.objExists(BsName + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName'):
+                IntermediateFrameName = pm.mel.eval('getAttr \"' + str(BsName) + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName\" ;')
                 if type(IntermediateFrameName) == list:
                     for name in IntermediateFrameName:
                         num = name.split('_')[1]
@@ -53,12 +52,12 @@ class ZKM_BsIntermediateFrame:
                     num = float(num) * 1000
                     pm.mel.blendShapeDeleteInBetweenTarget(BsName, int(AllBsNum[i]), int(5000 + num))
     # 保持链接重建基础Bs（包括中间帧）
-    # ZKM_KeepLinkRebuildBs('face_base', 'blendShape1', 0)
+    # ZKM_BsIntermediateFrame().ZKM_KeepLinkRebuildBs('bace_bs_Mesh', 'blendShape1', 1)
     def ZKM_KeepLinkRebuildBs(self,Model, BsName, AddIntermediateFrame):
         AllLinkDictionary = self.ZKM_BakeBsBackDictionary( Model, BsName)
         # 自动添加中间帧
         if AddIntermediateFrame == 1:
-            self.ZKM_AsSpecificationsAddBSIntermediateFrame(BsName, Model, '_bt_')
+            self.ZKM_AsSpecificationsAddBSIntermediateFrame(BsName, Model, '_')
         # 还原原链接
         for Dictionary in AllLinkDictionary:
             if Dictionary.get('soure'):
@@ -67,6 +66,7 @@ class ZKM_BsIntermediateFrame:
                 for t in Dictionary.get('target'):
                     pm.connectAttr(Dictionary.get('oneself'), t, f=1)
     # 烘焙所有bs并返回出相关链接字典
+    # print(ZKM_BsIntermediateFrame().ZKM_BakeBsBackDictionary('bace_bs_Mesh', 'blendShape1'))
     def ZKM_BakeBsBackDictionary(self,Model, BsName):
         AllBsName = pm.listAttr((BsName + '.w'), k=True, m=True)
         AllLinkDictionary = []  # 创建还原链接字典
@@ -105,18 +105,19 @@ class ZKM_BsIntermediateFrame:
         while i < len(AllNum):
             AllBsNum.append(int(AllNum[i].split('[')[-1][:-1]))
             i = i + 12
-        for i in range(1, len(AllBsNum)):
+        for i in range(0, len(AllBsNum)):
             # 获取中间帧
             if pm.objExists(BsName + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName'):
                 IntermediateFrameName = pm.mel.eval('getAttr \"' + str(BsName) + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName\" ;')
-                if not type(IntermediateFrameName) == list:
+                '''if not type(IntermediateFrameName) == list:
                     a = str(IntermediateFrameName)
                     IntermediateFrameName = []
-                    IntermediateFrameName.append(a)
+                    IntermediateFrameName.append(a)'''
                 for name in IntermediateFrameName:
                     num = name.split('_')[1]
                     num = float(num)
                     pm.setAttr((BsName + '.' + name.split('_')[0]), num)
+
                     pm.select(Model)
                     sel = pm.duplicate(rr=1)
                     pm.rename(sel, name.split('_')[0] + '_' + str(int(num * 1000)))
@@ -129,27 +130,25 @@ class ZKM_BsIntermediateFrame:
         NewBsName = pm.blendShape(frontOfChain=1)
         pm.rename(NewBsName, BsName)
         return AllLinkDictionary
-    # 将中间帧转换为游戏规范
-    # BSIntermediateFrameConversionSpecification('pCube1', 'blendShape1')
-    def BSIntermediateFrameConversionSpecification(self,Model, BsName):
+    # 将中间帧转换为游戏规范(有中间帧的bs必须有链接)
+    # ZKM_BsIntermediateFrame().ZKM_BSIntermediateFrameConversionSpecification('bace_bs_Mesh', 'blendShape1')
+    def ZKM_BSIntermediateFrameConversionSpecification(self, Model, BsName):
         AllBsName = pm.listAttr((BsName + '.w'), k=True, m=True)
         AllNum = pm.listAttr(BsName + '.inputTarget[0].inputTargetGroup[*]', c=1)
         i = 0
         AllBsNum = []
         HaveBsIntermediateFrameDictionnaire = []
         while i < len(AllNum):
-            AllBsNum.append(int(AllNum[i][-2:-1]))
+            AllBsNum.append(int(AllNum[i].split('[')[-1][:-1]))
             i = i + 12
         for i in range(0, len(AllBsName)):
             # 当中间帧存在
-            if pm.objExists(
-                    BsName + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName'):
-                IntermediateFrameName = pm.mel.eval('getAttr \"' + str(BsName) + '.inbetweenInfoGroup[' + str(
-                    i) + '].inbetweenInfo[*].inbetweenTargetName\" ;')
-                if not type(IntermediateFrameName) == list:
+            if pm.objExists(BsName + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName'):
+                IntermediateFrameName = pm.mel.eval('getAttr \"' + str(BsName) + '.inbetweenInfoGroup[' + str(AllBsNum[i]) + '].inbetweenInfo[*].inbetweenTargetName\" ;')
+                '''if not type(IntermediateFrameName) == list:
                     a = str(IntermediateFrameName)
                     IntermediateFrameName = []
-                    IntermediateFrameName.append(a)
+                    IntermediateFrameName.append(a)'''
                 # 轮流记录中间帧所在位置
                 num = []
                 num.append(0)

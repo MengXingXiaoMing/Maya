@@ -6,15 +6,13 @@ import pymel.core as pm
 #骨骼权重处理
 class ZKM_JointWeightProcessingClass:
     # 拷贝模型权重
+    # ZKM_JointWeightProcessingClass().ZKM_CopyModelWeightApply()
     def ZKM_CopyModelWeightApply(self):
         AllSel = pm.ls(sl=1)
-        Soure = AllSel[0]
-        Target = []
-        for i in range(1, len(AllSel)):
-            Target.append(AllSel[i])
-        self.ZKM_CopyWeight('Normal', Soure, Target, '', '')
+        self.ZKM_CopyWeight('Normal', AllSel[0], AllSel[1:], '', '')
 
     # 对半拷贝模型权重
+    # ZKM_JointWeightProcessingClass().ZKM_HalfCopyModelWeightApply()
     def ZKM_HalfCopyModelWeightApply(self):
         AllSel = pm.ls(sl=1)
         FirstHalf = AllSel[:len(AllSel) / 2]
@@ -28,22 +26,27 @@ class ZKM_JointWeightProcessingClass:
         if len(FirstHalfMesh) == len(LatterHalfMesh):
             for i in range(0, len(FirstHalfMesh)):
                 pm.select(FirstHalfMesh[i], r=1)
-                pm.select(LatterHalfMesh[i], add=1)
+                pm.pickWalk(d='up')
+                S = pm.ls(sl=1)
+                pm.select(LatterHalfMesh[i], r=1)
+                pm.pickWalk(d='up')
+                T = pm.ls(sl=1)
+                pm.select(S,T)
                 self.ZKM_CopyModelWeightApply()
         else:
             pm.pm.mel.error("请加载偶数的选择")
 
     # 底层拷贝权重
     # 提示，Target应为列表
+    # ZKM_JointWeightProcessingClass().ZKM_CopyWeight('Normal', 'pSphere1', ['pSphere3'], '', '')
     def ZKM_CopyWeight(self, CopyWay, Soure, Target, SoureUVset, TargetUVset):
         if CopyWay and Soure and Target:
-            HaveWeightSoure = []
-            Joint = []
             try:
                 HaveWeightSoure = pm.mel.findRelatedSkinCluster(Soure)
                 Joint = pm.skinCluster(Soure, q=1, inf=1)
             except:
-                pass
+                HaveWeightSoure = []
+                Joint = []
             if len(Target[0].split('.')) == 1:
                 TargetType = 'Model'
             else:
@@ -97,20 +100,15 @@ class ZKM_JointWeightProcessingClass:
                             for j in Removejoint:
                                 pm.skinCluster(HaveWeightSoure, e=1, ri=j)
                 if CopyWay == 'UV':
-                    print ('a')
                     if SoureUVset and TargetUVset:
                         if TargetType == 'Model':
                             for T in Target:
                                 pm.select(Soure, T)
-                                print (Soure)
-                                print (T)
-                                pm.copySkinWeights(surfaceAssociation='closestPoint', uvSpace=(str(SoureUVset), str(TargetUVset)),
+                                pm.copySkinWeights(surfaceAssociation='closestPoint', uvSpace=(SoureUVset, TargetUVset),
                                                    noMirror=1, influenceAssociation=['closestJoint', 'oneToOne'])
-
-
                         if TargetType == 'Point':
                             pm.select(Soure, Target)
-                            pm.copySkinWeights(surfaceAssociation='closestPoint', uvSpace=(str(SoureUVset), str(TargetUVset)),
+                            pm.copySkinWeights(surfaceAssociation='closestPoint', uvSpace=(SoureUVset, TargetUVset),
                                                noMirror=1, influenceAssociation=['closestJoint', 'oneToOne'])
                             if Removejoint:
                                 for j in Removejoint:
@@ -121,6 +119,7 @@ class ZKM_JointWeightProcessingClass:
                 pm.error('源没有骨骼蒙皮')
 
     # 底层平滑权重
+    # ZKM_JointWeightProcessingClass().ZKM_SmoothWeight('pSphere1', 1, 3)
     def ZKM_SmoothWeight(self, Model, NormalizeWeight, CS):
         Joint = pm.skinCluster(q=1, inf=1)
         pm.select(Model)
@@ -139,24 +138,28 @@ class ZKM_JointWeightProcessingClass:
                                        opacity=1, clear=1, e=1)
 
     # 把模型分离后处理出来的权重返回整体底层
+    # ZKM_JointWeightProcessingClass().ZKM_MergeWeightsToTargets(['pSphere7'], ['pSphere1','pSphere2','pSphere3'])
     def ZKM_MergeWeightsToTargets(self, SoureModel, DecomposeModel):
         ModelCopyGrp = []
         for i in range(0, len(DecomposeModel)):
             pm.select(DecomposeModel[i])
             Joint = pm.skinCluster(q=1, inf=1)
-            ModelCopy = pm.duplicate(rr=1)
+            pm.duplicate(rr=1)
+            ModelCopy = pm.ls(sl=1)
             ModelCopyGrp.append(ModelCopy)
             pm.select(Joint, ModelCopy)
             pm.mel.SmoothBindSkin()
             pm.select(DecomposeModel[i], ModelCopy)
             self.ZKM_CopyModelWeightApply()
         pm.select(ModelCopyGrp)
-        CureModel = pm.polyUniteSkinned(ModelCopyGrp, centerPivot=1, ch=0, mergeUVSets=1)
+        pm.polyUniteSkinned(ModelCopyGrp, centerPivot=1, ch=0, mergeUVSets=1)
+        CureModel = pm.ls(sl=1)
+        self.ZKM_CopyWeight('Normal', str(CureModel[0]), SoureModel, '', '')
         pm.delete(ModelCopyGrp)
-        self.ZKM_CopyWeight('Normal', CureModel[0], SoureModel, '', '')
         pm.delete(CureModel)
 
     # 导出权重
+    # ZKM_JointWeightProcessingClass().ExportWeight(['pSphere1'])
     def ExportWeight(self, Model):
         # 查询当前Maya安装路径
         MAYA_VERSION = cmds.about(version=True)[:4]
@@ -191,11 +194,11 @@ class ZKM_JointWeightProcessingClass:
                 for Jon in Joint:
                     file.write(Jon + '\n')
                 file.close()
-                pm.mel.eval(
-                    'deformerWeights -export -deformer \"' + SkinCluster + '\" -format \"XML\" -path \"' + MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/' + '\" \"' + MD + '.xml\";')
-
+                pm.mel.eval('deformerWeights -export -deformer \"' + SkinCluster + '\" -path \"' + MayaPath + '/scripts/MayaWeightExportImportWeightProvisionalFolder/' + '\" \"' + MD + '.xml\";')
+        print('\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\n')
     # 导入权重
     # noinspection PyTypeChecker
+    # ZKM_JointWeightProcessingClass().ImportWeight(['pSphere1'])
     def ImportWeight(self, Model):
         # 查询当前Maya安装路径
         MAYA_VERSION = cmds.about(version=True)[:4]
@@ -212,7 +215,7 @@ class ZKM_JointWeightProcessingClass:
             AllNodes = pm.ls(type='joint')
             for MD in Model:
                 if not os.path.exists(path + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ MD + ".xml"):
-                    print('\n没有找到本插件的权重存放文件夹，请先导出权重。\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ str(MD) + ".xml"+'\n')
+                    print('\n如果没有找到本插件的权重存放文件夹，请先导出权重。\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ str(MD) + ".xml"+'\n')
                 else:
                     fo = open(path + "\scripts\MayaWeightExportImportWeightProvisionalFolder\\" + MD + ".txt", "r")
                     lines = [l.split() for l in fo if l.strip()]
@@ -229,7 +232,8 @@ class ZKM_JointWeightProcessingClass:
                         HaveSkinCluster = []
                     if HaveSkinCluster:
                         pm.select(MD, r=1)
-                        pm.mel.DetachSkin()
+                        shapes = pm.listRelatives(MD, shapes=1)
+                        pm.skinCluster(shapes, e=1, ub=1)
                     pm.select(lines, MD)
                     pm.mel.SmoothBindSkin()
                     pm.select(MD)
@@ -237,12 +241,18 @@ class ZKM_JointWeightProcessingClass:
                     pm.deformerWeights((MD + ".xml"),
                                        path=(MayaPath + "/scripts/MayaWeightExportImportWeightProvisionalFolder/"), im=1,
                                        method="index", deformer=SkinCluster)
+                    pm.skinCluster(SkinCluster, forceNormalizeWeights=1, e=1)
                     #print('\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\n如果没有导入请确认是否重名或者名称不一样\n')
+        cmds.refresh()
 
     # 转移权重
+    # ZKM_JointWeightProcessingClass().TransferWeight('pSphere1')
     def TransferWeight(self, Model):
         Joint = pm.ls(sl=1)
         SkinCluster = str(pm.mel.findRelatedSkinCluster(Model))
         pm.select((Model + ".vtx[0:999999999]"))
         pm.skinPercent(SkinCluster, tmw=[Joint[0], Joint[1]])
         pm.select(Model, r=1)
+
+
+

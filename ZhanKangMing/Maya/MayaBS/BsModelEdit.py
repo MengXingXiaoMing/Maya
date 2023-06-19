@@ -32,8 +32,7 @@ class ZKM_DifferentTopologiesBSClass:
         pm.setAttr((IntermediateState + ".visibility"), 0)
         pm.setAttr((TransmitTarget + "_Copy.visibility"), 0)
     # 烘焙BS
-    def ZKM_BakingBS(self,BakingModel, BakingModel_BS,BakingBsAttribute):
-        BakingBsAttributeAll = BakingBsAttribute.split(",")
+    def ZKM_BakingBS(self,BakingModel, BakingModel_BS,BakingBsAttributeAll):
         # 清理BS属性
         pm.setAttr((BakingModel_BS + ".envelope"), 1)
         for i in range(0, len(BakingBsAttributeAll)):
@@ -46,20 +45,11 @@ class ZKM_DifferentTopologiesBSClass:
             pm.duplicate(rr=1)
             pm.mel.rename(Reame[1])
             pm.setAttr(BakingBsAttributeAll[i], 0)
-
     # 分解BS
-    def ZKM_DecomposeBS(self,DecomposeSource,DecomposeSource_BS,DecomposereFerence):
+    def ZKM_DecomposeBS(self,DecomposeSource,DecomposeSourceAll,DecomposereFerence):
         DecomposereFerenceShapes = pm.listRelatives(DecomposereFerence, shapes=1)
-        pm.select((DecomposereFerenceShapes[0] + ".vtx[0:99999999]"), r=1)
+        pm.select((DecomposereFerenceShapes[0] + ".vtx[*]"), r=1)
         DecomposereFerenceVtx = pm.ls(fl=1, sl=1)
-        pm.select(DecomposereFerence)
-        pm.duplicate(rr=1)
-        pm.mel.rename(DecomposereFerence + "_X")
-        pm.duplicate(rr=1)
-        pm.mel.rename(DecomposereFerence + "_Y")
-        pm.duplicate(rr=1)
-        pm.mel.rename(DecomposereFerence + "_Z")
-        DecomposeSourceAll = DecomposeSource_BS.split(",")
         DecomposeBS = DecomposeSourceAll[0].split(".")
         # 清理BS属性
         pm.setAttr((DecomposeBS[0] + ".envelope"), 1)
@@ -68,19 +58,29 @@ class ZKM_DifferentTopologiesBSClass:
             pm.setAttr((DecomposeBS[0] + "." + DecomposeBS_Welght[i]), 0)
         # 开始轮流bs分解
         for i in range(0, len(DecomposeSourceAll)):
+            pm.select(DecomposereFerence)
+            pm.duplicate(rr=1)
+            pm.mel.rename(DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_X")
+            pm.duplicate(rr=1)
+            pm.mel.rename(DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_Y")
+            pm.duplicate(rr=1)
+            pm.mel.rename(DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_Z")
             pm.setAttr(DecomposeSourceAll[i], 1)
             pm.select(DecomposeSource, r=1)
-            Copy = pm.duplicate(rr=1)
-            pm.select((Copy[0] + ".vtx[0:99999999]"), r=1)
+            pm.duplicate(rr=1)
+            Copy = pm.ls(sl=1)
+            pm.select((Copy[0] + ".vtx[*]"), r=1)
             DecomposeSourceVtx = pm.ls(fl=1, sl=1)
             pm.setAttr(DecomposeSourceAll[i], 0)
             for j in range(0, len(DecomposeSourceVtx)):
                 DecomposeSourceNum = pm.xform(DecomposeSourceVtx[j], q=1, ws=1, t=1)
                 DecomposereFerenceNum = pm.xform(DecomposereFerenceVtx[j], q=1, ws=1, t=1)
-                pm.setAttr((DecomposereFerence + "_XShape" + ".pnts[" + str(j) + "].pntx"),
+                pm.setAttr((DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_XShape" + ".pnts[" + str(j) + "].pntx"),
                            (DecomposeSourceNum[0] - DecomposereFerenceNum[0]))
-                pm.setAttr((DecomposereFerence + "_YShape" + ".pnts[" + str(j) + "].pnty"),
+                pm.setAttr((DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_YShape" + ".pnts[" + str(j) + "].pnty"),
                            (DecomposeSourceNum[1] - DecomposereFerenceNum[1]))
-                pm.setAttr((DecomposereFerence + "_ZShape" + ".pnts[" + str(j) + "].pntz"),
+                pm.setAttr((DecomposereFerence + '_' + DecomposeSourceAll[i].split(".")[1] + "_ZShape" + ".pnts[" + str(j) + "].pntz"),
                            (DecomposeSourceNum[2] - DecomposereFerenceNum[2]))
             pm.delete(Copy)
+        cmds.refresh()
+

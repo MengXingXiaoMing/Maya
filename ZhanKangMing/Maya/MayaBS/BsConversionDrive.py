@@ -1,6 +1,6 @@
 #coding=gbk
 import pymel.core as pm
-class ZKM_Bs:
+class ZKM_BsConvert:
     #将bs转化为附着的控制器驱动
     def ZKM_BsConvertControllerDrive(self,Controller, LoadBsName):
         # 获取bs节点所有bs属性
@@ -106,3 +106,5 @@ class ZKM_Bs:
                 else:
                     pm.connectAttr(AllSAT[i]['S'], AllSAT[i]['A'], f=1)
         pm.select(cl=1)
+
+
