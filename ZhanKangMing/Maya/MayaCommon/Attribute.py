@@ -14,7 +14,7 @@ class ZKM_AttributeClass:
             pm.mel.dynRenameMinCheckChanged(False, ('.'+AttributesName))
         if HaveMax == 0:
             pm.mel.dynRenameMaxCheckChanged(False, ('.'+AttributesName))
-        #AddAttributes('nurbsCircle1','double','A',1,0,0,0,0)#long是整型
+        #ZKM_AttributeClass().ZKM_AddAttributes('nurbsCircle1','double','A',1,0,0,0,0)#long是整型
     #设置默认属性范围
     def ZKM_SetDefaultAttributeRange(self,Curve,AttributesName,HaveMin,min,HaveMax,max):
         if AttributesName == 'tx':
@@ -35,7 +35,7 @@ class ZKM_AttributeClass:
             pm.transformLimits(Curve, esy=(HaveMin, HaveMax), sy=(min, max))
         if AttributesName == 'sz':
             pm.transformLimits(Curve, esz=(HaveMin, HaveMax), sz=(min, max))
-        #SetDefaultAttributeRange('nurbsCircle1','tx',1,1,1,2)
+        #ZKM_AttributeClass().ZKM_SetDefaultAttributeRange('nurbsCircle1','tx',1,1,1,2)
     #链接属性
     def ZKM_LinkAttributes(self,Soure,Target,NodeType,Multiplier,SoureMappingMin,SoureMappingMax,TargetMappingMin,TargetMappingMax):
         if NodeType == 'multiplyDivide':
@@ -51,57 +51,59 @@ class ZKM_AttributeClass:
             pm.setAttr((Soure.split('.')[0]+'_setRange_'+Target.split('.')[0]+'.oldMinX'), TargetMappingMin)
             pm.setAttr((Soure.split('.')[0]+'_setRange_'+Target.split('.')[0]+'.oldMaxX'), TargetMappingMax)
             pm.connectAttr((Soure.split('.')[0]+'_setRange_'+Target.split('.')[0]+'.outValueX'), Target, f=1)
+        #ZKM_AttributeClass().ZKM_LinkAttributes('nurbsCircle1.translateX','nurbsCircle1.translateY','multiplyDivide',2,0,1,1,0)
+        #ZKM_AttributeClass().ZKM_LinkAttributes('nurbsCircle1.translateX', 'nurbsCircle1.translateZ', 'setRange',2, 0, 1, 1, 0)
     #锁定并隐藏无用属性
-    def ZKM_HideUselessAttributes(self,Sel):
-        OwnAttributes = pm.listAttr(Sel, ud=1)
-        OwnAttributes.append(u'v')
-        LockNormalAttributes=[]
-        for Attributes in ['translate', 'rotate', 'scale']:
-            SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), s=1 ,d=0)#判断属性是否有输入
-            if SoureAndTarget:#如果有输入
-                for Axial in ['X', 'Y', 'Z']:#添加到列表
-                    LockNormalAttributes.append((Attributes + Axial))
-            else:#如果没有输入
-                SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), p=1, c=1)  # 获取具体属性的输入输出
-                if not SoureAndTarget:#如果输出不存在
-                    for Axial in ['X','Y','Z']:#开始判断下层有没有输入或者输出
-                        SoureAndTarget = pm.listConnections((Sel + '.' + Attributes + Axial), s=1, d=0)  # 判断属性是否有输入
-                        if SoureAndTarget:
-                            LockNormalAttributes.append((Attributes + Axial))
-                        else:
-                            SoureAndTarget = pm.listConnections((Sel + '.' + Attributes + Axial), p=1, c=1)#获取具体属性的输入输出
-                            if not SoureAndTarget:#如果没有输出(已经没有输入了)
+    def ZKM_HideUselessAttributes(self,sel):
+        for Sel in sel:
+            print Sel
+            OwnAttributes = pm.listAttr(Sel, ud=1)
+            OwnAttributes.append(u'v')
+            LockNormalAttributes=[]
+            for Attributes in ['translate', 'rotate', 'scale']:
+                SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), s=1 ,d=0)#判断属性是否有输入
+                if SoureAndTarget:#如果有输入
+                    for Axial in ['X', 'Y', 'Z']:#添加到列表
+                        LockNormalAttributes.append((Attributes + Axial))
+                else:#如果没有输入
+                    SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), p=1, c=1)  # 获取具体属性的输入输出
+                    if not SoureAndTarget:#如果输出不存在
+                        for Axial in ['X','Y','Z']:#开始判断下层有没有输入或者输出
+                            SoureAndTarget = pm.listConnections((Sel + '.' + Attributes + Axial), s=1, d=0)  # 判断属性是否有输入
+                            if SoureAndTarget:
                                 LockNormalAttributes.append((Attributes + Axial))
-        for Attributes in OwnAttributes:
-            SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), s=1 ,d=0)#判断属性是否有输入
-            if SoureAndTarget:
-                LockNormalAttributes.append(Attributes)
-            else:
-                SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), p=1, c=1)  # 获取具体属性的输入输出
-                if not SoureAndTarget:  # 如果没有输出(已经没有输入了)
+                            else:
+                                SoureAndTarget = pm.listConnections((Sel + '.' + Attributes + Axial), p=1, c=1)#获取具体属性的输入输出
+                                if not SoureAndTarget:#如果没有输出(已经没有输入了)
+                                    LockNormalAttributes.append((Attributes + Axial))
+            for Attributes in OwnAttributes:
+                SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), s=1 ,d=0)#判断属性是否有输入
+                if SoureAndTarget:
                     LockNormalAttributes.append(Attributes)
-        for Attributes in LockNormalAttributes:
-            pm.setAttr((Sel + '.' + Attributes), lock=True, channelBox=False, keyable=False)
+                else:
+                    SoureAndTarget = pm.listConnections((Sel + '.' + Attributes), p=1, c=1)  # 获取具体属性的输入输出
+                    if not SoureAndTarget:  # 如果没有输出(已经没有输入了)
+                        LockNormalAttributes.append(Attributes)
+            for Attributes in LockNormalAttributes:
+                pm.setAttr((Sel + '.' + Attributes), lock=True, channelBox=False, keyable=False)
+        #ZKM_AttributeClass().ZKM_HideUselessAttributes(['nurbsCircle1'])
     #锁定并隐藏选择的控制器无用属性
     def ZKM_SelHideUselessAttributes(self):
         Sel = pm.ls(sl=1)
-        if str(type(Sel)) == '<type \'list\'>':
-            for sel in Sel:
-                ZKM_AttributeClass().ZKM_HideUselessAttributes(sel)
-        else:
-            ZKM_AttributeClass().ZKM_HideUselessAttributes(str(Sel).split('\'')[1])
+        ZKM_AttributeClass().ZKM_HideUselessAttributes(Sel)
+        #ZKM_AttributeClass().ZKM_SelHideUselessAttributes()
     #显示选择控制器的所有属性
     def ZKM_ShowSelectAllAttributes(self):
         Sel= pm.ls(sl=1)
-        if str(type(Sel)) == '<type \'list\'>':
-            for sel in Sel:
-                ZKM_AttributeClass().ZKM_ShowAllAttributes(sel)
-        else:
-            ZKM_AttributeClass().ZKM_ShowAllAttributes(str(Sel).split('\'')[1])
+        ZKM_AttributeClass().ZKM_ShowAllAttributes(Sel)
+        #ZKM_AttributeClass().ZKM_ShowSelectAllAttributes()
     #显示所有属性
-    def ZKM_ShowAllAttributes(self,Sel):
-        OwnAttributes = pm.listAttr(Sel, ud=1)
-        for x in ['translateX','translateY','translateZ', 'rotateX','rotateY','rotateZ', 'scaleX', 'scaleY', 'scaleZ']:
-            OwnAttributes.append(x)
-        for Attributes in OwnAttributes:
-            pm.setAttr((Sel+'.'+str(Attributes)), k=True)
+    def ZKM_ShowAllAttributes(self,sel):
+        for Sel in sel:
+            OwnAttributes = pm.listAttr(Sel, ud=1)
+            for x in ['translateX','translateY','translateZ', 'rotateX','rotateY','rotateZ', 'scaleX', 'scaleY', 'scaleZ']:
+                OwnAttributes.append(x)
+            for Attributes in OwnAttributes:
+                pm.setAttr((Sel+'.'+str(Attributes)), k=True)
+        #ZKM_AttributeClass().ZKM_ShowAllAttributes(['nurbsCircle1'])
+

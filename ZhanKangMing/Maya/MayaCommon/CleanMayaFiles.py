@@ -2,53 +2,56 @@
 import pymel.core as pm
 class ZKM_CleanMayaFilesClass:
     # 删除无影响驱动
+    # ZKM_CleanMayaFilesClass().ZKM_DeleteNoImpactDrive()
     def ZKM_DeleteNoImpactDrive(self):
-        Sel = pm.ls(type='animCurveUL')
-        for sel in Sel:
-            DeleteUL = 0
-            floatChangeLS = pm.keyframe(sel, q=1, fc=1)  # 逐个获取时间轴
-            valueChangeLS = pm.keyframe(sel, q=1, vc=1)  # 逐个获取时间轴上的数值
-            inAngle = pm.keyTangent(sel, q=1, inAngle=1)  # 逐个获取前指针位置
-            outAngle = pm.keyTangent(sel, q=1, outAngle=1)  # 逐个获取后指针位置
-            inWeight = pm.keyTangent(sel, q=1, inWeight=1)  # 逐个获取前指针权重
-            outWeight = pm.keyTangent(sel, q=1, outWeight=1)  # 逐个获取后指针权重
-            if len(floatChangeLS) > 1:  # 判断是否至少有两个数
-                for Num in valueChangeLS:
-                    VAL = valueChangeLS
-                    VAL.remove(Num)  # 此次移除后是直接改变原来的元组
-                    for num in VAL:  # 判断每一个数在其他数中是否有不同
-                        if Num == num:
-                            DeleteUL = 1
-                        else:
-                            DeleteUL = 0
-                            break
-                    if DeleteUL == 1:  # 如果所有都相同的话再判断指针是否有区别
-                        AllAngle = inAngle + outAngle
-                        AllWeight = inWeight + outWeight
-                        for i in range(0, len(AllAngle)):  # 判断数是否为零，直到有个不为零跳出
-                            if AllAngle[i] == 0 or AllWeight[i] == 0:
-                                continue
+        for Type in ['animCurveUL','animCurveUA','animCurveUU']:
+            Sel = pm.ls(type=Type)
+            for sel in Sel:
+                DeleteUL = 0
+                floatChangeLS = pm.keyframe(sel, q=1, fc=1)  # 逐个获取时间轴
+                valueChangeLS = pm.keyframe(sel, q=1, vc=1)  # 逐个获取时间轴上的数值
+                inAngle = pm.keyTangent(sel, q=1, inAngle=1)  # 逐个获取前指针位置
+                outAngle = pm.keyTangent(sel, q=1, outAngle=1)  # 逐个获取后指针位置
+                inWeight = pm.keyTangent(sel, q=1, inWeight=1)  # 逐个获取前指针权重
+                outWeight = pm.keyTangent(sel, q=1, outWeight=1)  # 逐个获取后指针权重
+                if len(floatChangeLS) > 1:  # 判断是否至少有两个数
+                    for Num in valueChangeLS:
+                        VAL = valueChangeLS
+                        VAL.remove(Num)  # 此次移除后是直接改变原来的元组
+                        for num in VAL:  # 判断每一个数在其他数中是否有不同
+                            if Num == num:
+                                DeleteUL = 1
                             else:
                                 DeleteUL = 0
                                 break
+                        if DeleteUL == 1:  # 如果所有都相同的话再判断指针是否有区别
+                            AllAngle = inAngle + outAngle
+                            AllWeight = inWeight + outWeight
+                            for i in range(0, len(AllAngle)):  # 判断数是否为零，直到有个不为零跳出
+                                if AllAngle[i] == 0 or AllWeight[i] == 0:
+                                    continue
+                                else:
+                                    DeleteUL = 0
+                                    break
+                        if DeleteUL == 1:
+                            break
                     if DeleteUL == 1:
-                        break
-                if DeleteUL == 1:
+                        pm.delete(sel)
+                else:
                     pm.delete(sel)
-            else:
-                pm.delete(sel)
+
     # 删除无影响中间帧（驱动和动画节点都可，看填写的类型）
-    def ClearDriveInvalidIntermediateFrame(self,Type):
+    # ZKM_CleanMayaFilesClass().ZKM_ClearDriveInvalidIntermediateFrame(['animCurveUU','animCurveTU'])
+    def ZKM_ClearDriveInvalidIntermediateFrame(self, Type):
         for type in Type:
             Sel = pm.ls(type=type)
             for sel in Sel:
                 floatChangeLS = []
-                if type in ['animCurveUL']:
+                if type in ['animCurveUL', 'animCurveUU']:
                     floatChangeLS = pm.keyframe(sel, q=1, fc=1)  # 逐个获取时间轴
                 if type in ['animCurveTL', 'animCurveTA', 'animCurveTU']:
                     floatChangeLS = pm.keyframe(sel, q=1, timeChange=1)
                 valueChangeLS = pm.keyframe(sel, q=1, vc=1)  # 逐个获取时间轴上的数值
-                print (valueChangeLS)
                 inAngle = pm.keyTangent(sel, q=1, inAngle=1)  # 逐个获取前指针位置
                 outAngle = pm.keyTangent(sel, q=1, outAngle=1)  # 逐个获取后指针位置
                 inWeight = pm.keyTangent(sel, q=1, inWeight=1)  # 逐个获取前指针权重
@@ -77,7 +80,7 @@ class ZKM_CleanMayaFilesClass:
                         CopySel = pm.ls(sl=1)
                         # 获取需要处理的位置
                         FloatChangeLSNum = AllDictionaryGrp[j].get('floatChangeLS')
-                        if type in ['animCurveUL']:
+                        if type in ['animCurveUL', 'animCurveUU']:
                             # 剪切掉需要测量的点
                             pm.mel.eval('cutKey - float \"' + str(AllDictionaryGrp[j].get('floatChangeLS')) + ':' + str(
                                 AllDictionaryGrp[j].get('floatChangeLS')) + '\" - clear;')
@@ -125,7 +128,7 @@ class ZKM_CleanMayaFilesClass:
                         pm.delete(CopySel)
                     for N in DEL:
                         pm.select(sel)
-                        if type in ['animCurveUL']:
+                        if type in ['animCurveUL', 'animCurveUU']:
                             pm.mel.eval('cutKey - float \"' + N + ':' + N + '\" - clear;')
                         if type in ['animCurveTL', 'animCurveTA', 'animCurveTU']:
                             pm.mel.eval('cutKey - time \"' + N + ':' + N + '\" - clear;')

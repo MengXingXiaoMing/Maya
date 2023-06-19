@@ -1,13 +1,14 @@
 #coding=gbk
 import pymel.core as pm
-class LinkClass:
+class ZKM_LinkClass:
     # 断开链接
-    def BreakLink(self,Attribute):
-        Soure = pm.connectionInfo(Attribute, sfd=1)  # 获取源
-        Target = pm.connectionInfo(Attribute, dfs=1)  # 获取目标
-        if Soure:
-            pm.disconnectAttr(str(Soure), Attribute)
-        if Target:
-            for T in Target:
-                print(T)
-                pm.disconnectAttr(Attribute, str(T))
+    def ZKM_BreakLink(self,Attribute):
+        for Att in Attribute:
+            Soure = pm.connectionInfo(Att, sfd=1)  # 获取源
+            Target = pm.connectionInfo(Att, dfs=1)  # 获取目标
+            if Soure:
+                pm.disconnectAttr(str(Soure), Att)
+            if Target:
+                for T in Target:
+                    pm.disconnectAttr(Att, str(T))
+    # ZKM_LinkClass().ZKM_BreakLink(['nurbsCircle1.translateY','nurbsCircle1.translateZ'])

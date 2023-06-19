@@ -4,7 +4,8 @@ class ZKM_FollicleClass:
     # Ã«ÄÒÔ¼Êø
     def ZKM_FollicleConstraint(self,MD,Sel,Keep):
         pm.select(cl=1)
-        pm.group(n='AllFollicle_Grp')
+        if pm.objExists('AllFollicle_Grp'):
+            pm.group(n='AllFollicle_Grp')
         pm.createNode('closestPointOnMesh', n=("cpom"))
         pm.connectAttr((MD + "Shape" + ".outMesh"), ("cpom" + ".inMesh"), f=1)
         pm.spaceLocator(p=(0, 0, 0), n=("Loc"))
@@ -28,8 +29,8 @@ class ZKM_FollicleClass:
                     pm.parentConstraint((Sel[i] + "_follicle"), Sel[i], mo=1, weight=1)
             else:
                 pm.parentConstraint((Sel[i] + "_follicle"), Sel[i], weight=1)
-            if pm.objExists('FaceTemplate_Grp'):
+            if pm.objExists('AllFollicle_Grp'):
                 pm.parent((Sel[i] + "_follicle"), 'AllFollicle_Grp')
         pm.delete("Loc")
         pm.delete("cpom")
-
+        # ZKM_FollicleClass().ZKM_FollicleConstraint('bace_bs_Mesh',['nurbsCircle1','nurbsCircle2'],'Ture')

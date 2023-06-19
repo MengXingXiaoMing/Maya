@@ -13,10 +13,15 @@ class ZKM_FileProcessingClass:
             del myTempEDPF
 
     # 导入导出文件
-    def ZKM_ImportFile(self,file_path,file_pathReversion,ImportFileName, ImportAdditionalPath, ImpExpFile, suffix, Type):
-        name = pm.optionMenu(ImportFileName, q=1, value=1)
+    def ZKM_ImportFile(self,name, ImportAdditionalPath, ImpExpFile,Type):
+        #name = pm.optionMenu(ImportFileName, q=1, value=1)
+        suffix = ''
+        if Type == 'mayaAscii':
+            suffix = '.ma'
+        if Type == 'mayaBinary':
+            suffix = '.mb'
         if ImpExpFile == 1:  # 导入
-            pm.mel.performFileSilentImportAction(file_pathReversion + '/' + ImportAdditionalPath + '/' + name + suffix)
+            pm.mel.performFileSilentImportAction(ImportAdditionalPath + '/' + name + suffix)
         else:  # mayaAscii#mayaBinary#导出
-            pm.cmds.file((file_pathReversion + '/' + ImportAdditionalPath + '/' + name + suffix), pr=1, typ=Type, force=1,
+            pm.cmds.file((ImportAdditionalPath + '/' + name + suffix), pr=1, typ=Type, force=1,
                          options="v=0;", es=1)
