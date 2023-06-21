@@ -1,5 +1,5 @@
 # coding=gbk
-import json
+#import json
 import maya.cmds as cmds
 import random
 import pymel.core as pm
@@ -17,6 +17,11 @@ class ZKM_CurveControllerEditClass:
     # ZKM_CurveControllerEditClass().ZKM_asSwapCurve('T',[1,0,0])
     def ZKM_asSwapCurve(self,Name,Color):
         Select = pm.ls(sl=1)
+        AllSet = []
+        if pm.objExists('AllSet'):
+            pm.select('AllSet')
+            pm.mel.SelectHierarchy()
+            AllSet = pm.ls(sl=1)
         ZKM_CreateAndEditCurveClass().ZKM_CreateCurve((File_RootDirectory + '\MayaCommon\CurveShapeWithPicture'),Name)
         self.ZKM_ModifyControllerShapeTRS('SoftSelectionSize', 0, 0, 0)
         EndSelect = pm.ls(sl=1)
@@ -78,9 +83,9 @@ class ZKM_CurveControllerEditClass:
                     cmds.rotate(-90, -90, 0,
                                 (tempString[y] + ".cv[0:9999]"),
                                 r=1, os=1)
-
-                if pm.objExists('AllSet'):
-                    pm.mel.eval('sets -add ' + allSet + ' ' + tempString[y] + ';')
+                if sel[i] in AllSet:
+                    if pm.objExists('AllSet') :
+                        pm.mel.eval('sets -add ' + allSet + ' ' + tempString[y] + ';')
                     # cmds.sets(tempString[y], add=allSet)
 
                 if tempString3:
@@ -117,10 +122,10 @@ class ZKM_CurveControllerEditClass:
     def ZKM_ModifyControllerShapeTRS(self,Type, X, Y, Z):
         Curve = pm.ls(sl=1)
         for i in range(0, len(Curve)):
-            shap = pm.listRelatives(Curve[i], s=1)
+            Shape = pm.listRelatives(Curve[i], s=1)
+            print Shape
             pm.select(cl=1)
-            for j in range(0, len(shap)):
-                pm.select((shap[j] + ".cv[0:]"), add=1)
+            pm.select((Shape[0] + ".cv[0:]"))
             if Type == "translate":
                 pm.move((X), (Y), (Z), localSpace=1)
             if Type == "rotate":
@@ -129,7 +134,8 @@ class ZKM_CurveControllerEditClass:
                 pm.scale((X), (Y), (Z), r=1)
             if Type == "SoftSelectionSize":
                 size = pm.softSelect(q=1, ssd=1)
-                AllNum = pm.getAttr(Curve[i] + '.boundingBox.boundingBoxSize')
+                shape = pm.listRelatives(Curve[i],c=1)
+                AllNum = pm.getAttr(shape[0] + '.boundingBox.boundingBoxSize')
                 num = max(AllNum)
                 Scale = size / num * 2.14
                 pm.scale((Scale), (Scale), (Scale), r=1)
@@ -280,7 +286,6 @@ class ZKM_CurveControllerEditClass:
                         pm.parent((joint[i] + "_scaleConstraint1"), (joint[i] + "_parentConstraint1"),
                                   'ZKM_AllControllerConstraint_Grp')
 
-
     # 生成控制器
     def ZKM_ChuangJianFK(self, Name, C_GrpNum, Suffix, RemoveJoint,Colour):
         if pm.objExists('ZKM_FK_AllController'):
@@ -297,15 +302,11 @@ class ZKM_CurveControllerEditClass:
         # 建立独立控制器
         # 建立总控制器组
         pm.select(cl=1)
-        if not pm.objExists('ZKM_FK_AllController'):
-            pm.select(cl=1)
-            pm.group(n='ZKM_FK_AllController')
-            pm.parent('ZKM_FK_AllController','ZKM_AllFK_TopGrp')
         # 创建总字典
         AllDictionary = []
         # 查询是否有创建过，覆盖字典
         HaveAllDictionary = pm.objExists('ZKM_FK_Root_Grp.notes')
-        if HaveAllDictionary:
+        if HaveAllDictionary and pm.objExists('ZKM_FK_AllController'):
             # 清理骨骼约束
             pm.select('ZKM_FK_Root')
             pm.mel.SelectHierarchy()
@@ -352,12 +353,23 @@ class ZKM_CurveControllerEditClass:
                         pm.parent(nurbs[0],'ZKM_FK_Root_C' + OldSuffix)
                         # 建立旧样条组，并将旧32位绝对数还原到修复组中
                         for n in range(0,len(LastGrpNum)):
-                            pm.mel.doGroup(0, 1, 1)
-                            pm.mel.rename(J[0] + "_G" + str((len(LastGrpNum)-n)) + OldSuffix)
-                            TopGrp = pm.ls(sl=1)
+                            if pm.objExists(J[0] + "_G" + str((len(LastGrpNum)-n)) + OldSuffix):
+                                pm.select((J[0] + "_G" + str((len(LastGrpNum)-n)) + OldSuffix))
+                                TopGrp = pm.ls(sl=1)
+                            else:
+                                if n == 0:
+                                    pm.select(nurbs[0])
+                                else:
+                                    pm.select(J[0] + "_G" + str((len(LastGrpNum) - n + 1)) + OldSuffix)
+                                pm.mel.doGroup(0, 1, 1)
+                                pm.mel.rename(J[0] + "_G" + str((len(LastGrpNum)-n)) + OldSuffix)
+                                TopGrp = pm.ls(sl=1)
                             if not TopGrp[0].hasAttr('notes'):
                                 TopGrp[0].addAttr('notes', type='string')
                             TopGrp[0].attr('notes').set(Dictionary['Grp'][n])#按原样修复样条note
+                        for n in range(0, len(LastGrpNum)-1):
+                            pm.parent((J[0] + "_G" + str((len(LastGrpNum)-n)) + OldSuffix), (J[0] + "_G" + str((len(LastGrpNum)-1-n)) + OldSuffix))
+                        pm.parent(nurbs[0],(J[0] + "_G" + str(len(LastGrpNum)) + OldSuffix))
                     else:
                         G_Num = Dictionary.get('Grp')
                         self.ZKM_ReturnNotesToModel(Transform, Dictionary, 'Curve', 0)
@@ -392,14 +404,9 @@ class ZKM_CurveControllerEditClass:
                     for D in AllDelete:
                         Parent = pm.listRelatives(D,p=1)
                         subset = pm.listRelatives(D,c=1,type='transform')
-                        print D[0]
-                        print Parent[0]
                         for s in subset:
-                            print s
-                            print 'AAA'
                             pm.parent(s,Parent[0])
                         pm.delete(D)
-
                     # 此时已经完成了现存原骨骼所有组的新名称旧后缀还原###################################
 
             # 假如要生成的组数比原本的组少则进行解组
@@ -477,6 +484,9 @@ class ZKM_CurveControllerEditClass:
             # 提取所有组中的约束，有约束关联的提取关联，建立字典
             # 提取所有组的关联
         else:
+            pm.select(cl=1)
+            pm.group(n='ZKM_FK_AllController')
+            pm.parent('ZKM_FK_AllController', 'ZKM_AllFK_TopGrp')
             for J in joint:
                 J_nume = []
                 #给骨骼添加32位随机数

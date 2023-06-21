@@ -79,6 +79,7 @@ class ZKM_IndependentSmallfunctions:
     def CentreJoint(self):
         pm.polyToCurve(conformToSmoothMeshPreview=0, degree=1, form=2)
         CurveName = pm.ls(sl=1)
+        pm.mel.CenterPivot()
         pm.joint(p=(0, 0, 0), n="LingShiJoint")
         pm.delete(pm.pointConstraint(CurveName[0], 'LingShiJoint', weight=1, offset=(0, 0, 0)))
         pm.parent('LingShiJoint', w=1)

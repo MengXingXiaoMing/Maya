@@ -102,8 +102,8 @@ class ZKM_CreateAndEditCurveClass:
     # ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(['nurbsCircle1'],[1,1,1])
     def ZKM_ChangeCurveColor(self,Sel,Color):
         for s in Sel:
-            shape = pm.listRelatives(Sel[0], s=1, type='nurbsCurve')
+            shape = pm.listRelatives(s, s=1, type='nurbsCurve')
             pm.setAttr(str(s) + ".overrideEnabled", 0)
             pm.setAttr(shape[0] + ".overrideEnabled", 0)
-            pm.color(str(s), rgb=(Color[0], Color[1], Color[2]))
+            pm.color(str(shape[0]), rgb=(Color[0], Color[1], Color[2]))
 
