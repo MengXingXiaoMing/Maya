@@ -230,7 +230,6 @@ class ZKM_ControllerPresetTemplateCommand:
     # 选中改颜色
     def ChangeCurveColor(self):
         Sel = pm.ls(sl=1)
-        print Sel
         Color = pm.colorSliderGrp('WindowControllerProcessingChangeCurveColor_colorSliderGrp',q=1,rgb=1)
         ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(Sel,Color)
 
