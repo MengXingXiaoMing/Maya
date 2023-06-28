@@ -198,7 +198,7 @@ class ZKM_JointWeightProcessingClass:
         print('\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\n')
     # 导入权重
     # noinspection PyTypeChecker
-    # ZKM_JointWeightProcessingClass().ImportWeight(['pSphere1'])
+    # ZKM_JointWeightProcessingClass().ImportWeight(['Flour'])
     def ImportWeight(self, Model):
         # 查询当前Maya安装路径
         MAYA_VERSION = cmds.about(version=True)[:4]
@@ -217,6 +217,7 @@ class ZKM_JointWeightProcessingClass:
                 if not os.path.exists(path + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ MD + ".xml"):
                     print('\n如果没有找到本插件的权重存放文件夹，请先导出权重。\n如果要查询，下面是路径：' + '\n' + str(path) + '\scripts\MayaWeightExportImportWeightProvisionalFolder\\'+ str(MD) + ".xml"+'\n')
                 else:
+
                     fo = open(path + "\scripts\MayaWeightExportImportWeightProvisionalFolder\\" + MD + ".txt", "r")
                     lines = [l.split() for l in fo if l.strip()]
                     fo.close()
@@ -230,10 +231,12 @@ class ZKM_JointWeightProcessingClass:
                         HaveSkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询是否有蒙皮节点
                     except:
                         HaveSkinCluster = []
+
                     if HaveSkinCluster:
                         pm.select(MD, r=1)
                         shapes = pm.listRelatives(MD, shapes=1)
-                        pm.skinCluster(shapes, e=1, ub=1)
+                        pm.skinCluster(shapes[0], e=1, ub=1)
+
                     pm.select(lines, MD)
                     pm.mel.SmoothBindSkin()
                     pm.select(MD)
