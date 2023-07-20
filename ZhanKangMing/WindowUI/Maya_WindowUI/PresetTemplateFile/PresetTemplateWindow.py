@@ -443,7 +443,7 @@ if __name__ =='__main__':
     ShowWindow.ZKM_Window()
     PresetTemplate.ZKM_PresetTemplate().AutomaticSynchronizationSettings()
 
-def PresetTemplateWingCreateWingDrive():
+'''def PresetTemplateWingCreateWingDrive():
     #添加基础目标约束部分
     WingDrivePrefix = cmds.textFieldButtonGrp('WingDrivePrefix', q=1, text=1)
     ShoulderElbowWrist = cmds.textFieldButtonGrp('WingDriveShoulderElbowWristJoint', q=1, text=1).split(',')
@@ -610,7 +610,6 @@ def PresetTemplateWingCreateWingDrive():
 
                 #将基础目标部分提取成总控制部分
 
-
 def LTZZQDCK_kssc():
     FFK_C = str(pm.textFieldButtonGrp('LTZZQDCK_JZLTYTFKZQ', q=1, text=1))
     FK_C = str(pm.textFieldButtonGrp('LTZZQDCK_JZLTYTFKKZQ', q=1, text=1))
@@ -678,7 +677,7 @@ def LTZZQDCK_kssc():
     pm.parentConstraint(FFK_C, "qianzhui_LunTai", mo=1, weight=1)
     pm.scaleConstraint(FFK_C, "qianzhui_LunTai", weight=1, offset=(1, 1, 1))
     pm.select('qianzhui_LunTai_Grp', r=1)
-    pm.mel.searchReplaceNames("qianzhui", qianzhui, "hierarchy")
+    pm.mel.searchReplaceNames("qianzhui", qianzhui, "hierarchy")'''
 
 
 

@@ -2,7 +2,6 @@
 #获取文件路径
 import os
 import sys
-
 import inspect
 #根目录
 sys.dont_write_bytecode = True

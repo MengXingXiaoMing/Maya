@@ -8,7 +8,7 @@ import inspect
 import maya.cmds as cmds
 
 #根目录
-sys.dont_write_bytecode = True
+#sys.dont_write_bytecode = True
 ZKM_RootDirectory = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 File_RootDirectory = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 
@@ -25,15 +25,21 @@ from CreateAndEditCurve import *
 # 毛囊约束
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaCommon')
 from Follicle import *
+from FileProcessing import *
 # 独立功能
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaOthersLibrary')
 from IndependentSmallFunctions import *
+# 加载对应后缀文件
+sys.path.append(ZKM_RootDirectory+'\\Common\\CommonLibrary')
+from LoadCorrespondingSuffixFile import *
 # 属性可视化
 sys.path.append(File_RootDirectory + '\\ControllerProcessingWindowPictureMaterials')
 from AttributeVisualizationWindow import *
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaController')
 # 加载曲线编辑
 from CurveControllerEdit import *
+
+
 '''
 from CurveControllerEdit import *
 import CurveControllerEdit
@@ -80,7 +86,6 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.radioCollection('WindowControllerProcessingControllerOrientation', edit=1, select="X")
         pm.setParent('..')
         pm.button(c='ZKM_ControllerPresetTemplateCommand().RotationController()', l="旋转")
-
         pm.button(c='ZKM_ControllerPresetTemplateCommand().detectionOfTheSameNameMain()', bgc=(0, 0.8, 0.8), l="去除重复名称节点")
         pm.setParent('..')
         pm.rowColumnLayout(nc=1, adj=8)
@@ -102,7 +107,6 @@ class ZKM_ControllerPresetTemplateWindowClass:
                 pm.iconTextRadioButton(Name,w=55,h=55,i=(self.file_pathTop + '\Maya\MayaCommon\CurveShapeWithPicture' + "\\" + Name + '.jpg'),st="iconOnly",ann=Name)
                 pm.text(l=Name)
                 pm.setParent('..')
-        #(self.file_pathTop + '\Maya\MayaCommon\CurveShapeWithPicture' + "\\" + Name + '.jpg')
         pm.setParent('..')
         pm.setParent('..')
         pm.iconTextRadioCollection('WindowControllerProcessingAllControllerIconTextRadioCollection',e=1,
@@ -145,6 +149,27 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.button(c='ZKM_CurveControllerEditClass().ZKM_ChuangJianFKPreconditions()',bgc=(1,0,0), l="创基础")
         pm.button(c='ZKM_ControllerPresetTemplateCommand().OldChuangJianFK()', bgc=(0.4, 0, 0), l="独立创建控制器")
         pm.setParent('..')
+        pm.rowColumnLayout(cs=(2, 5), nc=2, adj=1)
+        pm.optionMenu('WindowControllerProcessingImportFile')
+        for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\ControllerProcessingWindowModel'), 0, '.mb')):
+            pm.menuItem(label=file)
+        pm.button(c='ZKM_ControllerPresetTemplateCommand().ImportFile()', l="导入", bgc=(1, 1, 1))
+        pm.setParent('..')
+        pm.rowColumnLayout(cs=(2, 5), nc=4, adj=1)
+        pm.optionMenu('WindowControllerProcessingCreateModel', w=90,cc='ZKM_ControllerPresetTemplateCommand().ModifyAccessoryUI()')
+        pm.menuItem(label="hand")
+        pm.menuItem(label="foot")
+        pm.button(c='ZKM_ControllerPresetTemplateCommand().CreateModel()', l="创建", bgc=(1, 1, 1))
+        pm.rowColumnLayout('WindowControllerProcessingCreateModel_rowColumnLayout',adj=1, nc=1)
+        pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', w=115)
+        ZKM_ControllerPresetTemplateCommand().ModifyAccessoryUI()
+        pm.setParent('..')
+        pm.button(c='ZKM_ControllerPresetTemplateCommand().AddAttribute(\'WindowControllerProcessingCreateModel_Attribute\')', l="删/增属性", bgc=(1, 1, 1))
+        pm.setParent('..')
+        pm.rowColumnLayout(cs=(2, 5), nc=2, adj=1)
+        pm.floatSliderGrp('WindowControllerProcessingControllerJointSize', fmx=9999999, min=0.1, max=2, cw3=(45, 40, 92), f=1,l="骨骼大小", v=1.00,cc='ZKM_ControllerPresetTemplateCommand().JointScale()')
+        pm.button('ShowHideJoint_Button',c='ZKM_ControllerPresetTemplateCommand().ShowHideJoint()', l="隐藏所有骨骼", bgc=(1, 1, 1))
+        pm.setParent('..')
         pm.rowColumnLayout(cs=(2, 5), nc=4, adj=4)
         pm.rowColumnLayout(cs=(2, 5), nc=2, adj=1,w=152)
         pm.optionMenu('WindowControllerProcessingAddAttributeOptionMenu')
@@ -152,8 +177,11 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.menuItem(label="SplineIK")
         pm.menuItem(label="AIM")
         pm.menuItem(label="Wheel")
-        pm.menuItem(label="RemoveFK")
-        pm.button(c='ZKM_ControllerPresetTemplateCommand().AddAttribute()', bgc=(1, 1, 1), l="添加\删除属性")
+        pm.menuItem(label="NotGenerate")
+        pm.menuItem(label="Global")
+
+
+        pm.button(c='ZKM_ControllerPresetTemplateCommand().AddAttribute(\'WindowControllerProcessingAddAttributeOptionMenu\')', l="A/D属性", bgc=(1, 1, 1))
         pm.setParent('..')
         pm.button(c='ZKM_CurveControllerEditClass().ZKM_ChuangJianFKSwitch(pm.checkBox(\'WindowControllerProcessingExtractConstraints\', q=1,value=1))',bgc=(1, 1, 0), l="切换")
         pm.button(c='ZKM_CurveControllerEditClass().ZKM_ControllerHoming()', bgc=(0, 1, 0), l="归位")
@@ -358,22 +386,198 @@ class ZKM_ControllerPresetTemplateCommand:
         print '别人写的，这种我就不重新写了'
         pm.mel.eval('source \"'+ZKM_RootDirectory+'/Outside/去除重复的物体名.mel\";')
 
-    # 添加属性
-    def AddAttribute(self):
-        AttributeName = pm.optionMenu('WindowControllerProcessingAddAttributeOptionMenu',q=1,v=1)
+    # 添加特定属性
+    def AddAttribute(self,name):
+        AttributeName = pm.optionMenu(name,q=1,v=1)
         sel = pm.ls(sl=1,type='joint')
+        Text = ''
+        for T in sel:
+            Text = Text + T+':'
         if sel:
-            if AttributeName == u'IK':#字符通用码
-                pm.addAttr(sel[0],ln='IK', en=sel[0]+':'+sel[1]+':'+sel[2]+':', at='enum')
-                pm.setAttr((sel[0]+'.IK'),e=1, keyable=True)
-            if AttributeName == u'SplineIK':#字符通用码
-                pass
-            if AttributeName == u'AIM':#字符通用码
-                pass
-            if AttributeName == u'Wheel':#字符通用码
-                pass
-            if AttributeName == u'RemoveFK':#字符通用码
-                pass
+            if AttributeName == u'NotGenerate':#字符通用码
+                Attribute = pm.listAttr(sel[0],userDefined=True)
+                if pm.objExists((sel[0] + '.notes')):
+                    Attribute.remove('notes')
+                if pm.objExists((sel[0] + '.NotGenerate')):
+                    Attribute.remove('NotGenerate')
+                for An in Attribute:
+                    if pm.objExists((sel[0] + '.'+An)):
+                        pm.catch(lambda: pm.deleteAttr(sel[0], attribute=An))
+                if pm.objExists((sel[0] + '.NotGenerate')):
+                    pm.catch(lambda: pm.deleteAttr(sel[0], attribute="NotGenerate"))
+                else:
+                    pm.addAttr(sel[0], ln='NotGenerate', en='self:subset:', at='enum')
+                    pm.setAttr((sel[0] + '.NotGenerate'), e=1, keyable=True)
+                    pm.select(sel[0])
+            else:
+                if pm.objExists((sel[0] + '.NotGenerate')):
+                    pm.catch(lambda: pm.deleteAttr(sel[0], attribute="NotGenerate"))
+                for Name in [u'IK',u'Cup',u'SplineIK', u'AIM', u'Wheel',u'Global']:
+                    if AttributeName == Name:  # 字符通用码
+                        if pm.objExists((sel[0] + '.' + Name)):
+                            pm.catch(lambda: pm.deleteAttr(sel[0], attribute=Name))
+                        else:
+                            pm.addAttr(sel[0], ln=Name, en=Text, at='enum')
+                            pm.setAttr((sel[0] + '.' + Name), e=1, keyable=True)
+                            pm.select(sel[0])
+
+                for Name in [u'Wrist',u'Cup',u'PinkyFinger', u'RingFinger', u'MiddleFinger', u'IndexFinger', u'ThumbFinger']:
+                    if AttributeName == Name:  # 字符通用码
+                        if pm.objExists((sel[0] + '.' + Name)):
+                            pm.catch(lambda: pm.deleteAttr(sel[0], attribute=Name))
+                        else:
+                            pm.addAttr(sel[0], ln=Name, en=Text, at='enum')
+                            pm.setAttr((sel[0] + '.' + Name), e=1, keyable=True)
+                            pm.select(sel[0])
+
+                for Name in [u'Foot',u'Heel',u'Tiptoe', u'ToesFront', u'ToesBack', u'Ankle']:
+                    if AttributeName == Name:  # 字符通用码
+                        if pm.objExists((sel[0] + '.' + Name)):
+                            pm.catch(lambda: pm.deleteAttr(sel[0], attribute=Name))
+                        else:
+                            pm.addAttr(sel[0], ln=Name, en=Text, at='enum')
+                            pm.setAttr((sel[0] + '.' + Name), e=1, keyable=True)
+                            pm.select(sel[0])
+
+    # 骨骼整体缩放
+    def JointScale(self):
+        pm.jointDisplayScale(pm.floatSliderGrp('WindowControllerProcessingControllerJointSize',q=1,v=1))
+        ZKM_AutomaticModificationUIRangeClass().ZKM_FloatSlider_Max_Edit_Controller('WindowControllerProcessingControllerJointSize')
+
+    # 骨骼显示隐藏
+    def ShowHideJoint(self):
+        Text = pm.button('ShowHideJoint_Button', q=1, l=1)
+        Joint = pm.ls(typ="joint")
+        if Text == u'隐藏所有骨骼':
+            for i in range(0, len(Joint)):
+                pm.setAttr((Joint[i] + ".drawStyle"), 2)
+            pm.button('ShowHideJoint_Button', e=1, l='显示所有骨骼',bgc=(0.6,0.6,0.6))
+        if Text == u'显示所有骨骼':
+            for i in range(0, len(Joint)):
+                pm.setAttr((Joint[i] + ".drawStyle"), 0)
+            pm.button('ShowHideJoint_Button', e=1, l='隐藏所有骨骼',bgc=(1,1,1))
+
+    # 导入文件
+    def ImportFile(self):
+        cur_dir = '/'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1])  # 获取当前绝对路径的上层目录 linux中应用'/'split和join
+        file_pathReversion = os.path.join(cur_dir)  # 获取文件路径A
+        name = pm.optionMenu('WindowControllerProcessingImportFile',q=1,v=1)
+        #name = name.encode('utf-8')
+        ZKM_FileProcessingClass().ZKM_ImportFile(name, (file_pathReversion + '/ControllerProcessingWindowModel'), 1, 'mayaBinary')
+
+    # 创建部件模板
+    def CreateModel(self):
+        AttributeName = pm.optionMenu('WindowControllerProcessingCreateModel', q=1, v=1)
+        if AttributeName == u'hand':#字符通用码
+            #创建骨骼
+            pm.select(cl=1)
+            AllJoint = []
+            wrist = pm.joint(p=(0, 0, 0), n='Wrist')
+            AllJoint.append(wrist)
+            pm.joint(p=(-1, 0, 0), n='WristEnd')
+            pm.select(wrist)
+            Cup = pm.joint(p=(-1, 0, -1), n='Cup')
+            AllJoint.append(Cup)
+            pm.joint(Cup, sao='yup', zso=1, e=1, oj='xyz')
+            AllName = ['PinkyFinger', 'RingFinger', 'MiddleFinger', 'IndexFinger', 'ThumbFinger']
+            for i in range(1, 5):
+                if i > 1:
+                    pm.select(wrist)
+                else:
+                    pm.select(Cup)
+                for n in range(4, 8):
+                    finger = pm.joint(p=(-n, 0, i - 2), n=AllName[i] + str(n - 3))
+                    AllJoint.append(finger)
+            pm.select(Cup)
+            for n in range(4, 8):
+                finger = pm.joint(p=(-n, 0, -2), n=AllName[0] + str(n - 3))
+                AllJoint.append(finger)
+            pm.select(wrist)
+            pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='yup')
+            pm.select(AllJoint[0])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=1)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0],AllJoint[1])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=2)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0],AllJoint[18:22])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=3)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0], AllJoint[2:6])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=4)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0], AllJoint[6:10])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=5)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0], AllJoint[10:14])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=6)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(AllJoint[0], AllJoint[14:18])
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=7)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=1)
+
+
+        if AttributeName == u'foot':#字符通用码
+            #创建骨骼
+            pm.select(cl=1)
+            foot = pm.joint(p=(0, 2, 0), n='Foot')
+            pm.joint(p=(0, 1, 0), n='FootEnd')
+            pm.select(foot)
+            Heel = pm.joint(p=(0, 0, -1), n='Heel')
+            Tiptoe = pm.joint(p=(0, 0, 3), n='Tiptoe')
+            ToesFront = pm.joint(p=(0, 0.5, 2), n='ToesFront')
+            pm.joint(p=(0, 0, 3), n='ToesFrontEnd')
+            pm.select(Tiptoe)
+            ToesBack = pm.joint(p=(0, 0.5, 2), n='ToesBack')
+            Ankle = pm.joint(p=(0, 2, 0), n='Ankle')
+            pm.joint(p=(0, 0, 0), n='AnkleEnd')
+            pm.select(foot)
+            pm.joint(zso=1, ch=1, e=1, oj='xyz', secondaryAxisOrient='yup')
+            pm.select(foot)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=1)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(foot,Heel)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=2)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(foot,Tiptoe)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=3)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(foot,ToesFront)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=4)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(foot,ToesBack)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=5)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.select(foot,Ankle)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=6)
+            self.AddAttribute('WindowControllerProcessingCreateModel_Attribute')
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', e=1, sl=1)
+
+    # 修改配件UI
+    def ModifyAccessoryUI(self):
+        AttributeName = pm.optionMenu('WindowControllerProcessingCreateModel', q=1, v=1)
+        if AttributeName == u'hand':#字符通用码
+            #创建骨骼
+            cmds.deleteUI('WindowControllerProcessingCreateModel_Attribute', control=True)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', w=115,p='WindowControllerProcessingCreateModel_rowColumnLayout')
+            pm.menuItem(label="Wrist")
+            pm.menuItem(label="Cup")
+            pm.menuItem(label="PinkyFinger")
+            pm.menuItem(label="RingFinger")
+            pm.menuItem(label="MiddleFinger")
+            pm.menuItem(label="IndexFinger")
+            pm.menuItem(label="ThumbFinger")
+        if AttributeName == u'foot':#字符通用码
+            cmds.deleteUI('WindowControllerProcessingCreateModel_Attribute', control=True)
+            pm.optionMenu('WindowControllerProcessingCreateModel_Attribute', w=115,p='WindowControllerProcessingCreateModel_rowColumnLayout')
+            pm.menuItem(label="Foot")
+            pm.menuItem(label="Heel")
+            pm.menuItem(label="Tiptoe")
+            pm.menuItem(label="ToesFront")
+            pm.menuItem(label="ToesBack")
+            pm.menuItem(label="Ankle")
+
 
 ShowWindow = ZKM_ControllerPresetTemplateWindowClass()
 ShowWindow.ZKM_Window()

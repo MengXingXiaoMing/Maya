@@ -15,5 +15,5 @@ pm.shelfButton(sourceType='python',
 	image=(file_pathA+'/PresetTemplateIcon.png'),
 	label='Ô¤ÖÃÄ£°å',
 	iol=(''),
-	command=('import sys\nsys.path.append(\"'+file_path+'\")\nimport PresetTemplateWindow\nfrom PresetTemplateWindow import *\nShowWindow.ZKM_Window()'),
+	command=('import sys\nsys.path.append(r\"'+file_path+'\")\nimport PresetTemplateWindow\nfrom PresetTemplateWindow import *\nShowWindow.ZKM_Window()'),
 	annotation='Ô¤ÖÃÄ£°å')

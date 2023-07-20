@@ -12,10 +12,9 @@ pm.melGlobals.initVar('string', 'gShelfTopLevel')
 currentShelf=str(pm.tabLayout(pm.melGlobals['gShelfTopLevel'], query=1, selectTab=1))
 pm.setParent(currentShelf)
 pm.shelfButton(sourceType='python',
-	image=(file_pathA+'/ControllerIcon.png'),
-	label='控制器处理',
+	image=('rename.png'),
+	label='改名',
 	iol=(''),
-	command=('import sys\nsys.path.append(r\"'+file_path+'\")\nimport ControllerProcessingWindow\nfrom ControllerProcessingWindow import *\nShowWindow.ZKM_Window()'),
-	image1=(file_pathA+'/ControllerIcon.png'),
-	annotation='控制器处理')
-print file_pathA+'/ControllerIcon.png'
+	command=('import sys\nsys.path.append(r\"'+file_path+'\")\nimport RenameWindow\nfrom RenameWindow import *\nShowWindow.ZKM_Window()'),
+	image1=('rename.png'),
+	annotation='改名')

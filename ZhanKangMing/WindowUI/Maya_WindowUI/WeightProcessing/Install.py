@@ -15,6 +15,6 @@ pm.shelfButton(sourceType='python',
 	image=(file_pathA+'/WeightIcon.png'),
 	label='权重处理',
 	iol=(''),
-	command=('import sys\nsys.path.append(\"'+file_path+'\")\nimport WeightProcessing\nfrom WeightProcessing import *\nShowWindow.ZKM_Window()'),
+	command=('import sys\nsys.path.append(r\"'+file_path+'\")\nimport WeightProcessing\nfrom WeightProcessing import *\nShowWindow.ZKM_Window()'),
 	image1=(file_pathA+'/WeightIcon.png'),
 	annotation='权重处理')
