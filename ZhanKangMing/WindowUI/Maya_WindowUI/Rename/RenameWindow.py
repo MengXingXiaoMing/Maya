@@ -25,11 +25,13 @@ class ZKM_RenameWindowClass():
             pm.deleteUI('RenameWindow')
         pm.window('RenameWindow', t="改名",cc='ZKM_RenameWindowClass().SaveUIWindow()')
         pm.rowColumnLayout(nc=1, adj=2)
-        pm.rowColumnLayout(nc=4, adj=4)
-        pm.checkBox('RenameWindow_AutomaticallySaveSettings',label='自动保存当前设置',cc='ZKM_RenameWindowClass().SaveUI()')
+        pm.rowColumnLayout(nc=6, adj=6)
+        pm.checkBox('RenameWindow_AutomaticallySaveSettings',label='自动保存设置',cc='ZKM_RenameWindowClass().SaveUI()')
         pm.iconTextButton(i='duplicateReference.png',c='ZKM_RenameWindowClass().SelectDuplicateNameObject()')
+        pm.textField('RenameWindow_SelectObjectTextField')
+        pm.button(l='选择对象', c='ZKM_RenameWindowClass().SelectTxt()')
         pm.iconTextButton(i='deleteRenderPass.png', c='ZKM_RenameWindowClass().detectionOfTheSameNameMain()')
-        pm.button(l='将文件所有数字转换为字母', c='ZKM_RenameWindowClass().ConvertNumToCharacters()')
+        pm.button(l='数字→字母', c='ZKM_RenameWindowClass().ConvertNumToCharacters()')
         pm.setParent('..')
         pm.separator(style="in", height=1)
         pm.rowColumnLayout(nc=2, adj=1)
@@ -107,19 +109,20 @@ class ZKM_RenameWindowClass():
         line = f.readlines()
         f.close()
         pm.checkBox('RenameWindow_AutomaticallySaveSettings',e=1,v=int(line[0]))
-        pm.radioCollection('RenameWindow_IncludeSubsets', e=1, select=line[1][:-1])
-        pm.textFieldButtonGrp('RenameWindow_AddPrefix', e=1, text=line[2][:-1])
-        pm.textFieldButtonGrp('RenameWindow_AddSuffix', e=1, text=line[3][:-1])
-        pm.checkBox('RenameWindow_RunPrint', e=1, v=int(line[4]))
-        pm.textFieldGrp('RenameWindow_SubstituteCharacterSoure',e=1, text=line[5][:-1])
-        pm.textFieldButtonGrp('RenameWindow_SubstituteCharacterTarget',e=1, text=line[6][:-1])
-        pm.textFieldGrp('RenameWindow_CompletelyRenamePrefix',e=1, text=line[7][:-1])
-        pm.textFieldGrp('RenameWindow_CompletelyRenameName',e=1, text=line[8][:-1])
-        pm.textFieldGrp('RenameWindow_CompletelyRenameSuffix',e=1, text=line[9][:-1])
-        pm.optionMenu('RenameWindow_binary_optionMenu',e=1, sl=int(line[10]))
-        pm.intScrollBar('RenameWindow_MoveUI_intScrollBar',e=1, value=int(line[11]))
+        pm.textField('RenameWindow_SelectObjectTextField', e=1, text=line[1][:-1])
+        pm.radioCollection('RenameWindow_IncludeSubsets', e=1, select=line[2][:-1])
+        pm.textFieldButtonGrp('RenameWindow_AddPrefix', e=1, text=line[3][:-1])
+        pm.textFieldButtonGrp('RenameWindow_AddSuffix', e=1, text=line[4][:-1])
+        pm.checkBox('RenameWindow_RunPrint', e=1, v=int(line[5]))
+        pm.textFieldGrp('RenameWindow_SubstituteCharacterSoure',e=1, text=line[6][:-1])
+        pm.textFieldButtonGrp('RenameWindow_SubstituteCharacterTarget',e=1, text=line[7][:-1])
+        pm.textFieldGrp('RenameWindow_CompletelyRenamePrefix',e=1, text=line[8][:-1])
+        pm.textFieldGrp('RenameWindow_CompletelyRenameName',e=1, text=line[9][:-1])
+        pm.textFieldGrp('RenameWindow_CompletelyRenameSuffix',e=1, text=line[10][:-1])
+        pm.optionMenu('RenameWindow_binary_optionMenu',e=1, sl=int(line[11]))
+        pm.intScrollBar('RenameWindow_MoveUI_intScrollBar',e=1, value=int(line[12]))
         self.MoveUI()
-        pm.textFieldButtonGrp('RenameWindow_QueryCharacters',e=1, text=line[12])
+        pm.textFieldButtonGrp('RenameWindow_QueryCharacters',e=1, text=line[13])
 
     def SaveUIWindow(self):
         if int(pm.checkBox('RenameWindow_AutomaticallySaveSettings', q=1, v=1)) == 1:
@@ -127,20 +130,21 @@ class ZKM_RenameWindowClass():
     def SaveUI(self):
         file = open((self.file_pathReversion+'/UI_Set.txt'), 'w')
         a0 = str(int(pm.checkBox('RenameWindow_AutomaticallySaveSettings',q=1,v=1)))
-        a1 = pm.radioCollection('RenameWindow_IncludeSubsets', q=1, select=1)
-        a2 = pm.textFieldButtonGrp('RenameWindow_AddPrefix', q=1, text=1)
-        a3 = pm.textFieldButtonGrp('RenameWindow_AddSuffix', q=1, text=1)
-        a4 = str(int(pm.checkBox('RenameWindow_RunPrint', q=1, v=1)))
-        a5 = pm.textFieldGrp('RenameWindow_SubstituteCharacterSoure',q=1, text=1)
-        a6 = pm.textFieldButtonGrp('RenameWindow_SubstituteCharacterTarget',q=1, text=1)
-        a7 = pm.textFieldGrp('RenameWindow_CompletelyRenamePrefix',q=1, text=1)
-        a8 = pm.textFieldGrp('RenameWindow_CompletelyRenameName',q=1, text=1)
-        a9 = pm.textFieldGrp('RenameWindow_CompletelyRenameSuffix',q=1, text=1)
-        a10 = pm.optionMenu('RenameWindow_binary_optionMenu',q=1, sl=1)
-        a11 = pm.intScrollBar('RenameWindow_MoveUI_intScrollBar',q=1, value=1)
-        a12 = pm.textFieldButtonGrp('RenameWindow_QueryCharacters',q=1, text=1)
-        w = (str(a0) + '\n' + str(a1) + '\n' + str(a2) + '\n' + str(a3) + '\n' + str(a4) + '\n' + str(a5) + '\n' + str(
-            a6) + '\n' + str(a7) + '\n' + str(a8) + '\n' + a9 + '\n' + str(a10) + '\n' + str(a11) + '\n' + str(a12))
+        a1 = pm.textField('RenameWindow_SelectObjectTextField', q=1, text=1)
+        a2 = pm.radioCollection('RenameWindow_IncludeSubsets', q=1, select=1)
+        a3 = pm.textFieldButtonGrp('RenameWindow_AddPrefix', q=1, text=1)
+        a4 = pm.textFieldButtonGrp('RenameWindow_AddSuffix', q=1, text=1)
+        a5 = str(int(pm.checkBox('RenameWindow_RunPrint', q=1, v=1)))
+        a6 = pm.textFieldGrp('RenameWindow_SubstituteCharacterSoure',q=1, text=1)
+        a7 = pm.textFieldButtonGrp('RenameWindow_SubstituteCharacterTarget',q=1, text=1)
+        a8 = pm.textFieldGrp('RenameWindow_CompletelyRenamePrefix',q=1, text=1)
+        a9 = pm.textFieldGrp('RenameWindow_CompletelyRenameName',q=1, text=1)
+        a10 = pm.textFieldGrp('RenameWindow_CompletelyRenameSuffix',q=1, text=1)
+        a11 = pm.optionMenu('RenameWindow_binary_optionMenu',q=1, sl=1)
+        a12 = pm.intScrollBar('RenameWindow_MoveUI_intScrollBar',q=1, value=1)
+        a13 = pm.textFieldButtonGrp('RenameWindow_QueryCharacters',q=1, text=1)
+        w = (str(a0) + '\n' + str(a1) + '\n' + str(a2) + '\n' + str(a3) + '\n' + str(a4) + '\n' + str(a5) + '\n' + str(a6) + '\n' + str(
+            a7) + '\n' + str(a8) + '\n' + str(a9) + '\n' + a10 + '\n' + str(a11) + '\n' + str(a12) + '\n' + str(a13))
         file.write(w)
 
     #ZKM_RenameWindowClass().SaveUI()
@@ -186,7 +190,7 @@ class ZKM_RenameWindowClass():
             pm.mel.SelectHierarchy()
         sel = pm.ls(sl=1,type='transform')
         Prefix = pm.textFieldButtonGrp('RenameWindow_AddPrefix', q=1,text=1)
-        Prefix = Prefix.encode('utf-8') # 字符通用码转为字符串
+        Prefix = Prefix.encode('utf-8') # 字符码转为字符串
         for i in range(0,len(sel)):
             Text = self.Rename(sel[i], Prefix, sel[i].split('|')[-1], '', ['',''], [1,''])
             if RunPrint == 1:
@@ -204,7 +208,7 @@ class ZKM_RenameWindowClass():
             pm.mel.SelectHierarchy()
         sel = pm.ls(sl=1,type='transform')
         Suffix = pm.textFieldButtonGrp('RenameWindow_AddSuffix', q=1,text=1)
-        Suffix = Suffix.encode('utf-8') # 字符通用码转为字符串
+        Suffix = Suffix.encode('utf-8') # 字符码转为字符串
         for i in range(0,len(sel)):
             Text = self.Rename(sel[i], '', sel[i].split('|')[-1], Suffix, ['',''], [1,''])
             if RunPrint == 1:
@@ -223,8 +227,8 @@ class ZKM_RenameWindowClass():
         sel = pm.ls(sl=1,type='transform')
         Soure = pm.textFieldGrp('RenameWindow_SubstituteCharacterSoure', q=1,text=1)
         Target = pm.textFieldButtonGrp('RenameWindow_SubstituteCharacterTarget', q=1, text=1)
-        Soure = Soure.encode('utf-8') # 字符通用码转为字符串
-        Target = Target.encode('utf-8')  # 字符通用码转为字符串
+        Soure = Soure.encode('utf-8') # 字符码转为字符串
+        Target = Target.encode('utf-8')  # 字符码转为字符串
         for i in range(0,len(sel)):
             Text = self.Rename(sel[i], '', sel[i], '', [Soure,Target], [1,''])
             if RunPrint == 1:
@@ -244,9 +248,9 @@ class ZKM_RenameWindowClass():
         Prefix = pm.textFieldGrp('RenameWindow_CompletelyRenamePrefix', q=1, text=1)
         Name = pm.textFieldGrp('RenameWindow_CompletelyRenameName', q=1, text=1)
         Suffix = pm.textFieldGrp('RenameWindow_CompletelyRenameSuffix', q=1, text=1)
-        Prefix = Prefix.encode('utf-8')  # 字符通用码转为字符串
-        Name = Name.encode('utf-8')  # 字符通用码转为字符串
-        Suffix = Suffix.encode('utf-8')  # 字符通用码转为字符串
+        Prefix = Prefix.encode('utf-8')  # 字符码转为字符串
+        Name = Name.encode('utf-8')  # 字符码转为字符串
+        Suffix = Suffix.encode('utf-8')  # 字符码转为字符串
         Binary = pm.optionMenu('RenameWindow_binary_optionMenu', q=1,sl=1)
         NumPosition = pm.intScrollBar('RenameWindow_MoveUI_intScrollBar', q=1, value=1)
         Num = 0
@@ -342,6 +346,11 @@ class ZKM_RenameWindowClass():
         Str = str(pm.textFieldButtonGrp('RenameWindow_QueryCharacters', q=1, text=1))
         pm.cmdScrollFieldExecuter('RenameWindow_cmdScrollFieldExecuter', e=1, ss=Str)
         pm.cmdScrollFieldExecuter('RenameWindow_cmdScrollFieldExecuter',q=1, sas=1)
+
+    def SelectTxt(self):
+        text = pm.textField('RenameWindow_SelectObjectTextField',q=1,tx=1)
+        text = text.encode('utf-8')
+        pm.select(text)
 ShowWindow = ZKM_RenameWindowClass()
 if __name__ =='__main__':
     ShowWindow.ZKM_Window()

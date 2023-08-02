@@ -149,11 +149,12 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.button(c='ZKM_CurveControllerEditClass().ZKM_ChuangJianFKPreconditions()',bgc=(1,0,0), l="创基础")
         pm.button(c='ZKM_ControllerPresetTemplateCommand().OldChuangJianFK()', bgc=(0.4, 0, 0), l="独立创建控制器")
         pm.setParent('..')
-        pm.rowColumnLayout(cs=(2, 5), nc=2, adj=1)
+        pm.rowColumnLayout(cs=(2, 5), nc=3, adj=1)
         pm.optionMenu('WindowControllerProcessingImportFile')
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\ControllerProcessingWindowModel'), 0, '.mb')):
             pm.menuItem(label=file)
         pm.button(c='ZKM_ControllerPresetTemplateCommand().ImportFile()', l="导入", bgc=(1, 1, 1))
+        pm.iconTextButton(style='iconOnly', image1='fileNew.png',command='os.startfile(r\''+self.file_path + '\ControllerProcessingWindowModel'+'\')')
         pm.setParent('..')
         pm.rowColumnLayout(cs=(2, 5), nc=4, adj=1)
         pm.optionMenu('WindowControllerProcessingCreateModel', w=90,cc='ZKM_ControllerPresetTemplateCommand().ModifyAccessoryUI()')

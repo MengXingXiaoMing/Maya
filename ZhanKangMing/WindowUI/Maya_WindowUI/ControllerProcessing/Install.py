@@ -18,4 +18,4 @@ pm.shelfButton(sourceType='python',
 	command=('import sys\nsys.path.append(r\"'+file_path+'\")\nimport ControllerProcessingWindow\nfrom ControllerProcessingWindow import *\nShowWindow.ZKM_Window()'),
 	image1=(file_pathA+'/ControllerIcon.png'),
 	annotation='¿ØÖÆÆ÷´¦Àí')
-print file_pathA+'/ControllerIcon.png'
+

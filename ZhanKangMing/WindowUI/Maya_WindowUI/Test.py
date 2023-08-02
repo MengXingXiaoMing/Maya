@@ -115,3 +115,7 @@ print offset
 pm.xform('joint3_G2', ws=1, t=pos)
 pm.move(offset[0], offset[1], offset[2], 'joint3_G2', r=1)'''
 
+
+
+Constraint = pm.parentConstraint('nurbsCircle2', wal=1)
+print Constraint
