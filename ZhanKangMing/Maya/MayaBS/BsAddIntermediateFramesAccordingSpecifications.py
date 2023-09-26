@@ -132,7 +132,7 @@ class ZKM_BsIntermediateFrame:
         pm.rename(NewBsName, BsName)
         return AllLinkDictionary
     # 将中间帧转换为游戏规范(有中间帧的bs必须有链接)
-    # ZKM_BsIntermediateFrame().ZKM_BSIntermediateFrameConversionSpecification('bace_bs_Mesh', 'blendShape1')
+    # ZKM_BsIntermediateFrame().ZKM_BSIntermediateFrameConversionSpecification('pCube1', 'blendShape1')
     def ZKM_BSIntermediateFrameConversionSpecification(self, Model, BsName):
         AllBsName = pm.listAttr((BsName + '.w'), k=True, m=True)
         AllNum = pm.listAttr(BsName + '.inputTarget[0].inputTargetGroup[*]', c=1)
