@@ -14,7 +14,7 @@ from CreateAndEditCurve import *
 class ZKM_CurveControllerEditClass:
     # ADV改控制器（为了兼容ADV我稍微改下就直接用了）
     # ZKM_CurveControllerEditClass().ZKM_asSwapCurve('T',[1,0,0])
-    def ZKM_asSwapCurve(self,Name,Color):
+    def ZKM_asSwapCurve(self,Type,Name,Color,Num):
         Select = pm.ls(sl=1)
         AllSet = []
         if pm.objExists('AllSet'):
@@ -79,7 +79,8 @@ class ZKM_CurveControllerEditClass:
                 rot = pm.xform(sel[i], q=1, ro=1, ws=1)
                 #		if(!(`gmatch $sel[0] "IK*"` || `gmatch $sel[0] "Pole*"` || `gmatch $sel[0] "RootX*"`))
                 if not (rot[0] == 0 and rot[1] == 0 and rot[2] == 0):
-                    pm.rotate(-90, -90, 0,(tempString[y] + ".cv[0:9999]"),r=1, os=1)#####
+                    pass
+                    #pm.rotate(-90, -90, 0,(tempString[y] + ".cv[0:9999]"),r=1, os=1)#####
                 if sel[i] in AllSet:
                     if pm.objExists('AllSet') :
                         pm.mel.eval('sets -add ' + allSet + ' ' + tempString[y] + ';')
@@ -92,7 +93,7 @@ class ZKM_CurveControllerEditClass:
         pm.dgdirty(a=1)
         pm.delete(EndSelect)
         pm.select(Select)
-        ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(Select,Color)
+        ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(Type,Select,Color,Num)
 
     # 旋转控制器
     # ZKM_CurveControllerEditClass().ZKM_RotationController('X')
@@ -155,7 +156,7 @@ class ZKM_CurveControllerEditClass:
         for i in range(0, len(joint)):
             pm.rename(ZKM_CreateAndEditCurveClass().ZKM_CreateCurve((File_RootDirectory + '\MayaCommon\CurveShapeWithPicture'),Name), joint[i] + "_C" + Suffix)
             nurbs.append(joint[i] + "_C" + Suffix)
-            ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(nurbs, Colour)
+            ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor('RGB',nurbs, Colour,0)
             self.ZKM_ModifyControllerShapeTRS('SoftSelectionSize', 0, 0, 0)
             for j in range(0, C_GrpNum):
                 pm.mel.doGroup(0, 1, 1)
@@ -246,30 +247,52 @@ class ZKM_CurveControllerEditClass:
         CurveShape = pm.ls(sl=1,type='nurbsCurve')
         for Shape in CurveShape:
             parent = pm.listRelatives(Shape, p=1)
-            pm.setAttr(parent[0] + ".translateX", 0)
-            pm.setAttr(parent[0] + ".translateY", 0)
-            pm.setAttr(parent[0] + ".translateZ", 0)
-            pm.setAttr(parent[0] + ".rotateX", 0)
-            pm.setAttr(parent[0] + ".rotateY", 0)
-            pm.setAttr(parent[0] + ".rotateZ", 0)
-            pm.setAttr(parent[0] + ".scaleZ", 1)
-            pm.setAttr(parent[0] + ".scaleX", 1)
-            pm.setAttr(parent[0] + ".scaleY", 1)
-            pm.setAttr(parent[0] + ".visibility", 1)
+            for t in ['.translateX', '.translateY', '.translateZ', '.rotateX', '.rotateY', '.rotateZ']:
+                try:
+                    pm.setAttr(parent[0] + t, 0)
+                except:
+                    pass
+            for t in ['.scaleX','.scaleY', '.scaleZ', '.visibility']:
+                try:
+                    pm.setAttr(parent[0] + t, 1)
+                except:
+                    pass
         pm.select(cl=1)
 
+    # 查询属性是否锁定，解锁并返回列表
+    def unLokeAttribute(self,sel):
+        re = []
+        for t in ['.translateX','.translateY','.translateZ','.rotateX','.rotateY','.rotateZ','.scaleX','.scaleY','.scaleZ','.visibility']:
+            if pm.getAttr(sel + t, lock=1):
+                pm.setAttr(sel + t, lock=0)
+                re.append(sel + t)
+        return re
     # 切换控制器
     def ZKM_ChuangJianFKSwitch(self,ExtractConstraints):
         self.ZKM_ControllerHoming()
         Now = pm.parentConstraint('ZKM_FK_Root', q=1, tl=1)
         pm.select('ZKM_FK_Root')
         pm.mel.SelectHierarchy()
+        joint = pm.ls(sl=1,type='joint')
+        pm.select(joint)
         if Now:
             pm.setAttr("ZKM_FK_AllController.visibility", 0)
-            pm.mel.DeleteConstraints()
+            for j in joint:
+                parentConstraint = []
+                scaleConstraint = []
+                try:
+                    parentConstraint = pm.parentConstraint(j, wal=1)
+                    scaleConstraint = pm.scaleConstraint(j, wal=1)
+                except:
+                    pass
+                if parentConstraint:
+                    pm.delete(parentConstraint)
+                if scaleConstraint:
+                    pm.delete(scaleConstraint)
+            pm.select(cl=1)
+            #pm.mel.DeleteConstraints()
         else:
             pm.setAttr("ZKM_FK_AllController.visibility", 1)
-            joint = pm.ls(sl=1)
             # 进行约束
             if ExtractConstraints == 1:
                 pm.select(cl=1)
@@ -283,7 +306,11 @@ class ZKM_CurveControllerEditClass:
                     if ExtractConstraints == 1:
                         pm.parent((joint[i] + "_scaleConstraint1"), (joint[i] + "_parentConstraint1"),
                                   'ZKM_AllControllerConstraint_Grp')
-
+            pm.select(cl=1)
+    '''    # 检查并清理已经生成的部分
+    def ZKM_ChuangJianFK_CheckClean(self,RemoveJoint):
+        
+        return joint'''
     # 生成控制器
     def ZKM_ChuangJianFK(self, Name, C_GrpNum, Suffix, RemoveJoint,Colour):
         if pm.objExists('ZKM_FK_AllController'):
@@ -297,20 +324,33 @@ class ZKM_CurveControllerEditClass:
                 q = pm.listRelatives(j, c=1)
                 if len(q) == 0:
                     joint.remove(j)
+        # 查询notes是否重复
+        '''AllJointNotes = []
+        for j in joint:
+            sel_notes = pm.getAttr(j + '.notes')
+            AllJointNotes.append(sel_notes)
+        AllJointNotesWeightlessnessReduction = set(AllJointNotes)
+        AllJointNotes.remove(AllJointNotesWeightlessnessReduction)
+        pm.select(cl=1)
+        for j in joint:
+            sel_notes = pm.getAttr(j + '.notes')
+            for Notes in AllJointNotes:
+                if sel_notes == Notes:
+                    pm.select(j, add=1)'''
         # 清除不需要创建控制器的
         NoCreate = []
         for j in joint:
-            if pm.objExists(j+'.NotGenerate'):
-                AttributeName = pm.getAttr(j+'.NotGenerate')
+            if pm.objExists(j + '.NotGenerate'):
+                AttributeName = pm.getAttr(j + '.NotGenerate')
                 Dictionary = {}
-                if AttributeName == 0:#字符通用码
+                if AttributeName == 0:  # 字符通用码
                     p = pm.listRelatives(j, p=1)
-                    c = pm.listRelatives(j,c=1)
-                    pm.parent(c,p[0])
-                    pm.parent(j,w=1)
-                    Dictionary = {'parent':p,'self':j,'child':c}
+                    c = pm.listRelatives(j, c=1)
+                    pm.parent(c, p[0])
+                    pm.parent(j, w=1)
+                    Dictionary = {'parent': p, 'self': j, 'child': c}
                     joint.remove(j)
-                if AttributeName == 1:#字符通用码
+                if AttributeName == 1:  # 字符通用码
                     pm.select(j)
                     pm.mel.SelectHierarchy()
                     RemoveJoint = pm.ls(typ='joint', sl=1)
@@ -320,8 +360,8 @@ class ZKM_CurveControllerEditClass:
                         except:
                             pass
                     p = pm.listRelatives(j, p=1)
-                    pm.parent(j,w=1)
-                    Dictionary = {'parent':p,'self':j,'child':[]}
+                    pm.parent(j, w=1)
+                    Dictionary = {'parent': p, 'self': j, 'child': []}
                 NoCreate.append(Dictionary)
         '''查询其他系统打的组并且转移'''
 
@@ -375,7 +415,7 @@ class ZKM_CurveControllerEditClass:
                         if not nurbs[0].hasAttr('notes'):
                             nurbs[0].addAttr('notes', type='string')
                         nurbs[0].attr('notes').set(C_Num)#按原样修复样条note
-                        ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(nurbs, Colour)
+                        ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor('RGB',nurbs, Colour,0)
                         pm.parent(nurbs[0],'ZKM_FK_Root_C' + OldSuffix)
                         # 建立旧样条组，并将旧32位绝对数还原到修复组中
                         for n in range(0,len(LastGrpNum)):
@@ -475,7 +515,7 @@ class ZKM_CurveControllerEditClass:
                         (File_RootDirectory + '\MayaCommon\CurveShapeWithPicture'), Name), J + "_C" + Suffix)
                     nurbs = pm.ls(sl=1)
                     self.ZKM_ModifyControllerShapeTRS('SoftSelectionSize', 0, 0, 0)
-                    ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(nurbs, Colour)
+                    ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor('RGB',nurbs, Colour,0)
                     self.ZKM_SetNumToNotes(nurbs[0], 32)
                     for j in range(0, C_GrpNum):
                         pm.mel.doGroup(0, 1, 1)
@@ -519,7 +559,7 @@ class ZKM_CurveControllerEditClass:
                 pm.rename(ZKM_CreateAndEditCurveClass().ZKM_CreateCurve((File_RootDirectory + '\MayaCommon\CurveShapeWithPicture'), Name), str(J) + "_C" + Suffix)
                 nurbs = pm.ls(sl=1)
                 self.ZKM_ModifyControllerShapeTRS('SoftSelectionSize', 0, 0, 0)
-                ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(nurbs, Colour)
+                ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor('RGB',nurbs, Colour,0)
                 # 给曲线添加32位随机数
                 if not nurbs[0].hasAttr('notes'):
                     self.ZKM_SetNumToNotes(nurbs[0], 32)
@@ -579,9 +619,9 @@ class ZKM_CurveControllerEditClass:
                             RotateConstraint = Constraint
                         except:
                             RotateConstraint = []
-                # 开始处理位移和旋转
-                # 把定位器p到对应的约束源
-                # 获取需要的位移和旋转值赋予到对应约束的偏移值
+                # 开始处理位移和旋转Constraint = pm.pointConstraint((str(J) + "_G" + str(i + 1) + Suffix), wal=1)
+                # 把定位器p到对应的约束源Constraint = pm.orientConstraint((str(J) + "_G" + str(i + 1) + Suffix), wal=1)
+                # 获取需要的位移和旋转值赋予到对应约束的偏移值Constraint = pm.aimConstraint((str(J) + "_G" + str(i + 1) + Suffix), wal=1)
                 # 删除定位器
                 if TranslateConstraint:
                     NumLoc = pm.spaceLocator()
@@ -594,22 +634,6 @@ class ZKM_CurveControllerEditClass:
                     if pm.ls(TranslateConstraint, type='parentConstraint'):
                         Soure = pm.parentConstraint(TranslateConstraint, q=1, tl=1)
                         pm.parentConstraint(Soure, TranslateConstraint, mo=1, e=1)
-                        '''SoureT = pm.listConnections(str(TranslateConstraint) + ".target[*].targetTranslate", s=True, scn=True,d=False)
-                        n = 0
-                        pm.spaceLocator(p=(0, 0, 0))
-                        locT = pm.ls(sl=1)
-                        pm.delete(pm.parentConstraint(J, locT))
-                        for ST in SoureT:
-                            # 建立定位器被对应的骨骼约束
-                            pm.parent(locT,ST)
-                            TX = pm.getAttr(locT[0] + '.translateX')
-                            TY = pm.getAttr(locT[0] + '.translateY')
-                            TZ = pm.getAttr(locT[0] + '.translateZ')
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetTranslateX', TX)
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetTranslateY', TY)
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetTranslateZ', TZ)
-                            n = n + 1
-                        pm.delete(locT)'''
                     if pm.ls(TranslateConstraint, type='pointConstraint'):
                         Soure = pm.pointConstraint(TranslateConstraint, q=1, tl=1)
                         pm.pointConstraint(Soure, TranslateConstraint, mo=1, e=1)
@@ -625,22 +649,6 @@ class ZKM_CurveControllerEditClass:
                     if pm.ls(RotateConstraint, type='parentConstraint'):
                         Soure = pm.parentConstraint(RotateConstraint, q=1, tl=1)
                         pm.parentConstraint(Soure, RotateConstraint, mo=1, e=1)
-                        '''SoureR = pm.listConnections(str(RotateConstraint) + ".target[*].targetRotate", s=True, scn=True, d=False)
-                        n = 0
-                        pm.spaceLocator(p=(0, 0, 0))
-                        locR = pm.ls(sl=1)
-                        pm.delete(pm.parentConstraint(J, locR))
-                        for ST in SoureR:
-                            # 建立定位器被对应的骨骼约束
-                            pm.parent(locR, ST)
-                            TX = pm.getAttr(locR[0] + '.rotateX')
-                            TY = pm.getAttr(locR[0] + '.rotateY')
-                            TZ = pm.getAttr(locR[0] + '.rotateZ')
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetRotateX', TX)
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetRotateY', TY)
-                            pm.setAttr(str(TranslateConstraint) + '.target[' + str(n) + '].targetOffsetRotateZ', TZ)
-                            n = n + 1
-                        pm.delete(locR)'''
                     if pm.ls(RotateConstraint, type='orientConstraint'):
                         Soure = pm.orientConstraint(RotateConstraint, q=1, tl=1)
                         pm.orientConstraint(Soure, RotateConstraint, mo=1, e=1)

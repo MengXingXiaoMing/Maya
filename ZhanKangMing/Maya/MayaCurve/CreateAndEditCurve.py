@@ -100,15 +100,26 @@ class ZKM_CreateAndEditCurveClass:
 
     # 选中改颜色
     # ZKM_CreateAndEditCurveClass().ZKM_ChangeCurveColor(['nurbsCircle1'],[1,1,1])
-    def ZKM_ChangeCurveColor(self,Sel,Color):
-        for s in Sel:
-            shape = pm.listRelatives(s, s=1, type='nurbsCurve')
-            #pm.setAttr(shape[0] + ".overrideEnabled", 0)
-            #pm.color(str(shape[0]), rgb=(Color[0], Color[1], Color[2]))
-            pm.setAttr(shape[0] + ".overrideEnabled", 1)
-            pm.setAttr(shape[0] + ".overrideDisplayType", 0)
-            pm.setAttr(shape[0] + '.overrideRGBColors', 1)
-            pm.setAttr(shape[0] + '.overrideRGBColors',1)
-            pm.setAttr(shape[0] + '.overrideColorR', Color[0])
-            pm.setAttr(shape[0] + '.overrideColorG', Color[1])
-            pm.setAttr(shape[0] + '.overrideColorB', Color[2])
+    def ZKM_ChangeCurveColor(self,Type,Sel,Color,Num):
+        if Type == 'RGB':
+            for s in Sel:
+                shape = pm.listRelatives(s, s=1, type='nurbsCurve')
+                #pm.setAttr(shape[0] + ".overrideEnabled", 0)
+                #pm.color(str(shape[0]), rgb=(Color[0], Color[1], Color[2]))
+                pm.setAttr(shape[0] + ".overrideEnabled", 1)
+                pm.setAttr(shape[0] + ".overrideDisplayType", 0)
+                pm.setAttr(shape[0] + '.overrideRGBColors', 1)
+                pm.setAttr(shape[0] + '.overrideColorR', Color[0])
+                pm.setAttr(shape[0] + '.overrideColorG', Color[1])
+                pm.setAttr(shape[0] + '.overrideColorB', Color[2])
+        if Type == 'Index':
+            print 'Index'
+            for s in Sel:
+                shape = pm.listRelatives(s, s=1, type='nurbsCurve')
+                # pm.setAttr(shape[0] + ".overrideEnabled", 0)
+                # pm.color(str(shape[0]), rgb=(Color[0], Color[1], Color[2]))
+                pm.setAttr(shape[0] + ".overrideEnabled", 1)
+                pm.setAttr(shape[0] + ".overrideDisplayType", 0)
+                pm.setAttr(shape[0] + '.overrideRGBColors', 0)
+                pm.setAttr(shape[0] + '.overrideColor', Num)
+

@@ -52,7 +52,7 @@ class ZKM_JointWeightProcessingClass:
             else:
                 TargetType = 'Point'
             if HaveWeightSoure:
-                Removejoint = []
+                '''Removejoint = []'''
                 # 先进行添加影响和蒙皮
                 if TargetType == 'Model':
                     for T in Target:
@@ -63,8 +63,14 @@ class ZKM_JointWeightProcessingClass:
                         if HaveWeight:
                             pm.select(T)
                             pm.mel.DetachSkin()
-                        pm.select(Joint, T)
-                        pm.mel.SmoothBindSkin()
+                        pm.select(T)
+                        pm.select(Joint,add=1)
+                        pm.skinCluster(tsb=1)
+                        '''TargetJoint = pm.skinCluster(T, q=1, inf=1)
+                        Removejoint = [i for i in TargetJoint if i not in Joint]
+                        if Removejoint:
+                            for j in Removejoint:
+                                pm.skinCluster(T,e=1, ri=j)'''
                 if TargetType == 'Point':
                     TargetModel = Target[0].split('.')[0]
                     try:
@@ -77,14 +83,15 @@ class ZKM_JointWeightProcessingClass:
                         if joint:
                             for j in joint:
                                 pm.skinCluster(HaveWeight, e=1, ai=j, wt=0)
-                        Removejoint = [i for i in TargetJoint if i not in Joint]
+                        '''Removejoint = [i for i in TargetJoint if i not in Joint]
                         if Removejoint:
                             for j in Removejoint:
-                                pm.select(Soure, j)
-                                pm.skinCluster(HaveWeightSoure, e=1, ai=j, wt=0)
+                                pm.skinCluster(TargetModel, e=1, ri=j)'''
                     else:
-                        pm.select(Joint, TargetModel)
-                        pm.mel.SmoothBindSkin()
+                        pm.select(TargetModel)
+                        pm.select(Joint, add=1)
+                        pm.skinCluster(tsb=1)
+
                 # 进行拷贝权重
                 if CopyWay == 'Normal':
                     if TargetType == 'Model':
@@ -96,9 +103,9 @@ class ZKM_JointWeightProcessingClass:
                         pm.select(Soure, Target)
                         pm.copySkinWeights(surfaceAssociation='closestPoint',
                                            influenceAssociation=['closestJoint', 'oneToOne'], noMirror=1)
-                        if Removejoint:
+                        '''if Removejoint:
                             for j in Removejoint:
-                                pm.skinCluster(HaveWeightSoure, e=1, ri=j)
+                                pm.skinCluster(HaveWeightSoure, e=1, ri=j)'''
                 if CopyWay == 'UV':
                     if SoureUVset and TargetUVset:
                         if TargetType == 'Model':
@@ -110,9 +117,9 @@ class ZKM_JointWeightProcessingClass:
                             pm.select(Soure, Target)
                             pm.copySkinWeights(surfaceAssociation='closestPoint', uvSpace=(SoureUVset, TargetUVset),
                                                noMirror=1, influenceAssociation=['closestJoint', 'oneToOne'])
-                            if Removejoint:
+                            '''if Removejoint:
                                 for j in Removejoint:
-                                    pm.skinCluster(HaveWeightSoure, e=1, ri=j)
+                                    pm.skinCluster(HaveWeightSoure, e=1, ri=j)'''
                     else:
                         pm.error('请加载uv选集')
             else:
@@ -128,7 +135,7 @@ class ZKM_JointWeightProcessingClass:
         else:
             pm.skinCluster(e=1, nw=1)
         pm.select(Model)
-        pm.mel.ArtPaintSkinWeightsTool()
+        #pm.mel.ArtPaintSkinWeightsTool()
         pm.mel.artAttrPaintOperation('artAttrSkinPaintCtx', 'Smooth')
         for i in range(0, len(Joint)):
             pm.mel.setSmoothSkinInfluence(Joint[i])
@@ -147,8 +154,9 @@ class ZKM_JointWeightProcessingClass:
             pm.duplicate(rr=1)
             ModelCopy = pm.ls(sl=1)
             ModelCopyGrp.append(ModelCopy)
-            pm.select(Joint, ModelCopy)
-            pm.mel.SmoothBindSkin()
+            pm.select(ModelCopy)
+            pm.select(Joint, add=1)
+            pm.skinCluster(tsb=1)
             pm.select(DecomposeModel[i], ModelCopy)
             self.ZKM_CopyModelWeightApply()
         pm.select(ModelCopyGrp)
@@ -236,9 +244,9 @@ class ZKM_JointWeightProcessingClass:
                         pm.select(MD, r=1)
                         shapes = pm.listRelatives(MD, shapes=1)
                         pm.skinCluster(shapes[0], e=1, ub=1)
-
-                    pm.select(lines, MD)
-                    pm.mel.SmoothBindSkin()
+                    pm.select(MD)
+                    pm.select(lines, add=1)
+                    pm.skinCluster(tsb=1)
                     pm.select(MD)
                     SkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询蒙皮节点
                     pm.deformerWeights((MD + ".xml"),
