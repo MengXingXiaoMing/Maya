@@ -1,0 +1,2 @@
+拖拽Install.py到maya视口即可自动安装。
+需打开的matrixNodes插件和Unfold3D插件。
