@@ -4,10 +4,17 @@ class ZKM_FollicleClass:
     # Ã«ÄÒÔ¼Êø
     def ZKM_FollicleConstraint(self,MD,Sel,Keep):
         pm.select(cl=1)
-        if pm.objExists('AllFollicle_Grp'):
+        if not pm.objExists('AllFollicle_Grp'):
             pm.group(n='AllFollicle_Grp')
-        pm.createNode('closestPointOnMesh', n=("cpom"))
-        pm.connectAttr((MD + "Shape" + ".outMesh"), ("cpom" + ".inMesh"), f=1)
+        shape = pm.listRelatives(MD,s=1)
+        TypeMesh = pm.ls(shape[0],type='mesh')
+        if TypeMesh:
+            pm.createNode('closestPointOnMesh', n=("cpom"))
+            pm.connectAttr((shape[0] + '.outMesh'), ('cpom' + '.inMesh'), f=1)
+        TypeNurbs = pm.ls(shape[0], type='nurbsSurface')
+        if TypeNurbs:
+            pm.createNode('closestPointOnSurface', n=("cpom"))
+            pm.connectAttr((shape[0] + '.worldSpace[0]'), ('cpom' + '.inputSurface'), f=1)
         pm.spaceLocator(p=(0, 0, 0), n=("Loc"))
         for i in range(0, len(Sel)):
             pm.delete(pm.pointConstraint(Sel[i], "Loc", weight=1, offset=(0, 0, 0)))
@@ -18,8 +25,12 @@ class ZKM_FollicleClass:
             u = float(pm.getAttr("cpom" + ".parameterU"))
             v = float(pm.getAttr("cpom" + ".parameterV"))
             pm.createNode('follicle', n=(Sel[i] + "_follicleShape"))
-            pm.connectAttr((MD + "Shape" + ".outMesh"), (Sel[i] + "_follicleShape" + ".inputMesh"), f=1)
-            pm.connectAttr((MD + "Shape" + ".worldMatrix[0]"), (Sel[i] + "_follicleShape" + ".inputWorldMatrix"), f=1)
+            if TypeMesh:
+                pm.connectAttr((MD + "Shape" + ".outMesh"), (Sel[i] + "_follicleShape" + ".inputMesh"), f=1)
+                pm.connectAttr((MD + "Shape" + ".worldMatrix[0]"), (Sel[i] + "_follicleShape" + ".inputWorldMatrix"),f=1)
+            if TypeNurbs:
+                pm.connectAttr((shape[0] + '.worldSpace[0]'), (Sel[i] + '_follicleShape' + '.inputSurface'), f=1)
+                pm.connectAttr((shape[0] + '.worldMatrix[0]'), (Sel[i] + '_follicleShape' + '.inputWorldMatrix'),f=1)
             pm.connectAttr((Sel[i] + "_follicleShape" + ".outTranslate"), (Sel[i] + "_follicle" + ".translate"), f=1)
             pm.connectAttr((Sel[i] + "_follicleShape" + ".outRotate"), (Sel[i] + "_follicle" + ".rotate"), f=1)
             pm.setAttr((Sel[i] + "_follicleShape" + ".parameterU"), u)
