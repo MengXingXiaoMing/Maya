@@ -1,0 +1,220 @@
+global proc WindowPLXGDH(){
+if(`window -ex PLXGDH`)deleteUI PLXGDH;
+    GraphEditor;
+    window -t "批量修改动画"  PLXGDH; columnLayout;
+    rowColumnLayout -nc 1 -adj 4;
+    textFieldButtonGrp -cw3 95 130 70 -l ("加载驱动/动画节点:") -text "" -bl  "加载" -bc "jztxt \"JZDHJD\"" JZDHJD ;
+        rowColumnLayout -nc 3 -adj 2;
+            textFieldGrp   -cw2 50 40  -l ("横向偏移:") -text "0" PYSLTransverse;
+            textField -w 10 -text "90" AddNumbersTransverseText;
+            button -l "加减偏移数值"  -c "AddNumbers (\"PYSLTransverse\",\"AddNumbersTransverseText\")";
+            
+            textFieldGrp   -cw2 50 40  -l ("纵向偏移:") -text "0" PYSLPortrait;
+            textField -w 10 -text "90" AddNumbersPortraitText;
+            button -l "加减偏移数值"  -c "AddNumbers (\"PYSLPortrait\",\"AddNumbersPortraitText\")";
+        setParent ..;
+    button -l "偏移"  -c "DriveAnimationDeviation";
+    button -l "》》驱动节点《《——替换——》》动画节点《《" -c "DriveAnimationDeviationTransformation";
+    button -l "驱动/动画节点转移链接(源空则保留,目标有则覆盖)"  -c "CopyAndLinkTarget";
+    textFieldButtonGrp  -cw3 50 175 60 -l ("链接源:") -text "" -bl  "加载" -bc "jzsx \"JZLJY\"" JZLJY ;
+    textFieldButtonGrp  -cw3 50 175 60 -l ("链接目标:") -text "" -bl  "加载" -bc "jzsx \"JZLJMB\"" JZLJMB ;
+showWindow;
+}
+WindowPLXGDH;
+//加载文本
+global proc jztxt(string $TextName){
+    string $Select[]=`ls -sl`;
+    for($i=0;$i<size($Select)-1;$i++){
+            $Select[$i]=($Select[$i]+",");
+        }
+    for($i=1;$i<size($Select);$i++){
+            $Select[0]=($Select[0]+$Select[$i]);
+        }
+    textFieldButtonGrp -e -tx $Select[0] $TextName;
+}
+//加载属性
+global proc jzsx(string $TextName){
+    string $QvDongYvan[]=`ls -sl`;//获取控制源
+    string $LianJieYvan[]=`channelBox -q -sma mainChannelBox`;//获取控制轴向
+    textFieldButtonGrp -e -tx ($QvDongYvan[0]+"."+$LianJieYvan[0]) $TextName;
+}
+//增减数值
+global proc AddNumbers(string $Soure,string $Text){
+    float $OldNumber=`textFieldGrp -q -text $Soure`;
+    float $NewNumber=`textField -q -text $Text`;
+    textFieldGrp -e -text ($OldNumber+$NewNumber) $Soure;
+}
+//读取驱动或动画节点对应数值的各项数值（包括指针）//此命令仅用于测试
+//ReadDriveAnimationNum($Source,$SourceNumber)
+global proc ReadDriveAnimationNum(string $Source ,float $SourceNumber){
+    float $floatChange[]=`keyframe -q -floatChange $Source`;
+    float $valueChange[]=`keyframe -q -valueChange $Source`;
+    float $inAngle[]=`keyTangent  -q -inAngle  $Source`;
+    float $inWeight[]=`keyTangent  -q -inWeight  $Source`;
+    float $outAngle[]=`keyTangent  -q -outAngle  $Source`;
+    float $outWeight[]=`keyTangent  -q -outWeight  $Source`;
+    print $valueChange $inAngle $inWeight $outAngle $outWeight;
+}
+///////////////////////////////////////////////////////////
+//驱动与动画偏移
+global proc DriveAnimationDeviation(){
+    string $TextFieldJZDHJD=`textFieldButtonGrp -q -text JZDHJD`;//获取文本
+    string $TextFieldData[];
+    $numTokens = `tokenize $TextFieldJZDHJD "," $TextFieldData`;//获取节点
+    float $TextFieldPYSLTransverse=`textFieldGrp -q -text PYSLTransverse`;//获取横向偏移数值
+    float $TextFieldPYSLPortrait=`textFieldGrp -q -text PYSLPortrait`;//获取纵向偏移数值
+    keyTangent -lock off;//解除指针锁定
+    keyTangent -edit -weightedTangents true;//解除指针权重锁定
+    for($i=0;$i<size($TextFieldData);$i++){
+        //读取指针
+        string $AnimationNodeType[];
+        string $AnimationNodeTRSV[]={"TL","TA","TU"};//print $AnimationNodeType
+        for($TRSA=0;$TRSA<size($AnimationNodeTRSV);$TRSA++){
+            string $AnimationNodeTRSVLS[]=`ls -type ("animCurve"+$AnimationNodeTRSV[$TRSA]) $TextFieldData[$i]`;//获取动画节点
+            string $Str;
+            $Str=$AnimationNodeTRSVLS[0];
+            $AnimationNodeType[0]=$AnimationNodeTRSVLS[0];
+            if(size($Str)>=1){
+                break;
+            }
+        }
+        string $DriveNodeType[]=`ls -type "animCurveUL" $TextFieldData[$i]`;//获取驱动节点
+        //查询关键帧
+        int $AorD=0;
+        if(size($AnimationNodeType)>=1){
+            $AorD=1;
+        }
+        if(size($DriveNodeType)>=1){
+            $AorD=1;
+        }
+        if($AorD==0){
+            error "请加载驱动或者动画节点";
+        }
+        if(size($AnimationNodeType)>=1){
+            //调整指针
+            keyframe  -r -valueChange $TextFieldPYSLPortrait -timeChange $TextFieldPYSLTransverse $TextFieldData[$i];
+            //float $TimeOrFloatChange=$TextFieldPYSLPortrait;
+            //keyframe -relative -timeChange $TimeOrFloatChange;
+            //for($j=0;$j<size($timeChange);$j++){
+                //float $value=$valueChange[$j]+$TextFieldPYSLTransverse;
+                //keyframe -index $j -e -valueChange $value $TextFieldData[$i];
+                //keyTangent -e -a -t $timeChange[$j] -inAngle $inAngle[$j] -inWeight $inWeight[$j] -outAngle $outAngle[$j] -outWeight $outWeight[$j] $TextFieldData[$i];
+            //}
+        }
+        if(size($DriveNodeType)>=1){
+            //调整指针
+            keyframe  -r -valueChange $TextFieldPYSLPortrait -floatChange $TextFieldPYSLTransverse $TextFieldData[$i];
+            //for($j=0;$j<size($floatChange);$j++){
+            //    float $value=$valueChange[$j]+$TextFieldPYSLTransverse;
+            //    float $TimeOrFloatChange=$floatChange[$j]+$TextFieldPYSLPortrait;
+            //    keyframe -index $j -e -vc $value  $TextFieldData[$i] ;//按顺序调整关键帧
+            //    //keyTangent -index $j -e -a -inAngle $inAngle[$j] -inWeight $inWeight[$j] -outAngle $outAngle[$j] -outWeight $outWeight[$j] $TextFieldData[$i];//按顺序调整关键帧指针
+            //}
+        }
+        
+    }
+    
+    
+    
+    
+}
+//驱动或者动画互相转换
+global proc DriveAnimationDeviationTransformation(){
+    string $TextFieldJZDHJD=`textFieldButtonGrp -q -text JZDHJD`;//获取文本
+    string $TextFieldData[];
+    $numTokens = `tokenize $TextFieldJZDHJD "," $TextFieldData`;//获取节点
+    keyTangent -lock off;//解除指针锁定
+    keyTangent -edit -weightedTangents true;//解除指针权重锁定
+    for($i=0;$i<size($TextFieldData);$i++){
+        //读取指针
+        string $AnimationNodeType[];
+        string $AnimationNodeTRSV[]={"TL","TA","TU"};//print $AnimationNodeType
+        for($TRSA=0;$TRSA<size($AnimationNodeTRSV);$TRSA++){
+            string $AnimationNodeTRSVLS[]=`ls -type ("animCurve"+$AnimationNodeTRSV[$TRSA]) $TextFieldData[$i]`;//获取动画节点
+            string $Str;
+            $Str=$AnimationNodeTRSVLS[0];
+            $AnimationNodeType[0]=$AnimationNodeTRSVLS[0];
+            if(size($Str)>=1){
+                break;
+            }
+        }
+        string $DriveNodeType[]=`ls -type "animCurveUL" $TextFieldData[$i]`;//获取驱动节点
+        //查询关键帧
+        float $timeChange[];
+        float $valueChange[];
+        float $floatChange[];
+        int $AorD=0;
+        if(size($AnimationNodeType)>=1){
+            float $timeChangeLS[]=`keyframe -q -timeChange $TextFieldData[$i]`;//获取时间轴
+            $timeChange=$timeChangeLS;
+            float $valueChangeLS[]=`keyframe -q -valueChange $TextFieldData[$i]`;//获取逐个时间轴上的数值
+            $valueChange=$valueChangeLS;
+            $AorD=1;
+        }
+        if(size($DriveNodeType)>=1){
+            float $floatChangeLS[]=`keyframe -q -fc $TextFieldData[$i]`;//获取时间轴
+            $floatChange=$floatChangeLS;
+            float $valueChangeLS[]=`keyframe -q -vc $TextFieldData[$i]`;//获取逐个时间轴上的数值
+            $valueChange=$valueChangeLS;
+            $AorD=1;
+        }
+        if($AorD==0){
+            error "请加载驱动或者动画节点";
+        }
+        float $inAngle[]=`keyTangent  -q -inAngle  $TextFieldData[$i]`;//获取逐个时间轴前指针位置
+        float $inWeight[]=`keyTangent  -q -inWeight  $TextFieldData[$i]`;//获取逐个时间轴前指针权重
+        float $outAngle[]=`keyTangent  -q -outAngle  $TextFieldData[$i]`;//获取逐个时间轴后指针位置
+        float $outWeight[]=`keyTangent  -q -outWeight  $TextFieldData[$i]`;//获取逐个时间轴后指针权重
+        //string $ZhongJianJieDianTL[]=`listConnections -s 1 -d 0 -t "animCurveTL" $TextFieldData[$i]`;//获取控制源T
+        //string $ZhongJianJieDianTA[]=`listConnections -s 1 -d 0 -t "animCurveTA" $TextFieldData[$i]`;//获取控制源R
+        //string $ZhongJianJieDianTU[]=`listConnections -s 1 -d 0 -t "animCurveTU" $TextFieldData[$i]`;//获取控制源SVAdd
+        string $Source=`connectionInfo -sfd ($TextFieldData[$i]+".input")`;//获取源
+        string $Target[]=`connectionInfo -dfs ($TextFieldData[$i]+".output")`;//获取目标
+        //if(){
+            
+        //}
+        
+        //connectAttr -f time1.outTime nurbsCircle2.translateX;//链接时间轴
+        if(size($AnimationNodeType)>=1){
+            //创建关键帧代理链接
+            shadingNode -asUtility plusMinusAverage -n "DriveKeyframeLinkProxy";
+            addAttr -ln "Soure"  -at double  -dv 0 "DriveKeyframeLinkProxy";
+            setAttr -e-keyable true "DriveKeyframeLinkProxy.Soure";
+            addAttr -ln "Target"  -at double  -dv 0 "DriveKeyframeLinkProxy";
+            setAttr -e-keyable true "DriveKeyframeLinkProxy.Target";
+            createNode "animCurveUL" -n ($TextFieldData[$i]+"_CopyNode");
+            connectAttr -f "DriveKeyframeLinkProxy.Soure" ($TextFieldData[$i]+"_CopyNode.input");
+            connectAttr -f ($TextFieldData[$i]+"_CopyNode.output") "DriveKeyframeLinkProxy.Target";
+            //创建关键帧
+            for($k=0;$k<size($timeChange);$k++){
+                setAttr "DriveKeyframeLinkProxy.Soure" $timeChange[$k];
+                setDrivenKeyframe -currentDriver "DriveKeyframeLinkProxy.Soure" "DriveKeyframeLinkProxy.Target";
+            }
+            //调整指针
+            for($j=0;$j<size($timeChange);$j++){
+                float $value=$valueChange[$j];
+                keyframe -index $j -e -vc $value ($TextFieldData[$i]+"_CopyNode");//按顺序调整关键帧
+                keyTangent -index $j -e -a -inAngle $inAngle[$j] -inWeight $inWeight[$j] -outAngle $outAngle[$j] -outWeight $outWeight[$j] ($TextFieldData[$i]+"_CopyNode");
+            }
+            connectAttr -f ($TextFieldData[$i]+"_CopyNode.output") $Target;
+            if(size($Source)>0){
+                connectAttr -f $Source ($TextFieldData[$i] + "_CopyNode.input");
+            }else{
+                connectAttr -f "time1.outTime" ($TextFieldData[$i] + "_CopyNode.input");
+            }
+        }
+        delete("DriveKeyframeLinkProxy");
+        delete $TextFieldData[$i];
+    }
+}
+//拷贝驱动节点与动画节点复制并链接到目标
+global proc CopyAndLinkTarget(){
+    
+}
+//editDrivenKeyframe -currentDriver nurbsCircle2.translateX nurbsCircle2.translateY;
+//keyTangent  -edit -time 10 -attribute translateY -absolute -outAngle 10 -outWeight 5 nurbsCircle2;
+//keyframe -e -iub true -r -o over -vc 3.58881 -t 10 nurbsCircle2_translateY ;
+//keyframe  -animation keys  -absolute -valueChange 3 -floatChange 10 nurbsCircle2_translateY;
+//keyframe -animation keys -option over -absolute -floatChange 10 ;
+
+
