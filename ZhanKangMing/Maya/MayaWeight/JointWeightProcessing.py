@@ -135,14 +135,14 @@ class ZKM_JointWeightProcessingClass:
         else:
             pm.skinCluster(e=1, nw=1)
         pm.select(Model)
-        #pm.mel.ArtPaintSkinWeightsTool()
+        pm.mel.ArtPaintSkinWeightsTool()
+        pm.mel.artAttrSkinPaintCtx(pm.currentCtx(), e=1, opacity=1)
         pm.mel.artAttrPaintOperation('artAttrSkinPaintCtx', 'Smooth')
         for i in range(0, len(Joint)):
             pm.mel.setSmoothSkinInfluence(Joint[i])
-            pm.mel.eval('artSkinRevealSelected artAttrSkinPaintCtx;')
+            #pm.mel.eval('artSkinRevealSelected artAttrSkinPaintCtx;')
             for J in range(0, CS):
-                pm.artAttrSkinPaintCtx(pm.currentCtx(),
-                                       opacity=1, clear=1, e=1)
+                pm.artAttrSkinPaintCtx(pm.currentCtx(),opacity=1, clear=1, e=1)
 
     # 把模型分离后处理出来的权重返回整体底层
     # ZKM_JointWeightProcessingClass().ZKM_MergeWeightsToTargets(['pSphere7'], ['pSphere1','pSphere2','pSphere3'])
@@ -265,5 +265,25 @@ class ZKM_JointWeightProcessingClass:
         pm.skinPercent(SkinCluster, tmw=[Joint[0], Joint[1]])
         pm.select(Model, r=1)
 
+    # 归一化权重
+    def NormalizeWeight(self, Model):
+        for MD in Model:
+            SkinCluster = str(pm.mel.findRelatedSkinCluster(MD))  # 查询蒙皮节点
+            pm.skinCluster(SkinCluster, forceNormalizeWeights=1, e=1)
 
+    # 处理权重矩阵，使低版本maya模型移动过远产生点抖动的问题
+    def HandlingWeightJitter(self, sel):
+        multMatrix = pm.shadingNode('multMatrix', asUtility=1)
+        Matrix = pm.listConnections((sel[0] + '.worldMatrix[0]'), p=1)
+        for M in Matrix:
+            pm.connectAttr((multMatrix + '.matrixSum'), M, force=1)
+        pm.connectAttr((sel[0] + '.worldMatrix[0]'), (multMatrix + '.matrixIn[0]'), force=1)
+        pm.connectAttr((sel[0] + '.worldInverseMatrix[0]'), (multMatrix + '.matrixIn[1]'), force=1)
+        for i in range(1, len(sel)):
+            multMatrix = pm.shadingNode('multMatrix', asUtility=1)
+            Matrix = pm.listConnections((sel[i] + '.worldMatrix[0]'), p=1)
+            for M in Matrix:
+                pm.connectAttr((multMatrix + '.matrixSum'), M, force=1)
+            pm.connectAttr((sel[i] + '.worldMatrix[0]'), (multMatrix + '.matrixIn[0]'), force=1)
+            pm.connectAttr((sel[0] + '.worldInverseMatrix[0]'), (multMatrix + '.matrixIn[1]'), force=1)
 

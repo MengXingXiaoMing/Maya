@@ -13,9 +13,8 @@ class ZKM_IndependentSmallfunctions:
                 pm.setAttr((Sel[i] + ".displayLocalAxis"), 0)
 
     # 生成骨骼链
-    def GenerateBoneChain(self):
+    def GenerateBoneChain(self,ShuLiang):
         Nurbs = pm.ls(sl=1)
-        ShuLiang = pm.intSliderGrp('WindowControllerProcessingJointNum', q=1, v=1)
         pm.spaceLocator(p=(0, 0, 0), n="LocatorSC")
         pm.select("LocatorSC", r=1)
         pm.select(Nurbs, tgl=1)
@@ -77,15 +76,25 @@ class ZKM_IndependentSmallfunctions:
 
     # 在所选线中心创建骨骼
     def CentreJoint(self):
-        pm.polyToCurve(conformToSmoothMeshPreview=0, degree=1, form=2)
-        CurveName = pm.ls(sl=1)
+        sel = pm.ls(sl=1,fl=1)
+        CurveName = []
+        for s in sel:
+            pm.select(s)
+            pm.polyToCurve(conformToSmoothMeshPreview=0, degree=1, form=2)
+            CurveName.append(pm.ls(sl=1))
+        pm.select(CurveName[1:])
+        pm.pickWalk(d='down')
+        pm.select(CurveName[0],add=1)
+        pm.parent(s=1, add=1)
+        pm.select(CurveName[0])
         pm.mel.CenterPivot()
+        pm.select(cl=1)
         pm.joint(p=(0, 0, 0), n="LingShiJoint")
         pm.delete(pm.pointConstraint(CurveName[0], 'LingShiJoint', weight=1, offset=(0, 0, 0)))
         pm.parent('LingShiJoint', w=1)
-        pm.delete(CurveName[0])
         pm.select('LingShiJoint', r=1)
-        pm.mel.rename(CurveName[0] + "Joint")
+        pm.rename('LingShiJoint',CurveName[0][0] + 'Joint')
+        pm.delete(CurveName)
 
     # 在中心建立骨骼链
     def CreateCentreJoint(self):
@@ -239,4 +248,62 @@ class ZKM_IndependentSmallfunctions:
     # edgeRing  # edgeLoop
     def InterlacedLineSelection(self,MS,int):
         pm.mel.polySelectEdgesEveryN(MS,int)
+
+    # 统一循环边骨骼权重
+    def UniformEdgeLoopWeights(self):
+        sel = pm.ls(sl=1, fl=1)
+        pm.mel.ConvertSelectionToVertices()
+        point = pm.ls(sl=1, fl=1)
+        pm.select(point[0])
+        for i in range(0, len(point)):
+            pm.select(point[i])
+            pm.mel.CopyVertexWeights()
+            pm.mel.polySelectEdgesEveryN("edgeLoop", 1)
+            SelA = pm.ls(sl=1, fl=1)
+            pm.select(list(set(SelA).difference(set(sel))))
+            pm.mel.SelectEdgeLoopSp()
+            pm.mel.ConvertSelectionToVertices()
+            LoopPoint = pm.ls(sl=1, fl=1)
+            pm.select(LoopPoint)
+            pm.mel.PasteVertexWeights()
+
+    # 显影骨骼
+    def SetBoneDisplay(self,num):
+        Joint = pm.ls(typ="joint")
+        for i in range(0, len(Joint)):
+            pm.setAttr((Joint[i] + ".drawStyle"),num)
+
+    # 按循环边中心创建骨骼
+    def CreateJointByEdgeLoop(self):
+        sel = pm.ls(sl=1, fl=1)
+        pm.mel.ConvertSelectionToVertices()
+        point = pm.ls(sl=1, fl=1)
+        pm.select(point[0])
+        J = []
+        for i in range(0, len(point)):
+            pm.select(point[i])
+            pm.mel.polySelectEdgesEveryN("edgeLoop", 1)
+            SelA = pm.ls(sl=1, fl=1)
+            pm.select(list(set(SelA).difference(set(sel))))
+            pm.mel.SelectEdgeLoopSp()
+            pm.mel.ConvertSelectionToVertices()
+            LoopPoint = pm.ls(sl=1, fl=1)
+            pm.select(LoopPoint)
+            cluster = pm.cluster()
+            pm.select(cl=1)
+            joint = pm.joint(p=(0, 0, 0))
+            pm.delete(pm.pointConstraint(cluster, joint, w=1))
+            pm.delete(cluster)
+            if i > 0:
+                pm.parent(joint, J)
+            J = joint
+
+
+
+
+
+
+
+
+
 

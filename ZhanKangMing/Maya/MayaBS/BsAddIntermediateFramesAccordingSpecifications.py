@@ -67,7 +67,7 @@ class ZKM_BsIntermediateFrame:
                 for t in Dictionary.get('target'):
                     pm.connectAttr(Dictionary.get('oneself'), t, f=1)
     # 烘焙所有bs并返回出相关链接字典
-    # print(ZKM_BsIntermediateFrame().ZKM_BakeBsBackDictionary('bace_bs_Mesh', 'blendShape1'))
+    # print(ZKM_BsIntermediateFrame().ZKM_BakeBsBackDictionary('face_base', 'blendShape1'))
     def ZKM_BakeBsBackDictionary(self,Model, BsName):
         AllBsName = pm.listAttr((BsName + '.w'), k=True, m=True)
         AllLinkDictionary = []  # 创建还原链接字典
@@ -115,15 +115,18 @@ class ZKM_BsIntermediateFrame:
                     IntermediateFrameName = []
                     IntermediateFrameName.append(a)'''
                 for name in IntermediateFrameName:
-                    num = name.split('_')[1]
+                    num = name.split('_')[-1]
                     num = float(num)
-                    pm.setAttr((BsName + '.' + name.split('_')[0]), num)
-
+                    DictionnaireS = str(IntermediateFrameName[0].split('_')[0])
+                    for i in range(1,len(IntermediateFrameName[0].split('_')[:-1])):
+                        DictionnaireS = DictionnaireS + '_' + (IntermediateFrameName[0].split('_')[:-1])[i]
+                    pm.setAttr((BsName + '.' + DictionnaireS), num)
                     pm.select(Model)
                     sel = pm.duplicate(rr=1)
-                    pm.rename(sel, name.split('_')[0] + '_' + str(int(num * 1000)))
+                    print BsName + '.' + DictionnaireS
+                    pm.rename(sel, DictionnaireS + '_' + str(int(num * 1000)))
                     pm.parent(sel, 'ZKM_AllFaceBsCure_Grp')
-                    pm.setAttr((BsName + '.' + name.split('_')[0]), 0)
+                    pm.setAttr((BsName + '.'+DictionnaireS), 0)
         pm.delete(BsName)
         BsModel = pm.listRelatives('ZKM_AllFaceBsCure_Grp', c=1)
         pm.select(BsModel)
@@ -154,11 +157,15 @@ class ZKM_BsIntermediateFrame:
                 num = []
                 num.append(0)
                 for j in range(0, len(IntermediateFrameName)):
-                    n = IntermediateFrameName[j].split('_')[1]
+                    n = IntermediateFrameName[j].split('_')[-1]
+
                     n = float(n)
                     num.append(n)
                 num.append(1)
-                Dictionnaire = {'soure': str(IntermediateFrameName[0].split('_')[0]), 'IntermediateFrame': num}
+                DictionnaireS = str(IntermediateFrameName[0].split('_')[0])
+                for i in range(1, len(IntermediateFrameName[0].split('_')[:-1])):
+                    DictionnaireS = DictionnaireS + '_' + (IntermediateFrameName[0].split('_')[:-1])[i]
+                Dictionnaire = {'soure': DictionnaireS, 'IntermediateFrame': num}
                 HaveBsIntermediateFrameDictionnaire.append(Dictionnaire)
         # 烘焙所有bs并返回出相关链接字典
         AllLinkDictionary = self.ZKM_BakeBsBackDictionary(Model, BsName)

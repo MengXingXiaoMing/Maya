@@ -113,7 +113,6 @@ class ZKM_CreateAndEditCurveClass:
                 pm.setAttr(shape[0] + '.overrideColorG', Color[1])
                 pm.setAttr(shape[0] + '.overrideColorB', Color[2])
         if Type == 'Index':
-            print 'Index'
             for s in Sel:
                 shape = pm.listRelatives(s, s=1, type='nurbsCurve')
                 # pm.setAttr(shape[0] + ".overrideEnabled", 0)
