@@ -5,6 +5,7 @@ import pymel.core as pm
 import os
 import sys
 import inspect
+import pymel.core as pm
 J = pm.ls(sl=1)[0]
 Suffix = ''
 for i in range(0, 2):
@@ -141,3 +142,131 @@ while 1:
     pm.select(Point)
     pm.mel.PasteVertexWeights()
     i = i + len(sel)
+
+
+pm.mel.polySelectEdgesEveryN("edgeLoop", 1)
+
+sel=pm.ls(sl=1,fl=1)
+pm.mel.ConvertSelectionToVertices()
+point = pm.ls(sl=1,fl=1)
+pm.select(point[0])
+for i in range(0,len(point)):
+    pm.select(point[i])
+    pm.mel.CopyVertexWeights()
+    pm.mel.polySelectEdgesEveryN("edgeLoop", 1)
+    SelA=pm.ls(sl=1,fl=1)
+    pm.select(list(set(SelA).difference(set(sel))))
+    pm.mel.SelectEdgeLoopSp()
+    pm.mel.ConvertSelectionToVertices()
+    LoopPoint = pm.ls(sl=1,fl=1)
+    pm.select(LoopPoint)
+    pm.mel.PasteVertexWeights()
+
+
+sel = pm.ls(sl=1, fl=1)
+pm.mel.ConvertSelectionToVertices()
+point = pm.ls(sl=1, fl=1)
+pm.select(point[0])
+J = []
+for i in range(0, len(point)):
+    pm.select(point[i])
+    pm.mel.polySelectEdgesEveryN("edgeLoop", 1)
+    SelA = pm.ls(sl=1, fl=1)
+    pm.select(list(set(SelA).difference(set(sel))))
+    pm.mel.SelectEdgeLoopSp()
+    pm.mel.ConvertSelectionToVertices()
+    LoopPoint = pm.ls(sl=1, fl=1)
+    pm.select(LoopPoint)
+    cluster = pm.cluster()
+    pm.select(cl=1)
+    joint = pm.joint(p=(0,0,0))
+    pm.delete(pm.pointConstraint(cluster, joint, w=1))
+    pm.delete(cluster)
+    if i > 0:
+        pm.parent(joint,J)
+    J = joint
+
+
+
+
+
+pm.mel.SelectEdgeRingSp()
+Sel = pm.ls(sl=1,fl=1)
+i = 0
+while 1:
+    if not (i < len(Sel)):
+        break
+    pm.select(Sel[i], r=1)
+    pm.mel.performSelContiguousEdges(0)
+    pm.mel.ConvertSelectionToVertices()
+    Point=pm.ls(sl=1,fl=1)
+    pm.select(Point[0])
+    pm.mel.CopyVertexWeights()
+    pm.select(Point)
+    pm.mel.PasteVertexWeights()
+    i = i + len(sel)
+
+
+
+
+
+
+
+
+
+
+import pymel.core as pm
+sel = pm.ls(sl=1)
+multMatrix = pm.shadingNode('multMatrix', asUtility=1)
+Matrix = pm.listConnections((sel[0]+'.worldMatrix[0]'), p=1)
+for M in Matrix:
+    pm.connectAttr((multMatrix + '.matrixSum'), M, force=1)
+pm.connectAttr((sel[0]+'.worldMatrix[0]'), (multMatrix+'.matrixIn[0]'), force=1)
+pm.connectAttr((sel[0]+'.worldInverseMatrix[0]'), (multMatrix+'.matrixIn[1]'), force=1)
+for i in range(1,len(sel)):
+    multMatrix = pm.shadingNode('multMatrix', asUtility=1)
+    Matrix = pm.listConnections((sel[i]+'.worldMatrix[0]'), p=1)
+    for M in Matrix:
+        pm.connectAttr((multMatrix + '.matrixSum'), M, force=1)
+    pm.connectAttr((sel[i] + '.worldMatrix[0]'), (multMatrix + '.matrixIn[0]'), force=1)
+    pm.connectAttr((sel[0]+'.worldInverseMatrix[0]'), (multMatrix+'.matrixIn[1]'), force=1)
+
+
+
+
+
+
+
+
+
+import pymel.core as pm
+AllJoint = pm.ls(sl=1)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

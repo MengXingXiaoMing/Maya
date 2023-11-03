@@ -95,11 +95,16 @@ class ZKM_ControllerPresetTemplateWindowClass:
                               bc='ZKM_ControllerPresetTemplateCommand().GenerateRefreshWindow(\''+self.file_pathTop+'/Maya/MayaCommon/CurveShapeWithPicture\')')
         pm.button(l='删除所选样条',c='ZKM_ControllerPresetTemplateCommand().DeleteSelectedCurve(\''+self.file_pathTop+'/Maya/MayaCommon/CurveShapeWithPicture\')')
         pm.setParent('..')
-        pm.rowColumnLayout(nc=2, adj=1)
+        pm.rowColumnLayout(nc=2, adj=1,cw=(1,1))
+        AllTxtFile = os.listdir(self.file_pathTop+'\Maya\MayaCommon\CurveShapeWithPicture')  # 返回文件名
+        WindowControllerProcessingAllControllerSliderLineMax = (len(AllTxtFile)/5/2*74-400)/10
+        if WindowControllerProcessingAllControllerSliderLineMax<=0:
+            WindowControllerProcessingAllControllerSliderLineMax=0.01
+        pm.floatScrollBar("WindowControllerProcessingAllControllerSliderLine", hr=0, max=WindowControllerProcessingAllControllerSliderLineMax, min=0,
+                          cc='ZKM_SliderClass().ZKM_Slider(\'WindowControllerProcessingAllControllerSliderLine\',\'WindowControllerProcessingAllControllerFlowLayout\',\'WindowControllerProcessingAllControllerFormLayout\',-10)')
         pm.formLayout('WindowControllerProcessingAllControllerFormLayout',h=400)
         pm.rowColumnLayout('WindowControllerProcessingAllControllerFlowLayout',nc=5)
         pm.iconTextRadioCollection('WindowControllerProcessingAllControllerIconTextRadioCollection')
-        AllTxtFile = os.listdir(self.file_pathTop+'\Maya\MayaCommon\CurveShapeWithPicture')  # 返回文件名
         for i in AllTxtFile:
             if os.path.splitext(i)[1] == '.txt':
                 Name = os.path.splitext(i)[0]
@@ -111,11 +116,7 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.setParent('..')
         pm.iconTextRadioCollection('WindowControllerProcessingAllControllerIconTextRadioCollection',e=1,
                                    sl=pm.iconTextRadioCollection('WindowControllerProcessingAllControllerIconTextRadioCollection', q=1, cia=1)[0])
-        WindowControllerProcessingAllControllerSliderLineMax = (len(AllTxtFile)/5/2*74-400)/10
-        if WindowControllerProcessingAllControllerSliderLineMax<=0:
-            WindowControllerProcessingAllControllerSliderLineMax=0.01
-        pm.floatScrollBar("WindowControllerProcessingAllControllerSliderLine", hr=0, max=WindowControllerProcessingAllControllerSliderLineMax, min=0,
-                          cc='ZKM_SliderClass().ZKM_Slider(\'WindowControllerProcessingAllControllerSliderLine\',\'WindowControllerProcessingAllControllerFlowLayout\',\'WindowControllerProcessingAllControllerFormLayout\',-10)')
+
         pm.setParent('..')
         # 改控制器和颜色
         pm.button(c='ZKM_ControllerPresetTemplateCommand().asSwapCurve()', l="改控制器")
@@ -144,7 +145,7 @@ class ZKM_ControllerPresetTemplateWindowClass:
         pm.rowColumnLayout(nc=2, adj=8)
         pm.intSliderGrp('WindowControllerProcessingJointNum', fmx=9999999, min=1, cc='ZKM_AutomaticModificationUIRangeClass().ZKM_IntSlider_Max_Edit_Controller(\'WindowControllerProcessingJointNum\')', max=100,
                         cw3=(0, 40, 150), f=1, l="", v=50)
-        pm.button(c='ZKM_IndependentSmallfunctions().GenerateBoneChain()', l="选择样条创建骨骼")
+        pm.button(c='ZKM_IndependentSmallfunctions().GenerateBoneChain(pm.intSliderGrp(\'WindowControllerProcessingJointNum\', q=1, v=1))', l="选择样条创建骨骼")
         pm.setParent('..')
         pm.rowColumnLayout(cs=(2, 5), nc=4, adj=3)
         pm.checkBox('WindowControllerProcessingIgnoreEndBones_checkBox',w=85, value=1, label="忽略末端骨骼")

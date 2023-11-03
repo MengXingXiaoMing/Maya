@@ -19,6 +19,9 @@ from JointWeightProcessing import *
 #创建模型类
 sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaModel')
 from GenerateModel import *
+#独立功能
+sys.path.append(ZKM_RootDirectory + '\\Maya\\MayaOthersLibrary')
+from IndependentSmallFunctions import *
 
 class ZKM_QvanZhongChuLiWindowClass:
     def __init__(self):
@@ -34,7 +37,6 @@ class ZKM_QvanZhongChuLiWindowClass:
     def ZKM_Window(self):
         if pm.window('WindowQvanZhongChuLiPY', ex=1):
             pm.deleteUI('WindowQvanZhongChuLiPY')
-
         pm.window('WindowQvanZhongChuLiPY', t='权重处理')
         pm.columnLayout()
         pm.rowColumnLayout(nc=1, adj=1)
@@ -51,9 +53,9 @@ class ZKM_QvanZhongChuLiWindowClass:
         pm.setParent('..')
         pm.button(c='ZKM_QvanZhongChuLiCommandsClass().ZKM_CopyPointWeightApply()', l='拷贝点权重')
         pm.rowColumnLayout(nc=2, adj=2)
-        pm.button(c='pm.mel.CopyVertexWeights()', l='复制顶点权重')
-        pm.button(c='pm.mel.PasteVertexWeights()', l='粘贴顶点权重')
         pm.button(c='pm.mel.removeUnusedInfluences()', l='移除无权重骨骼')
+        pm.button(c='ZKM_IndependentSmallfunctions().UniformEdgeLoopWeights()', l='统一循环边权重')
+        pm.button(c='ZKM_IndependentSmallfunctions().CreateJointByEdgeLoop()', l='中心建立骨骼链')
         #pm.button(c='ZKM_QvanZhongChuLiCommandsClass().AbsolutePositionMirrorWeight()', l='绝对位置镜像权重(停用)')
         pm.setParent('..')
         pm.rowColumnLayout(nc=7, adj=1)
@@ -95,6 +97,38 @@ class ZKM_QvanZhongChuLiWindowClass:
         pm.button(c='ZKM_QvanZhongChuLiCommandsClass().TransferWeights()', l='转移权重(先选要转移的骨骼)')
         pm.button(c='ZKM_QvanZhongChuLiCommandsClass().ImportWeights()', l='导入权重')
         pm.setParent('..')
+        pm.rowColumnLayout(adj=1, nc=19)
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='menuIconSelect.png', h=45,
+                          c='pm.mel.SelectHierarchy()', l='选择层次')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='CenterPivot.png', h=45,
+                          c='pm.mel.CenterPivot()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='DeleteHistory.png', h=45,
+                          c='pm.mel.DeleteHistory()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='FreezeTransform.png', h=45,
+                          c='pm.mel.FreezeTransformations()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='polyDelEdgeVertex.png', h=45,
+                          c='pm.mel.DeletePolyElements()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='polySplitEdgeRing.png', h=45,
+                          c='pm.mel.SplitEdgeRingTool()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='polyExtrudeFacet.png', h=45,
+                          c='pm.mel.performPolyExtrude(0)', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='locator.png', h=45,
+                          c='pm.mel.CreateLocator()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextCentered', i='cluster.png', h=45,
+                          c='pm.mel.CreateCluster()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='kinJoint.png', h=45,
+                          c='ZKM_IndependentSmallfunctions().SetBoneDisplay(0)', l='显示')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='kinJoint.png', h=45,
+                          c='ZKM_IndependentSmallfunctions().SetBoneDisplay(2)', l='隐藏')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='menuIconSkinning.png', h=45,
+                          c='pm.mel.CopyVertexWeights()', l='C_W')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='menuIconSkinning.png', h=45,
+                          c='pm.mel.PasteVertexWeights()', l='V_W')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='textureEditor.png', h=45,
+                          c='pm.mel.TextureViewWindow()', l='')
+        pm.iconTextButton(flat=0, style='iconAndTextVertical', i='blendShapeEditor.png', h=45,
+                          c='pm.mel.ShapeEditor()', l='')
+        pm.setParent('..')
         pm.rowColumnLayout(bgc=(0.7, 0.7, 1), adj=2, nc=8)
         pm.textFieldGrp('ModelFace', text='2000', cw2=(80, 70), l='模型面数(大致):')
         pm.floatSliderGrp('ReduceDetail', min=1, max=100, cw3=(50, 30, 100), f=1, fieldMaxValue=9999, l='减少细节', v=20)
@@ -115,6 +149,9 @@ class ZKM_QvanZhongChuLiWindowClass:
         pm.button(c='ZKM_QvanZhongChuLiCommandsClass().GeneratingSimpleModuleApply()', l='生成简模(先清理模型)')
         
         pm.setParent('..')
+        pm.text(l='模型提交前可能需要处理部分(部分无法撤回)')
+        pm.button(c='ZKM_JointWeightProcessingClass().NormalizeWeight(pm.ls(sl=1))', l='为当前选择模型修复模型稍微移动一点就抖动的情况(归一化权重)')
+        pm.button(c='ZKM_JointWeightProcessingClass().HandlingWeightJitter(pm.ls(sl=1))', l='为当前选择骨骼修复在低版本情况下模型移动过远点出现抖动情况')
         pm.setParent('..')
         pm.showWindow()
 class ZKM_QvanZhongChuLiCommandsClass:

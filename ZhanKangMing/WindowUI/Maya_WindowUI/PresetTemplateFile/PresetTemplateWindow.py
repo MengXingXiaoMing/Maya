@@ -48,10 +48,10 @@ class PresetTemplateWindowClass:
         cmds.rowColumnLayout(nc=1, adj=5)
         cmds.rowColumnLayout(nc=4, adj=1)
 
-        cmds.button(l='使用帮助', command='os.startfile(\''+self.file_path+'\Help.txt\')')
+        cmds.button(l='使用帮助', command='os.startfile(r\''+self.file_path+'\Help.txt\')')
         cmds.textFieldButtonGrp('LoadName',cw2=(150,10),bl='加载模型',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'LoadName\')')
         cmds.textFieldButtonGrp('LoadBS', cw2=(150,10),bl='加载BS',bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'LoadBS\')')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
         cmds.setParent('..')
 
         cmds.rowColumnLayout(nc=3, adj=4)
@@ -65,7 +65,7 @@ class PresetTemplateWindowClass:
             pm.menuItem(label=file)
         cmds.button(l='载入',command='ZKM_PresetTemplate().LoadEmoticonTemplate(\'LoadBsModelTemplate\',\'Py_PresetTemplate_Material/PresetTemplate_TemplateMaterial\',0)')
         cmds.setParent('..')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png',command='os.startfile(\'' + self.file_path + '\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png',command='os.startfile(r\'' + self.file_path + '\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
         cmds.rowColumnLayout('ChangeRowColumnLayout',nc=1, adj=1)
         pm.optionMenu('GenerateLocatorScheme')
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_pathReversion+'/Py_PresetTemplate_Material/PresetTemplate_TemplateMaterial/'+(pm.optionMenu('LoadBsModelTemplate',q=1, value=1))+'_Programme'),0,'.ma')):
@@ -79,7 +79,7 @@ class PresetTemplateWindowClass:
         cmds.checkBox('RemoveKeepmirror',label='移动保持对称', value=1,cc='SymmetricLink()')
         cmds.button(l='保存定位器文件', command='ZKM_PresetTemplate().OpenMouldLoc()')
         cmds.setParent('..')
-        cmds.iconTextButton('ChangeIconTextButton',style='iconOnly', image1='fileNew.png',command='os.startfile(\'' + self.file_path + '\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
+        cmds.iconTextButton('ChangeIconTextButton',style='iconOnly', image1='fileNew.png',command='os.startfile(r\'' + self.file_path + '\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\')')
 
         cmds.rowColumnLayout(nc=1, adj=1)
         pm.optionMenu('ControllerGenerationMethod')
@@ -105,7 +105,7 @@ class PresetTemplateWindowClass:
         cmds.button(l='添加对应属性以及将控制器自动链接到bs', command='ZKM_PresetTemplate().AddAttributesAndAink()')
         cmds.button(l='控制器转换为驱动', command='ZKM_PresetTemplate().BsConvertControllerDrive()')
         cmds.setParent('..')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\AutoLinkBsScheme\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\AutoLinkBsScheme\')')
 
         pm.optionMenu('CustomPanel', label="")
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\Py_PresetTemplate_Material\CustomPanel'),0, '.ma')):
@@ -117,7 +117,7 @@ class PresetTemplateWindowClass:
             pm.menuItem(file, label=file)
         cmds.button(l='运行自定义链接', command='ZKM_PresetTemplate().RunCorrespondingCommand()')
         cmds.setParent('..')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\CustomPanel\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\CustomPanel\')')
         cmds.setParent('..')
 
         cmds.rowColumnLayout(nc=4, adj=4)
@@ -132,28 +132,28 @@ class PresetTemplateWindowClass:
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\Py_PresetTemplate_Material\BS_IntermediateFrame_FilmSpecificationScheme'), 1, '.py','.mel')):
             pm.menuItem(file, label=file)
         cmds.button(l='影视规范修改BS中间帧', command='ZKM_PresetTemplate().FilmCustomLinks()')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\'' + self.file_path + '\Py_PresetTemplate_Material\BS_IntermediateFrame_FilmSpecificationScheme\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\'' + self.file_path + '\Py_PresetTemplate_Material\BS_IntermediateFrame_FilmSpecificationScheme\')')
 
         pm.optionMenu('GameSpecifications', label="")
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\Py_PresetTemplate_Material\BS_IntermediateFrame_GameSpecificationScheme'),1, '.py','.mel')):
             pm.menuItem(file, label=file)
         cmds.button(l='UE规范修改BS中间帧', command='ZKM_PresetTemplate().GameCustomLinks()')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\BS_IntermediateFrame_GameSpecificationScheme\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\BS_IntermediateFrame_GameSpecificationScheme\')')
 
         pm.optionMenu('CustomModification')
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\Py_PresetTemplate_Material\CustomModification'),1,'.py','.mel')):
             pm.menuItem(file, label=file)
         cmds.button(l='自定义修改', command='ZKM_PresetTemplate().CustomModification()')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\CustomModification\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\CustomModification\')')
 
         pm.optionMenu('AutomaticSynchronization',cc='AutomaticSynchronization()')
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix((self.file_path + '\Py_PresetTemplate_Material\AutomaticSynchronizationSettings'),0, '.txt')):
             pm.menuItem(file, label=file)
         cmds.button(l='保存页面', command='ZKM_PresetTemplate().SavePage()')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\AutomaticSynchronizationSettings\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\AutomaticSynchronizationSettings\')')
         cmds.textFieldGrp('NewFileName', label='文件名称')
         cmds.button(l='新建页面', command='ZKM_PresetTemplate().NewPage()')
-        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(\'' + self.file_path + '\Py_PresetTemplate_Material\AutomaticSynchronizationSettings\')')
+        cmds.iconTextButton(style='iconOnly', image1='fileNew.png', label='LoadEmoticonTemplate()',command='os.startfile(r\'' + self.file_path + '\Py_PresetTemplate_Material\AutomaticSynchronizationSettings\')')
         cmds.setParent('..')
         cmds.rowColumnLayout(nc=3, adj=4)
         cmds.button(l='删除无变化驱动', command='ZKM_PresetTemplate().DeleteUnchangedDrive()')
@@ -360,61 +360,116 @@ class PresetTemplateWindowClass:
         child4 = cmds.rowColumnLayout(numberOfColumns=2)
         cmds.rowColumnLayout(nc=2, adj=5)
         PictureFormLayout = cmds.formLayout()
-        cmds.picture(
-            i=(self.file_pathReversion + "/Py_PresetTemplate_Material/PresetTemplate_PictureMaterial/轮胎自转驱动BGC"))
-        PictureFormLayoutHandButton = cmds.button(l='手腕骨骼', bgc=(1, 1, 1))
-        PictureFormLayoutThumbButton = cmds.button(l='大拇指', bgc=(1, 1, 1))
-        PictureFormLayoutIndexFingerButton = cmds.button(l='食指', bgc=(1, 1, 1))
-        PictureFormLayoutMiddleFingerButton = cmds.button(l='中指', bgc=(1, 1, 1))
-        PictureFormLayoutRingFingerButton = cmds.button(l='无名指', bgc=(1, 1, 1))
-        PictureFormLayoutLittleFingerButton = cmds.button(l='小拇指', bgc=(1, 1, 1))
-        PictureFormLayoutSulcusBoneButton = cmds.button(l='钩骨', bgc=(1, 1, 1))
+        cmds.picture(i=(self.file_pathReversion + "/Py_PresetTemplate_Material/PresetTemplate_PictureMaterial/轮胎自转驱动BGC"))
+        PictureFormLayoutHandButton = cmds.button(l='轮胎长度样条', bgc=(1, 1, 1), c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireLengthSpline\')')
+        PictureFormLayoutThumbButton = cmds.button(l='轮胎控制器', bgc=(1, 1, 1), c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireController\')')
+        PictureFormLayoutIndexFingerButton = cmds.button(l='轮胎控制器父对象', bgc=(1, 1, 1),c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireParentController\')')
         cmds.setParent('..')
-        pm.formLayout(PictureFormLayout,
-                      edit=1,
-                      attachPosition=[(PictureFormLayoutHandButton, "top", 190, 0),
+        pm.formLayout(PictureFormLayout,edit=1,
+                      attachPosition=[(PictureFormLayoutHandButton, "top", 140, 0),
                                       (PictureFormLayoutThumbButton, "top", 220, 0),
-                                      (PictureFormLayoutIndexFingerButton, "top", 240, 0),
-                                      (PictureFormLayoutMiddleFingerButton, "top", 190, 0),
-                                      (PictureFormLayoutRingFingerButton, "top", 140, 0),
-                                      (PictureFormLayoutLittleFingerButton, "top", 110, 0),
-                                      (PictureFormLayoutSulcusBoneButton, "top", 165, 0)],
-                      attachForm=[(PictureFormLayoutHandButton, "left", 10),
-                                  (PictureFormLayoutThumbButton, "left", 50),
-                                  (PictureFormLayoutIndexFingerButton, "left", 200),
-                                  (PictureFormLayoutMiddleFingerButton, "left", 210),
-                                  (PictureFormLayoutRingFingerButton, "left", 200),
-                                  (PictureFormLayoutLittleFingerButton, "left", 180),
-                                  (PictureFormLayoutSulcusBoneButton, "left", 60)])
+                                      (PictureFormLayoutIndexFingerButton, "top", 320, 0)],
+                      attachForm=[(PictureFormLayoutHandButton, "left", 310),
+                                  (PictureFormLayoutThumbButton, "left", 315),
+                                  (PictureFormLayoutIndexFingerButton, "left", 130)])
         cmds.rowColumnLayout(nc=1, adj=5)
+        cmds.button(l='创建轮胎长度样条')
         cmds.rowColumnLayout(nc=2, adj=6)
-        cmds.button(l='手腕骨骼:', c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'ArmDriveWristJoint1\')')
-        cmds.textFieldButtonGrp('ArmDriveWristJoint1', cw3=(0, 130, 0), l='', text='', bl='加载骨骼',
-                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'ArmDriveWristJoint1\')')
+        cmds.button(l='轮胎长度样条:', c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireLengthSpline\')')
+        cmds.textFieldButtonGrp('PresetTemplateTireLengthSpline', cw3=(0, 130, 0), l='', text='', bl='加载样条',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTireLengthSpline\')')
+        cmds.button(l='轮胎控制器:', c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireController\')')
+        cmds.textFieldButtonGrp('PresetTemplateTireController', cw3=(0, 130, 0), l='', text='', bl='加载控制器',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTireController\')')
+        cmds.button(l='轮胎父控制器:',c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTireParentController\')')
+        cmds.textFieldButtonGrp('PresetTemplateTireParentController', cw3=(0, 130, 0), l='', text='', bl='加载控制器',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTireParentController\')')
         cmds.setParent('..')
         cmds.rowColumnLayout(nc=2, adj=6)
-        pm.text(l='Go：')
+        pm.text(l='向前旋转方向：')
         pm.rowColumnLayout(numberOfColumns=6)
-        cmds.radioCollection('PresetTemplateHandDriveSpread1')
-        cmds.radioButton('PresetTemplateHandDrive_Spread_X', label="X")
-        cmds.radioButton('PresetTemplateHandDrive_Spread_fX', label="-X")
-        cmds.radioButton('PresetTemplateHandDrive_Spread_Y', label="Y")
-        cmds.radioButton('PresetTemplateHandDrive_Spread_fY', label="-Y")
-        cmds.radioButton('PresetTemplateHandDrive_Spread_Z', label="Z")
-        cmds.radioButton('PresetTemplateHandDrive_Spread_fZ', label="-Z")
-        pm.radioCollection('PresetTemplateHandDriveSpread1', edit=1, select="PresetTemplateHandDrive_Spread_Z")
+        cmds.radioCollection('PresetTemplateTireForwardRotationDirection')
+        cmds.radioButton('X', label="X")
+        cmds.radioButton('fX', label="-X")
+        cmds.radioButton('Y', label="Y")
+        cmds.radioButton('fY', label="-Y")
+        cmds.radioButton('Z', label="Z")
+        cmds.radioButton('fZ', label="-Z")
+        pm.radioCollection('PresetTemplateTireForwardRotationDirection', edit=1, select="Z")
         cmds.setParent('..')
+
+        pm.text(l='车辆前进方向：')
+        pm.rowColumnLayout(numberOfColumns=6)
+        cmds.radioCollection('PresetTemplateCarDirection')
+        cmds.radioButton('X', label="X")
+        cmds.radioButton('Y', label="Y")
+        cmds.radioButton('Z', label="Z")
+        pm.radioCollection('PresetTemplateCarDirection', edit=1, select="Z")
+        cmds.setParent('..')
+
+        cmds.setParent('..')
+        cmds.rowColumnLayout(nc=3, adj=1)
+        cmds.textFieldButtonGrp('PresetTemplateTirePrefix', cw3=(0, 130, 0), l='', text='', bl='前缀',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTirePrefix\')')
+        cmds.button(l='生成轮胎',c='ZKM_PresetTemplateTireGeneration().PresetTemplateCreateTire()')
+        cmds.button(l='删除轮胎', bgc=(1, 1, 1),c='ZKM_PresetTemplateTireGeneration().PresetTemplateDeleteTire()')
         cmds.setParent('..')
         cmds.setParent('..')
         cmds.setParent('..')
 
-
         cmds.setParent('..')
 
+        #履带
         child5 = cmds.rowColumnLayout(numberOfColumns=2)
-        cmds.button()
-        cmds.button()
-        cmds.button()
+        cmds.rowColumnLayout(nc=2, adj=5)
+        PictureFormLayout = cmds.formLayout()
+        cmds.picture(
+            i=(self.file_pathReversion + "/Py_PresetTemplate_Material/PresetTemplate_PictureMaterial/履带自传驱动BGC"))
+        cmds.setParent('..')
+        cmds.rowColumnLayout(nc=1, adj=5)
+        cmds.rowColumnLayout(nc=2, adj=9)
+        pm.button(l='生成骨骼')
+        pm.intSliderGrp('PresetTemplateCreateJointNum', min=1, max=50, cw3=(55, 25, 100), f=1, l='骨骼数量：', v=1)
+        cmds.button(l='履带长度样条:',
+                    c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTrackLengthSpline\')')
+        cmds.textFieldButtonGrp('PresetTemplateTrackLengthSpline', cw3=(0, 130, 0), l='', text='', bl='加载样条',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTrackLengthSpline\')')
+        cmds.button(l='履带控制器:',
+                    c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTrackController\')')
+        cmds.textFieldButtonGrp('PresetTemplateTrackController', cw3=(0, 130, 0), l='', text='', bl='加载控制器',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTrackController\')')
+        cmds.button(l='履带父控制器:',
+                    c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTrackParentController\')')
+        cmds.textFieldButtonGrp('PresetTemplateTrackParentController', cw3=(0, 130, 0), l='', text='', bl='加载控制器',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTrackParentController\')')
+        cmds.button(l='履带骨骼:',
+                    c='ZKM_ReadTextClass().ZKM_ReadLoadText(\'textFieldButtonGrp\',\'PresetTemplateTrackTopJoint\')')
+        cmds.textFieldButtonGrp('PresetTemplateTrackTopJoint', cw3=(0, 130, 0), l='', text='', bl='加载顶骨骼',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTrackTopJoint\')')
+
+        pm.text(l='向前移动方向：')
+        pm.rowColumnLayout(numberOfColumns=6)
+        cmds.radioCollection('PresetTemplateTrackDirection')
+        cmds.radioButton('X', label="X")
+        cmds.radioButton('fX', label="-X")
+        cmds.radioButton('Y', label="Y")
+        cmds.radioButton('fY', label="-Y")
+        cmds.radioButton('Z', label="Z")
+        cmds.radioButton('fZ', label="-Z")
+        pm.radioCollection('PresetTemplateTrackDirection', edit=1, select="Z")
+        cmds.setParent('..')
+
+
+
+        cmds.setParent('..')
+        cmds.rowColumnLayout(nc=3, adj=2)
+        cmds.textFieldButtonGrp('PresetTemplateTrackPrefix', cw3=(0, 130, 0), l='', text='', bl='前缀',
+                                bc='ZKM_LoadTextClass().ZKM_LoadText(\'textFieldButtonGrp\' , \'PresetTemplateTrackPrefix\')')
+        cmds.button(l='生成履带', c='ZKM_PresetTemplateCreateTrack().PresetTemplateCreateTrack()')
+        cmds.button(l='删除履带', bgc=(1, 1, 1), c='ZKM_PresetTemplateCreateTrack().PresetTemplateDeleteTrack()')
+        cmds.setParent('..')
+        cmds.setParent('..')
+        cmds.setParent('..')
         cmds.setParent('..')
 
         child6 = cmds.rowColumnLayout(numberOfColumns=2)
@@ -429,13 +484,20 @@ class PresetTemplateWindowClass:
         cmds.button()
         cmds.setParent('..')
 
-        cmds.tabLayout(tabs, edit=True, tabLabel=[(child1, '表情驱动'), (child2, '手部驱动'), (child3, '翅膀驱动'), (child4, '车辆生成'), (child5, '履带自动'), (child6, '裙子驱动'), (child7, '眼镜嘴巴生成')])
+        child8 = cmds.rowColumnLayout(numberOfColumns=2)
+        cmds.button()
+        cmds.button()
+        cmds.button()
+        cmds.setParent('..')
+
+        cmds.tabLayout(tabs, edit=True, tabLabel=[(child1, '表情驱动'), (child2, '手部驱动'), (child3, '翅膀驱动'), (child4, '轮胎生成'), (child5, '履带自动'), (child6, '拉链生成'), (child7, '眼镜嘴巴生成'),(child8, 'test')])
 
         cmds.showWindow()
 ShowWindow = PresetTemplateWindowClass()
 if __name__ =='__main__':
     global file_path
     global file_pathA
+
     try:
         ZKM_PresetTemplate().DeleteScriptJob(jobNum)
     except:

@@ -96,7 +96,7 @@ class ZKM_SkirtCollisionWindowClass:
                 pm.addAttr(Cur, ln=Hip + 'OutputMin', dv=0, at='double')
                 pm.setAttr((Cur + '.' + Hip + 'OutputMin'), e=1, keyable=True)
                 pm.connectAttr((Cur + '.' + Hip + 'OutputMin'), (remapValue + '.outputMin'), f=1)
-                pm.addAttr(Cur, ln=Hip + 'OutputMax', dv=1, at='double')
+                pm.addAttr(Cur, ln=Hip + 'OutputMax', dv=90, at='double')
                 pm.setAttr((Cur + '.' + Hip + 'OutputMax'), e=1, keyable=True)
                 pm.connectAttr((Cur + '.' + Hip + 'OutputMax'), (remapValue + '.outputMax'), f=1)
         for Cur in Curve:
@@ -121,7 +121,7 @@ class ZKM_SkirtCollisionWindowClass:
                 LinkCondition = condition
             multiplyDivide_3 = pm.shadingNode('multiplyDivide', asUtility=1)
 
-            pm.addAttr(Cur, ln='Magnification', dv=DirectionNum*50, at='double')
+            pm.addAttr(Cur, ln='Magnification', dv=DirectionNum, at='double')
             pm.setAttr((Cur + '.' + 'Magnification'), e=1, keyable=True)
             if LinkCondition:
                 pm.connectAttr((LinkCondition + '.outColorR'), (multiplyDivide_3 + '.input1X'), f=1)

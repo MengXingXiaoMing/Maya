@@ -16,14 +16,13 @@ class ZKM_plug_in_Class():
         import maya.app.general.executeDroppedPythonFile as myTempEDPF
         myTempEDPF.executeDroppedPythonFile(Path, "")
         del myTempEDPF
-        '''#print 'python(\"import maya.app.general.executeDroppedPythonFile as myTempEDPF\")'
-        pm.mel.eval('python(\"import maya.app.general.executeDroppedPythonFile as myTempEDPF\")')
-        #print ('python(\"myTempEDPF.executeDroppedPythonFile(r\\\"'+Path+'\\\",\\\"\\\")\")')
-        pm.mel.eval('python(\"myTempEDPF.executeDroppedPythonFile(r\\\"'+Path+'\\\",\\\"\\\")\")')
-        #print 'python(\"del myTempEDPF\")'
-        pm.mel.eval('python(\"del myTempEDPF\")')'''
     def AutomaticallySwitchWallpapers(self):
-        pass
+        if pm.window('AutomaticallySwitchWallpapers_Window', ex=1):
+            pm.deleteUI('AutomaticallySwitchWallpapers_Window')
+        pm.window('AutomaticallySwitchWallpapers_Window', t='ÎÄµµÂ·¾¶')
+        pm.columnLayout()
+        pm.button()
+        pm.showWindow()
     def Open_Document(self):
         os.system("start explorer Z:\\1.Private folder\\Rig\\zhankangming\\ZhanKangMing\\ZhanKangMing_Documentation\\Documentation.docx")
     def Open_Document_set(self):
@@ -41,4 +40,8 @@ class ZKM_plug_in_Class():
         pm.button()
         pm.showWindow()
     def Open_web(self):
-        webbrowser.open('https://space.bilibili.com/173984578?spm_id_from=333.1007.0.0')
+        mod = int(pm.getModifiers())
+        if mod == 4 :
+            webbrowser.open('https://github.com/MengXingXiaoMing?tab=repositories')
+        else:
+            webbrowser.open('https://space.bilibili.com/173984578?spm_id_from=333.1007.0.0')

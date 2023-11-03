@@ -153,7 +153,7 @@ class ZKM_PresetTemplate:
         for file in (ZKM_FileNameProcessingClass().ZKM_LoadFileNameOfTheCorrespondingSuffix(file,0,'.ma')):
             pm.menuItem(file, label=file,parent=Name)
         #修改打开命令
-        cmds.iconTextButton('ChangeIconTextButton',e=1,command='os.startfile(\''+self.file_path+'\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\\'+str(pm.optionMenu('LoadBsModelTemplate', q=1, value=1))+'_Programme\')')
+        cmds.iconTextButton('ChangeIconTextButton',e=1,command='os.startfile(r\''+self.file_path+'\Py_PresetTemplate_Material\PresetTemplate_TemplateMaterial\\'+str(pm.optionMenu('LoadBsModelTemplate', q=1, value=1))+'_Programme\')')
     #加载模板
     def LoadEmoticonTemplate(self,FileName,AdditionalPath,Keep):
         if Keep<1:
@@ -311,7 +311,7 @@ class ZKM_PresetTemplate:
         pm.select('FaceLoc_Head_loc_M','FaceLoc_Jaw_loc_M','FaceLoc_Mouth_loc_M','FaceLoc_Eye_loc_R','FaceLoc_Eye_loc_R',d=1)
         SELA = pm.ls(sl=1)
         ZKM_FollicleClass().ZKM_FollicleConstraint(GetModel,SELA,str(AdsorptionSurface))
-        pm.delete('AllFollicle_Grp')
+        #pm.delete('AllFollicle_Grp')
         #按定位器生成控制器
         for l in Loc:
             pm.select(cl=1)
@@ -600,6 +600,181 @@ class ZKM_PresetTemplateWingDrive:
                 pm.catch(pm.deleteAttr(Curve, attribute='Curve'))
             pm.addAttr(Curve, ln='Curve', en=Attributes, at="enum")
             pm.setAttr((Curve + '.Curve'), e=1, keyable=True)
+class ZKM_PresetTemplateTireGeneration:
+    # 创建轮胎
+    def PresetTemplateCreateTire(self):
+        TireLengthCurve = cmds.textFieldButtonGrp('PresetTemplateTireLengthSpline', q=1, text=1)# 轮胎长度样条
+        TireController = cmds.textFieldButtonGrp('PresetTemplateTireController', q=1, text=1)# 轮胎控制器
+        TireParentController = cmds.textFieldButtonGrp('PresetTemplateTireParentController', q=1, text=1)# 轮胎父控制器
+        TirePrefix = cmds.textFieldButtonGrp('PresetTemplateTirePrefix', q=1, text=1)  # 轮胎前缀
+        Direction = pm.radioCollection('PresetTemplateTireForwardRotationDirection', q=1,select=1) # 朝向
+        CarDirection = pm.radioCollection('PresetTemplateCarDirection', q=1, select=1)  # 朝向
+        axial = 'X'
+        AxialDirection = 1
+        if Direction == 'X':
+            axial = 'X'
+            AxialDirection = 1
+        if Direction == 'fX':
+            axial = 'X'
+            AxialDirection = -1
+        if Direction == 'Y':
+            axial = 'Y'
+            AxialDirection = 1
+        if Direction == 'fY':
+            axial = 'Y'
+            AxialDirection = -1
+        if Direction == 'Z':
+            axial = 'Z'
+            AxialDirection = 1
+        if Direction == 'fZ':
+            axial = 'Z'
+            AxialDirection = -1
+        prePosA = pm.spaceLocator(p=(0,0,0),n=(TirePrefix + '_car_bl_prePosLocA'))
+        nowPos = pm.spaceLocator(p=(0, 0, 0), n=(TirePrefix + '_car_bl_nowPosLoc'))
+        prePos = pm.spaceLocator(p=(0, 0, 0), n=(TirePrefix + '_car_bl_prePosLoc'))
+        pm.setAttr(TirePrefix + '_car_bl_prePosLoc.visibility', 0)
+        pm.select(nowPos,prePosA)
+        Group1 = pm.group(n=(TirePrefix + '_car_bl_locGrp'))
+        pm.setAttr(TirePrefix + '_car_bl_locGrp.visibility',0)
+        MoveCurve = pm.circle(c=(0, 0, 0), ch=0, d=3, ut=0, sw=360, s=8, r=1, tol=0.01, nr=(0, 1, 0),n=(TirePrefix + '_Tire_C'))
+        Group2 = pm.group(n=(TirePrefix + '_Tire'))
 
+        pm.addAttr((TirePrefix + '_Tire_C'), ln='StartFrames', dv=0, at='double')
+        pm.setAttr((TirePrefix + '_Tire_C.StartFrames'), e=1, keyable=True)
+        pm.addAttr((TirePrefix + '_Tire_C'), ln='BeiLv', dv=AxialDirection, at='double')
+        pm.setAttr((TirePrefix + '_Tire_C.BeiLv'), e=1, keyable=True)
+        pm.addAttr((TirePrefix + '_Tire_C'), ln='prePosX', dv=0, at='double')
+        #pm.setAttr((TirePrefix + '_Tire_C.prePosX'), e=1, keyable=True)
+        pm.addAttr((TirePrefix + '_Tire_C'), ln='prePosY', dv=0, at='double')
+        #pm.setAttr((TirePrefix + '_Tire_C.prePosY'), e=1, keyable=True)
+        pm.addAttr((TirePrefix + '_Tire_C'), ln='prePosZ', dv=0, at='double')
+        #pm.setAttr((TirePrefix + '_Tire_C.prePosZ'), e=1, keyable=True)
 
+        pm.parent((TirePrefix + '_car_bl_prePosLoc'),(TirePrefix + '_Tire_C'))
+        pm.select(Group1, Group2)
+        pm.group(n=(TirePrefix + '_Tire_Grp'))
 
+        pm.pointConstraint(prePosA, prePos, weight=1)
+        pm.pointConstraint((TirePrefix + '_Tire_C'),nowPos,weight=1)
+
+        pm.delete(pm.pointConstraint(TireController,(TirePrefix + '_Tire_Grp'),weight=1))
+
+        curveInfo = pm.shadingNode('curveInfo', asUtility=1)
+        pm.connectAttr((TireLengthCurve + '.worldSpace[0]'), (curveInfo + '.inputCurve'),f=1)
+        # CurveLength = pm.getAttr(curveInfo + '.arcLength')
+        pm.select(TireController, r=1)
+        pm.pickWalk(d='up')
+        pm.mel.doGroup(0, 1, 1)
+        pm.mel.rename(TirePrefix + '_Tire_Link')
+        pm.mel.doGroup(0, 1, 1)
+        pm.mel.rename(TirePrefix + '_Tire_Constraint')
+        pm.parentConstraint(MoveCurve, (TirePrefix + '_Tire_Constraint'),mo=1, weight=1)
+        pm.scaleConstraint(MoveCurve, (TirePrefix + '_Tire_Constraint'),weight=1, offset=(1, 1, 1))
+        pm.parentConstraint(TireParentController, Group2, mo=1, weight=1)
+        pm.scaleConstraint(TireParentController, Group2, weight=1, offset=(1, 1, 1))
+        pm.expression(s=('\nfloat $autoRoll=' + TirePrefix + '_Tire_C.BeiLv;\nfloat $prePosX=' + TirePrefix + '_Tire_C.prePosX;\nfloat $prePosY=' + TirePrefix + '_Tire_C.prePosY;\nfloat $prePosZ=' + TirePrefix + '_Tire_C.prePosZ;\nfloat $nowPosX=' + TirePrefix + '_car_bl_nowPosLoc.translateX;\nfloat $nowPosY=' + TirePrefix + '_car_bl_nowPosLoc.translateY;\nfloat $nowPosZ=' + TirePrefix + '_car_bl_nowPosLoc.translateZ;\nfloat $dis=mag(<<$nowPosX,$nowPosY,$nowPosZ>>-<<$prePosX,$prePosY,$prePosZ>>);\n' + TirePrefix + '_car_bl_prePosLocA.translateX=$prePosX;\n' + TirePrefix + '_car_bl_prePosLocA.translateY=$prePosY;\n' + TirePrefix + '_car_bl_prePosLocA.translateZ=$prePosZ;\n' + TirePrefix + '_Tire_C.prePosX=$nowPosX;\n' + TirePrefix + '_Tire_C.prePosY=$nowPosY;\n' + TirePrefix + '_Tire_C.prePosZ=$nowPosZ;\nfloat $dirPreZ=' + TirePrefix + '_car_bl_prePosLoc.translate' + CarDirection + ';\nint $dir=0;\nif($dirPreZ<0)$dir=-1;\nelse if($dirPreZ>0)$dir=1;\nfloat $perimeter=' + curveInfo + '.arcLength;\nfloat $StartFrames=' + TirePrefix + '_Tire_C.StartFrames;\nint $Start=0;\nif($StartFrames<frame)$Start=1;\nfloat $curRoll=' + TirePrefix + '_Tire_Link.rotate'+axial+';\n\n' + TirePrefix + '_Tire_Link.rotate'+axial+'=($curRoll+($dis/$perimeter)*360*$autoRoll*$dir)*$Start;'),
+                      ae=1, uc='all', o='', n=(TirePrefix + "Tire_expression"))
+        '''if (TirePrefix + '_Tire_C.StartBaking') == 1:
+            pm.setAttr(TirePrefix + "_Tire_Link.rotateX", pm.getAttr(TirePrefix + '_Tire_C.num'))
+            pm.setKeyframe(TirePrefix + "_Tire_Link.rx")'''
+    # 删除轮胎
+    def PresetTemplateDeleteTire(self):
+        TirePrefix = cmds.textFieldButtonGrp('PresetTemplateTirePrefix', q=1, text=1)  # 轮胎前缀
+        pm.delete(TirePrefix + '_Tire_Grp')
+        for Text in ['_Tire_Constraint','_Tire_Link']:
+            parent = pm.listRelatives((TirePrefix + Text),p=1)
+            subset = pm.listRelatives((TirePrefix + Text),c=1)
+            for s in subset:
+                pm.parent(s,parent[0])
+            pm.delete((TirePrefix + Text))
+class ZKM_PresetTemplateCreateTrack:
+    # 创建履带
+    def PresetTemplateCreateTrack(self):
+        TrackLengthCurve = cmds.textFieldButtonGrp('PresetTemplateTrackLengthSpline', q=1, text=1)  # 履带长度样条
+        TrackController = cmds.textFieldButtonGrp('PresetTemplateTrackController', q=1, text=1)  # 履带控制器
+        TrackParentController = cmds.textFieldButtonGrp('PresetTemplateTrackParentController', q=1, text=1)  # 履带父控制器
+        TrackTopJoint = cmds.textFieldButtonGrp('PresetTemplateTrackTopJoint', q=1, text=1)  # 履带骨骼
+        TrackPrefix = cmds.textFieldButtonGrp('PresetTemplateTrackPrefix', q=1, text=1)  # 履带前缀
+        TrackPrefix = TrackPrefix + '_Track'
+        Direction = pm.radioCollection('PresetTemplateTrackDirection', q=1, select=1)  # 履带朝向
+        AxialDirection = 1
+        if Direction == 'X':
+            AxialDirection = 1
+        if Direction == 'fX':
+            AxialDirection = -1
+        if Direction == 'Y':
+            AxialDirection = 1
+        if Direction == 'fY':
+            AxialDirection = -1
+        if Direction == 'Z':
+            AxialDirection = 1
+        if Direction == 'fZ':
+            AxialDirection = -1
+        prePosA = pm.spaceLocator(p=(0, 0, 0), n=(TrackPrefix + '_car_bl_prePosLocA'))
+        nowPos = pm.spaceLocator(p=(0, 0, 0), n=(TrackPrefix + '_car_bl_nowPosLoc'))
+        prePos = pm.spaceLocator(p=(0, 0, 0), n=(TrackPrefix + '_car_bl_prePosLoc'))
+        pm.setAttr(TrackPrefix + '_car_bl_prePosLoc.visibility', 0)
+        pm.select(nowPos, prePosA)
+        Group1 = pm.group(n=(TrackPrefix + '_car_bl_locGrp'))
+        pm.setAttr(TrackPrefix + '_car_bl_locGrp.visibility', 0)
+        MoveCurve = pm.circle(c=(0, 0, 0), ch=0, d=3, ut=0, sw=360, s=8, r=1, tol=0.01, nr=(0, 1, 0),
+                              n=(TrackPrefix + '_C'))
+        Group2 = pm.group(n=(TrackPrefix + '_Track_Grp'))
+
+        pm.addAttr((TrackPrefix + '_C'), ln='StartFrames', dv=0, at='double')
+        pm.setAttr((TrackPrefix + '_C.StartFrames'), e=1, keyable=True)
+        pm.addAttr((TrackPrefix + '_C'), ln='BeiLv', dv=AxialDirection, at='double')
+        pm.setAttr((TrackPrefix + '_C.BeiLv'), e=1, keyable=True)
+        pm.addAttr((TrackPrefix + '_C'), ln='Move', dv=0, at='double')
+        pm.setAttr((TrackPrefix + '_C.Move'), e=1, keyable=True)
+        pm.addAttr((TrackPrefix + '_C'), ln='prePosX', dv=0, at='double')
+        pm.addAttr((TrackPrefix + '_C'), ln='prePosY', dv=0, at='double')
+        pm.addAttr((TrackPrefix + '_C'), ln='prePosZ', dv=0, at='double')
+
+        pm.parent((TrackPrefix + '_car_bl_prePosLoc'), (TrackPrefix + '_C'))
+        pm.select(Group1, Group2)
+        pm.group(n=(TrackPrefix + '_Grp'))
+
+        pm.pointConstraint(prePosA, prePos, weight=1)
+        pm.pointConstraint((TrackPrefix + '_C'), nowPos, weight=1)
+
+        pm.delete(pm.pointConstraint(TrackController, (TrackPrefix + '_Grp'), weight=1))
+
+        curveInfo = pm.shadingNode('curveInfo', asUtility=1)
+        pm.connectAttr((TrackLengthCurve + '.worldSpace[0]'), (curveInfo + '.inputCurve'), f=1)
+        pm.select(TrackController, r=1)
+        pm.pickWalk(d='up')
+        pm.mel.doGroup(0, 1, 1)
+        pm.mel.rename(TrackPrefix + '_Constraint')
+        pm.parentConstraint(MoveCurve, (TrackPrefix + '_Constraint'), mo=1, weight=1)
+        pm.scaleConstraint(MoveCurve, (TrackPrefix + '_Constraint'), weight=1, offset=(1, 1, 1))
+        pm.parentConstraint(TrackParentController, Group2, mo=1, weight=1)
+        pm.scaleConstraint(TrackParentController, Group2, weight=1, offset=(1, 1, 1))
+        pm.select(TrackTopJoint)
+        pm.mel.SelectHierarchy()
+        AllJoint = pm.ls(sl=1)
+        TrackLengthCurveShape = pm.listRelatives(TrackLengthCurve, s=1)
+        pm.select(AllJoint[0],AllJoint[-1],TrackLengthCurve)
+        pm.ikHandle(roc=True, ns=4, ccv=False, pcv=False, sol='ikSplineSolver')
+        ikHandle = pm.ls(sl=1)
+        pm.select(TrackTopJoint,TrackLengthCurve)
+        pm.mel.doGroup(0, 1, 1)
+        pm.mel.rename(TrackPrefix + '_JointAndCurve_Grp')
+        pm.parent(ikHandle,(TrackPrefix + '_JointAndCurve_Grp'),(TrackPrefix + '_C'))
+
+        pm.expression(s=('\nfloat $autoRoll=' + TrackPrefix + '_C.BeiLv;\nfloat $prePosX=' + TrackPrefix + '_C.prePosX;\nfloat $prePosY=' + TrackPrefix + '_C.prePosY;\nfloat $prePosZ=' + TrackPrefix + '_C.prePosZ;\nfloat $nowPosX=' + TrackPrefix + '_car_bl_nowPosLoc.translateX;\nfloat $nowPosY=' + TrackPrefix + '_car_bl_nowPosLoc.translateY;\nfloat $nowPosZ=' + TrackPrefix + '_car_bl_nowPosLoc.translateZ;\nfloat $dis=mag(<<$nowPosX,$nowPosY,$nowPosZ>>-<<$prePosX,$prePosY,$prePosZ>>);\n' + TrackPrefix + '_car_bl_prePosLocA.translateX=$prePosX;\n' + TrackPrefix + '_car_bl_prePosLocA.translateY=$prePosY;\n' + TrackPrefix + '_car_bl_prePosLocA.translateZ=$prePosZ;\n' + TrackPrefix + '_C.prePosX=$nowPosX;\n' + TrackPrefix + '_C.prePosY=$nowPosY;\n' + TrackPrefix + '_C.prePosZ=$nowPosZ;\nfloat $dirPreZ=' + TrackPrefix + '_car_bl_prePosLoc.translate' + Direction + ';\nint $dir=0;\nif($dirPreZ<0)$dir=-1;\nelse if($dirPreZ>0)$dir=1;\nfloat $perimeter=' + curveInfo + '.arcLength;\nfloat $StartFrames=' + TrackPrefix + '_C.StartFrames;\nint $Start=0;\nif($StartFrames<frame)$Start=1;\nfloat $curRoll=' + ikHandle[0] + '.offset;\nint $maxValue='+TrackLengthCurveShape[0]+'.maxValue;\nfloat $Move=(' + TrackPrefix + '_C.Move);\n' + ikHandle[0] + '.offset=(999999999*$maxValue+$Move+$curRoll+($dis/$perimeter)*$maxValue*$autoRoll*$dir)%$maxValue*$Start;'),
+                      ae=1, uc='all', o='', n=(TrackPrefix + "_expression"))
+
+    # 删除轮胎
+    def PresetTemplateDeleteTrack(self):
+        TrackPrefix = cmds.textFieldButtonGrp('PresetTemplateTrackPrefix', q=1, text=1)  # 轮胎前缀
+        TrackPrefix = TrackPrefix + '_Track'
+        JC = pm.listRelatives((TrackPrefix + '_JointAndCurve_Grp'), c=1)
+        for jc in JC:
+            pm.parent(jc,w=1)
+        pm.delete(TrackPrefix + '_Grp')
+        parent = pm.listRelatives((TrackPrefix + '_Constraint'), p=1)
+        subset = pm.listRelatives((TrackPrefix + '_Constraint'), c=1)
+        for s in subset:
+            pm.parent(s, parent[0])
+        pm.delete((TrackPrefix + '_Constraint'))
