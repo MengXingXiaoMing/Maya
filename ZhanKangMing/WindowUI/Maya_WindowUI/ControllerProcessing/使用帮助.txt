@@ -1,1 +1,0 @@
-拖拽Install.py到maya视图自动安装到maya。
