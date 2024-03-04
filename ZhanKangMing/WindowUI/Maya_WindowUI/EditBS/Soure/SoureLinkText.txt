@@ -1,3 +1,0 @@
-{'soure':'nurbsCircle1.translateX','mapping':[0,1,0,1]}
-
-{'soure':'nurbsCircle1.translateX','mapping':[0,1,0,1]}
