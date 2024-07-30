@@ -1,3 +1,0 @@
-All_G.translateY
-All_G.rotateX
-

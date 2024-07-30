@@ -1,2 +1,0 @@
-All_G.translateX
-All_G.translateZ
