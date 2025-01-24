@@ -183,6 +183,10 @@ class Window(QtWidgets.QMainWindow):
             cmds.addAttr(j, proxy=('FK' + base_joint_name + '.baking_num'), longName='baking_wheel')
             # 添加总控制器属性代理
             cmds.addAttr(general_controller, proxy=('FK' + base_joint_name + '.baking_num'), longName=base_joint_name)
+
+            cmds.addAttr('FK' + base_joint_name + '.autoRoll', e=1, softMaxValue=10000000000000000000000000.0, softMinValue=-10000000000000000000000000.0)
+            cmds.setAttr('FK' + base_joint_name + '.autoRoll', cb=False, k=True)
+            cmds.setAttr('FK' + base_joint_name + '.autoRoll', cb=True, k=False)
             # 建立节点关系
             cmds.connectAttr((general_controller[0] + '.tire'), ('FKX' + base_joint_name + '.tire'), f=1)
             choice_node = cmds.shadingNode('choice', asUtility=1)
@@ -271,7 +275,7 @@ class Window(QtWidgets.QMainWindow):
     def create_tire(self):
         # 获取要删除的节点
         need_delete = []
-
+        surface = cmds.ls(sl=1)
         # 加载总控制器
         self.maya_common.select_text_target(self.line_edit_1, ['QLineEdit'])
         tire_parent_controller = cmds.ls(sl=1)
@@ -429,6 +433,9 @@ class Window(QtWidgets.QMainWindow):
             cmds.parentConstraint(tire_controller[i], tire_perimeter[i], w=1)
             cmds.scaleConstraint(tire_controller[i], tire_perimeter[i], w=1)
 
+            cmds.setAttr((tire_controller[i] + '.magnification'), cb=False, k=True)
+            cmds.setAttr((tire_controller[i] + '.magnification'), cb=True, k=False)
+
         # 添加表达式
         cmds.expression(s='if(' + tire_parent_controller[0] + '.baking_wheels==1 && ' + tire_parent_controller[
             0] + '.expression_type==1){\n'
@@ -464,6 +471,7 @@ class Window(QtWidgets.QMainWindow):
         cmds.select(tire_parent_controller[0])
         cmds.addAttr(tire_parent_controller[0], ln='node', dt='string')
         cmds.setAttr(tire_parent_controller[0] + '.node', str(need_delete), type='string')
+
 
     # 删除轮胎
     def delete_adv_tire(self):

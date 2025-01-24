@@ -536,6 +536,7 @@ class Window(QtWidgets.QMainWindow):
     def modify_UI_values_and_provide_feedback_to_the_slider(self):
         num = self.line_edit_3.text()
         num = float(num)
+        print(num)
         target_ui = self.slider_1
         target_ui_type = 'QSlider'
         self.command.ui_edit.give_the_value_to_the_slider(num, target_ui, target_ui_type)
