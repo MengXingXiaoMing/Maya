@@ -1,2 +1,0 @@
-这是metahuman官方包，里面含有案例做测试，如果要最新版本请自行去github更新。
-如果官方地址不变更的话地址就是：https://github.com/EpicGames/MetaHuman-DNA-Calibration
