@@ -3,11 +3,11 @@ import os
 import sys
 import maya.cmds as cmds
 import inspect
-FilePath = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA'
+FilePath = 'Z:\\1.Private folder\\Rig\\zhankangming\\ZhanKangMing\\Maya_PY3_plug-in\\ui'
 sys.path.append(FilePath + '\\ZKM_plug_in_UI')
 import ZKM_plug_in_Command
 from ZKM_plug_in_Command import *
-ZKM_plug_in_user_file_path = r'BBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBB'
+ZKM_plug_in_user_file_path = r'Z:\1.Private folder\Rig\zhankangming\ZhanKangMing\Maya_PY3_plug-in\user\yangjie'
 
 #仅仅用于加载预置插件,会减慢打开速度,加载后遍可以使用其中内置命令
 def initializePlugin(obg):
