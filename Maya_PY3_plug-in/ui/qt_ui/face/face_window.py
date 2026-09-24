@@ -1,32 +1,29 @@
 # -*- coding: utf-8 -*-
-import inspect
+import maya.cmds as cmds
 import os
 import sys
-
-import random
-
-from datetime import datetime
-import maya.mel as mel
-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
-import maya.cmds as cmds
-
-import importlib
+import inspect
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library = root_path + '\\' + maya_version
-# 库添加到系统路径
-sys.path.append(library)
+maya_version_int = int(maya_version)
+for i in range(30):
+    maya_version_int = maya_version_int - i
+    # 库路径
+    maya_version = str(maya_version_int)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
 import zkm_dna_edit_library
 from zkm_dna_edit_library import *

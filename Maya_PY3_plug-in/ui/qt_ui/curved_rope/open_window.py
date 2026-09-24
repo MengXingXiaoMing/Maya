@@ -5,7 +5,7 @@ import os
 import inspect
 import importlib
 import maya.cmds as cmds
-# 文件路径
+# 文件路径a
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
@@ -20,3 +20,10 @@ import curved_rope_window
 importlib.reload(curved_rope_window)
 from curved_rope_window import *
 window.show()
+# stretch_condition = cmds.shadingNode('condition', asUtility=1)
+        # cmds.connectAttr((self.prefix + 'TotalControl_Curve.stretch'), stretch_condition + '.firstTerm', f=1)
+        # cmds.setAttr(stretch_condition + '.colorIfTrueR', 3)
+        # cmds.setAttr(stretch_condition + '.colorIfFalseR', 4)
+# cmds.connectAttr(stretch_condition + '.outColorR', value_condition + '.operation',f=1)
+# 弹簧结算器
+#ikSpringSolver

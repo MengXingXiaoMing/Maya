@@ -1,0 +1,65 @@
+{
+    "template_name": "基础角色模板",
+    "version": "1.0",
+    "description": "适用于标准人体骨骼的基础重定向模板",
+    "bone_mapping": [
+        ["R_thumb03_CTL",0],
+        ["R_thumb02_CTL",0],
+        ["R_thumb01_CTL",0],
+
+        ["R_index03_CTL",0],
+        ["R_index02_CTL",0],
+        ["R_index01_CTL",0],
+
+        ["R_middle03_CTL",0],
+        ["R_middle02_CTL",0],
+        ["R_middle01_CTL",0],
+
+        ["R_pinky03_CTL",0],
+        ["R_pinky02_CTL",0],
+        ["R_pinky01_CTL",0],
+
+        ["R_wristFK_CTL",0],
+        ["R_elbowFK_CTL",0],
+        ["R_shoulder_CTL",0],
+        ["R_shoulderFK_CTL",0],
+        ["R_clavicle_CTL",0],
+
+        ["R_thighFK_CTL",0],
+        ["R_kneeFK_CTL",0],
+        ["R_ankleFK_CTL",0],
+        ["R_heel_CTL",0],
+
+
+        ["C_root_CTL",1],
+        ["C_pelvis_CTL",0],
+
+
+        ["L_thumb03_CTL",0],
+        ["L_thumb02_CTL",0],
+        ["L_thumb01_CTL",0],
+
+        ["L_index03_CTL",0],
+        ["L_index02_CTL",0],
+        ["L_index01_CTL",0],
+
+        ["L_middle03_CTL",0],
+        ["L_middle02_CTL",0],
+        ["L_middle01_CTL",0],
+
+        ["L_pinky03_CTL",0],
+        ["L_pinky02_CTL",0],
+        ["L_pinky01_CTL",0],
+
+        ["L_wristFK_CTL",0],
+        ["L_elbowFK_CTL",0],
+        ["L_shoulder_CTL",0],
+        ["L_shoulderFK_CTL",0],
+        ["L_clavicle_CTL",0],
+
+        ["L_thighFK_CTL",0],
+        ["L_kneeFK_CTL",0],
+        ["L_ankleFK_CTL",0],
+        ["L_heel_CTL",0]
+    ]
+}

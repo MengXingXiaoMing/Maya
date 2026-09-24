@@ -1,22 +1,31 @@
 # -*- coding: utf-8 -*-
 import maya.cmds as cmds
-# 获取文件路径
 import os
 import sys
 import inspect
-import importlib
-
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library_path = root_path + '\\' + maya_version
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
-# 库添加到系统路径
-sys.path.append(library_path)
 import common
 from common import *
 
@@ -55,7 +64,7 @@ class Command():
         # 版本号
         self.maya_version = cmds.about(version=True)
         # 库路径
-        self.library_path = root_path + '\\' + self.maya_version
+        self.library_path = root_path + '\\' + maya_version
 
         self.common = Common()
         self.maya_common = MayaCommon()
@@ -71,10 +80,25 @@ class Command():
         curve_list = []
         library_path = os.path.join('/'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
         library_path = library_path + '/' + self.maya_version + '/curve_library'
+
+        try:
+            controller_file_path = cmds.iconTextButton('MayaWindow_menu_Process_formLayout1_AddButton', q=1, ann=1)
+            # print(controller_file_path)
+            library_path = controller_file_path + '\\curve_library'
+            # path_split = library_path.split('\\')
+            # MayaPath = path_split[0]
+            # for i in range(1, len(path_split)):
+            #     MayaPath = MayaPath + '/' + path_split[i]
+            # library_path = MayaPath
+        except:
+            pass
+
         list = os.listdir(library_path)  # 返回文件名
         for l in list:
             if os.path.splitext(l)[1] == '.txt':
                 curve_list.append(l.split('.')[0])
+
+
         return(curve_list)
 
     # 拖动滑块自动修改颜色面板

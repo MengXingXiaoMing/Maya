@@ -1,146 +1,44 @@
 # -*- coding: utf-8 -*-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
 import maya.cmds as cmds
-
-# 获取文件路径
 import os
 import sys
 import inspect
-import importlib
-
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library_path = root_path + '\\' + maya_version
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
-# 库添加到系统路径
-sys.path.append(library_path)
 
 import others_library
 from others_library import *
 importlib.reload(others_library)
 
-class FlowLayout(QLayout):
-    def __init__(self, parent=None, h_spacing=-1, v_spacing=-1, *args, **kwargs):
-        super(FlowLayout, self).__init__(parent)
-        self._h_spacing = h_spacing
-        self._v_spacing = v_spacing
+import ui_edit
+importlib.reload(ui_edit)
+from ui_edit import *
 
-        self.itemList = []
+import model
+from model import *
+importlib.reload(model)
 
-    def __del__(self):
-        while self.count():
-            self.takeAt(0)
-
-    def addItem(self, item):
-        self.itemList.append(item)
-
-    def count(self):
-        return len(self.itemList)
-
-    def itemAt(self, index):
-        if 0 <= index < len(self.itemList):
-            return self.itemList[index]
-        return None
-
-    def takeAt(self, index):
-        if 0 <= index < len(self.itemList):
-            return self.itemList.pop(index)
-        return None
-
-    def expandingDirections(self):
-        return Qt.Orientations(Qt.Orientation(0))
-
-    def hasHeightForWidth(self):
-        return True
-
-    def heightForWidth(self, width):
-        height = self.doLayout(QRect(0, 0, width, 0), True)
-        return height
-
-    def setGeometry(self, rect):
-        super(FlowLayout, self).setGeometry(rect)
-        self.doLayout(rect, False)
-
-    def sizeHint(self):
-        return self.minimumSize()
-
-    def minimumSize(self):
-        size = QSize()
-
-        for item in self.itemList:
-            size = size.expandedTo(item.minimumSize())
-
-        size += QSize(2 * self.contentsMargins().top(), 2 * self.contentsMargins().top())
-        return size
-
-    def smartSpacing(self, pm):
-        if not self.parent():
-            return -1
-        elif isinstance(self.parent(), QWidget):
-            return self.parent().style().pixelMetric(pm, None, self.parent())
-        else:
-            return self.parent().spacing()
-
-    def horizontalSpacing(self):
-        return self._h_spacing if self._h_spacing >= 0 else self.smartSpacing(QStyle.PM_LayoutHorizontalSpacing)
-
-    def verticalSpacing(self):
-        return self._v_spacing if self._v_spacing >= 0 else self.smartSpacing(QStyle.PM_LayoutVerticalSpacing)
-
-    def setHorizontalSpacing(self, value):
-        self._h_spacing = value
-
-    def setVerticalSpacing(self, value):
-        self._v_spacing = value
-
-    def setSpacing(self, value):
-        self.setHorizontalSpacing(value)
-        self.setVerticalSpacing(value)
-        return super().setSpacing(value)
-
-    def doLayout(self, rect, testOnly):
-        x = rect.x()
-        y = rect.y()
-        lineHeight = 0
-
-        for item in self.itemList:
-            wid = item.widget()
-            spaceX = self.horizontalSpacing()
-            if spaceX == -1:
-                spaceX = wid.style().layoutSpacing(
-                    QSizePolicy.CheckBox,
-                    QSizePolicy.PushButton,
-                    Qt.Horizontal)
-            spaceY = self.verticalSpacing()
-            if spaceY == -1:
-                spaceY = wid.style().layoutSpacing(
-                    QSizePolicy.PushButton,
-                    QSizePolicy.PushButton,
-                    Qt.Vertical)
-            nextX = x + item.sizeHint().width() + spaceX
-            if nextX - spaceX > rect.right() and lineHeight > 0:
-                x = rect.x()
-                y = y + lineHeight + spaceY
-                nextX = x + item.sizeHint().width() + spaceX
-                lineHeight = 0
-
-            if not testOnly:
-                item.setGeometry(QRect(QPoint(x, y), item.sizeHint()))
-
-            x = nextX
-            lineHeight = max(lineHeight, item.sizeHint().height())
-
-        return y + lineHeight - rect.y()
 class Window(QtWidgets.QMainWindow):
     def __init__(self, parent=wrapInstance(int(Omui.MQtUtil.mainWindow()), QtWidgets.QWidget)):
         #self.command = Command()
@@ -151,7 +49,10 @@ class Window(QtWidgets.QMainWindow):
             pass
         super(Window, self).__init__(parent)
         self.maya_version = cmds.about(version=True)
-        self.setWindowTitle('文件清理(Maya'+self.maya_version+')')
+        self.setWindowTitle('文件清理+小功能(Maya'+self.maya_version+')')
+        self.ui_edit = UiEdit()
+        self.model = Model()
+
         self.create_widgets()
         self.create_layouts()
         self.create_connect()
@@ -165,81 +66,143 @@ class Window(QtWidgets.QMainWindow):
         self.maya_version = cmds.about(version=True)
         # 库路径
         self.library_path = root_path + '\\' + maya_version
+
+
+
     def create_widgets(self):
         # 第一行
-        self.button_1 = QtWidgets.QPushButton('清理枢轴')
-        self.button_2 = QtWidgets.QPushButton('清理所有bs组')
-        self.button_3 = QtWidgets.QPushButton('简单模型清理（并不能处理掉所有问题）')
-        self.button_4 = QtWidgets.QPushButton('清理动画节点（包括动画层）')
+        self.button_001 = QtWidgets.QPushButton('清理枢轴')
+        self.button_002 = QtWidgets.QPushButton('清理所有bs组')
+        self.button_003 = QtWidgets.QPushButton('简单模型清理（并不能处理掉所有问题）')
+        self.button_004 = QtWidgets.QPushButton('清理动画节点（包括动画层）')
 
-        self.button_5 = QtWidgets.QPushButton('清理显示层')
-        self.button_6 = QtWidgets.QPushButton('文件清理')
-        self.button_7 = QtWidgets.QPushButton('检查自穿插（需手动修改）')
-        self.button_15 = QtWidgets.QPushButton('选择对称点（0.001）')
-        self.button_8 = QtWidgets.QPushButton('选择模型中线修复对称')
-        self.button_9 = QtWidgets.QPushButton('清理空间名')
-        # self.button_10 = QtWidgets.QPushButton('')
-        self.button_11 = QtWidgets.QPushButton('清理权重（0.01）')
-        self.button_12 = QtWidgets.QPushButton('清理物体点吸附模型后数值为NAN')
-        self.button_13 = QtWidgets.QPushButton('清理渲染层（开发中）')
-        self.button_14 = QtWidgets.QPushButton('清理渲染层（开发中）')
+        self.button_005 = QtWidgets.QPushButton('清理显示层')
+        self.button_006 = QtWidgets.QPushButton('文件清理')
+        self.button_007 = QtWidgets.QPushButton('检查自穿插（需手动修改）')
+        self.button_008 = QtWidgets.QPushButton('选择对称点（0.001）')
+        self.button_009 = QtWidgets.QPushButton('选择模型中线修复对称')
+        self.button_010 = QtWidgets.QPushButton('清理空间名')
+        self.button_011 = QtWidgets.QPushButton('清理权重（0.01）')
+        self.button_012 = QtWidgets.QPushButton('清理物体点吸附模型后数值为NAN')
+        # self.button_013 = QtWidgets.QPushButton('清理渲染层（开发中）')
+        # self.button_014 = QtWidgets.QPushButton('清理渲染层（开发中）')
+        self.button_013 = QtWidgets.QPushButton('旧版模型对称（保证至少有一对面是对称的，且有中线）')
+        self.button_014 = QtWidgets.QPushButton('选择uv边界线')
+        self.button_015 = QtWidgets.QPushButton('按uv切割模型并按uv打平模型且建立uv变形表达式(加表达式时巨卡，生成后的模型有刷新属性，自己写个表达式链接给那刷新属性就能刷新)')
+        self.button_016 = QtWidgets.QPushButton('按uv建立模型')
+        self.button_017 = QtWidgets.QPushButton('建立Uv变形平面')
 
-        self.splitter_1 = QtWidgets.QSplitter()
-        self.splitter_1.setFixedHeight(1)
-        self.splitter_1.setFrameStyle(1)
+        # self.splitter_1 = QtWidgets.QSplitter()
+        # self.splitter_1.setFixedHeight(1)
+        # self.splitter_1.setFrameStyle(1)
 
     def create_layouts(self):
-        self.central_widget = QtWidgets.QWidget(self)
-        self.setCentralWidget(self.central_widget)
+        # 创建滚动区域
+        scroll_area = QtWidgets.QScrollArea()
+        scroll_area.setWidgetResizable(True)  # 关键：允许内容部件调整大小
+        scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarAsNeeded)
+        self.setCentralWidget(scroll_area)  # 将滚动区域设置为主窗口的中央部件
 
-        main_layout = QtWidgets.QVBoxLayout(self.central_widget)
+        # 创建内容部件
+        content_widget = QWidget()
+        scroll_area.setWidget(content_widget)
+        main_layout = QtWidgets.QVBoxLayout(content_widget)
         main_layout.setContentsMargins(0, 0, 0, 0)
         main_layout.setSpacing(1)
 
         # 第一行
-        h_Box_layout_1 = QtWidgets.QHBoxLayout(self)
-        main_layout.addLayout(h_Box_layout_1)
-        scroll_area_1 = QtWidgets.QScrollArea(self)
-        scroll_area_1.setWidgetResizable(True)
-        scroll_area_1.setFrameShape(QFrame.Shape.NoFrame)
-        scroll_area_1.setWidget(QWidget())
-        flow_layout_1 = FlowLayout(scroll_area_1.widget())
-        flow_layout_1.setSpacing(1)
-        flow_layout_1.addWidget(self.button_1)
-        flow_layout_1.addWidget(self.button_2)
-        flow_layout_1.addWidget(self.button_3)
-        flow_layout_1.addWidget(self.button_4)
-        flow_layout_1.addWidget(self.button_5)
-        flow_layout_1.addWidget(self.button_6)
-        flow_layout_1.addWidget(self.button_7)
-        flow_layout_1.addWidget(self.button_15)
-        flow_layout_1.addWidget(self.button_8)
-        flow_layout_1.addWidget(self.button_9)
-        # flow_layout_1.addWidget(self.button_10)
-        flow_layout_1.addWidget(self.button_11)
-        flow_layout_1.addWidget(self.button_12)
+        splitter = QtWidgets.QSplitter(Qt.Vertical)
+        main_layout.addWidget(splitter)
+
+        scroll_area_2, Widget_1, h_Box_layout_11 = self.ui_edit.create_ui_with_auto_slider(splitter)
+        h_Box_layout_11.setSpacing(1)
+        h_Box_layout_11.addWidget(self.button_001)
+        h_Box_layout_11.addWidget(self.button_002)
+        h_Box_layout_11.addWidget(self.button_003)
+        h_Box_layout_11.addWidget(self.button_004)
+        h_Box_layout_11.addWidget(self.button_005)
+        h_Box_layout_11.addWidget(self.button_006)
+        h_Box_layout_11.addWidget(self.button_007)
+        h_Box_layout_11.addWidget(self.button_008)
+        h_Box_layout_11.addWidget(self.button_009)
+        h_Box_layout_11.addWidget(self.button_010)
+        h_Box_layout_11.addWidget(self.button_011)
+        h_Box_layout_11.addWidget(self.button_012)
+        h_Box_layout_11.addWidget(self.button_013)
+        # for i in range(100):
+        #     button_015 = QtWidgets.QPushButton('按uv切割模型并按uv打平模型')
+        #     h_Box_layout_11.addWidget(button_015)
         #flow_layout_1.addWidget(self.button_13)
 
-        h_Box_layout_1.addWidget(scroll_area_1)
+        scroll_area_3, Widget_2, h_Box_layout_12 = self.ui_edit.create_ui_with_auto_slider(splitter)
+        h_Box_layout_12.addWidget(self.button_014)
+        h_Box_layout_12.addWidget(self.button_015)
+        h_Box_layout_12.addWidget(self.button_016)
+
+
 
         # 置顶
         main_layout.addStretch(1)
-    def create_connect(self):
-        self.button_1.clicked.connect(lambda:  self.others_library.cleaning_the_pivot())  # 清理枢轴
-        self.button_2.clicked.connect(lambda: self.others_library.clean_up_invalid_BS_groups())  # 清理所有bs和bs组
-        self.button_3.clicked.connect(lambda: self.others_library.cleaning_the_model())  # 简单清理模型
-        self.button_4.clicked.connect(lambda: self.others_library.cleaning_the_animation_nodes())  # 清理动画节点
-        self.button_5.clicked.connect(lambda: self.others_library.cleaning_the_display_layers())  # 清理显示层
-        self.button_6.clicked.connect(lambda: self.others_library.cleaning_the_file())  # 文件清理
-        self.button_7.clicked.connect(lambda: self.others_library.check_self_intersect())  # 检查自穿插
-        self.button_15.clicked.connect(lambda: cmds.select(self.others_library.mirror_point()[2]))  # 选择对称点
-        self.button_8.clicked.connect(lambda: self.others_library.fix_symmetry())  # 修复对称
-        self.button_9.clicked.connect(lambda: self.others_library.clean_namespace())  # 清理空间名
-        self.button_11.clicked.connect(lambda: self.others_library.joint_weight_to_game_specification())  # 清理权重
-        self.button_12.clicked.connect(lambda: self.others_library.clean_adsorption_num_nan())  # 清理空间名
 
+    def create_connect(self):
+        self.button_001.clicked.connect(lambda:  self.others_library.cleaning_the_pivot())  # 清理枢轴
+        self.button_002.clicked.connect(lambda: self.others_library.clean_up_invalid_BS_groups())  # 清理所有bs和bs组
+        self.button_003.clicked.connect(lambda: self.others_library.cleaning_the_model())  # 简单清理模型
+        self.button_004.clicked.connect(lambda: self.others_library.cleaning_the_animation_nodes())  # 清理动画节点
+        self.button_005.clicked.connect(lambda: self.others_library.cleaning_the_display_layers())  # 清理显示层
+        self.button_006.clicked.connect(lambda: self.others_library.cleaning_the_file())  # 文件清理
+        self.button_007.clicked.connect(lambda: self.others_library.check_self_intersect())  # 检查自穿插
+        self.button_008.clicked.connect(lambda: cmds.select(self.others_library.mirror_point()[2]))  # 选择对称点
+        self.button_009.clicked.connect(lambda: self.others_library.fix_symmetry())  # 修复对称
+        self.button_010.clicked.connect(lambda: self.others_library.clean_namespace())  # 清理空间名
+        self.button_011.clicked.connect(lambda: self.others_library.joint_weight_to_game_specification())  # 清理权重
+        self.button_012.clicked.connect(lambda: self.others_library.clean_adsorption_num_nan())  # 物体吸附数值为nan
+        self.button_013.clicked.connect(lambda: self.others_library.fix_symmetry_2())  # 修复对称2
+
+        self.button_014.clicked.connect(lambda: cmds.select(self.model.get_uv_borders(cmds.ls(sl=1))))  # 选择uv边缘
+        self.button_015.clicked.connect(self.mesh_to_uv)  # 按uv切割模型并生成打平模型（所有分离的线和uv匹配）
+        self.button_016.clicked.connect(lambda: cmds.select(self.model.create_uv_model(cmds.ls(sl=1)[0]))) # 按uv切割模型并生成打平模型（所有分离的线和uv匹配）
+
+
+    # 按uv切割模型并生成打平模型（所有分离的线和uv匹配）,且建立uv变形
+    def mesh_to_uv(self):
+        cmds.undoInfo(ock=1)
+        sel = cmds.ls(sl=1)
+        cmds.select(self.model.get_uv_borders(cmds.ls(sl=1)))
+        cmds.DetachComponent()
+        model, uv_with_point = self.model.create_flattened_model(sel[0])
+        # 添加属性
+        cmds.addAttr(model, ln='refresh', at='double', dv=0)
+        an = model + '.refresh'
+        cmds.setAttr(an, e=1, keyable=True)
+        x = 0
+        for s in sel:
+            shape = cmds.listRelatives(s, c=1, type='mesh')
+            point = cmds.ls(model + '.vtx[*]', fl=1)
+            expression_txt = 'float $refresh = ' + an + ';\n'
+            for i in range(len(point)):
+                # uv_points = cmds.polyListComponentConversion(point[i], fromVertex=True, toUV=True)
+                # uv_points = cmds.filterExpand(uv_points, sm=35)[0]  # 过滤为 UV 组件[4](@ref)
+                # num = int(uv_points.split('[')[1].split(']')[0])
+                num = uv_with_point[i][1]
+                # xform = cmds.xform(point[i], q=1, t=1, ws=1)
+                # plusMinusAverage = cmds.createNode('plusMinusAverage')
+                txt = 'float $xform'+str(x)+'[] = `xform -q -t -a  "' + point[i] + '"`;\n'
+                for me in shape:
+                    txt += '' + me + '.uvSet[0].uvSetPoints[' + str(num) + '].uvSetPointsU = $xform'+str(x)+'[0];\n'
+                    txt += '' + me + '.uvSet[0].uvSetPoints[' + str(num) + '].uvSetPointsV = $xform'+str(x)+'[1];\n'
+                x += 1
+                expression_txt += txt
+                print(s,x)
+                # print(uv_points)
+            cmds.expression(s=expression_txt, ae=1, uc='all', o='')
+            cmds.polySoftEdge(s, a=180, ch=1)
+
+        cmds.undoInfo(cck=1)
     def self_commend(self):
         pass
+
 window = Window()
 if __name__ == '__main__':
     window.show()

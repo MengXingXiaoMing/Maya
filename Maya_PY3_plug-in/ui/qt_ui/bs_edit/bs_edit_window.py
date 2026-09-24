@@ -1,5 +1,30 @@
 # -*- coding: utf-8 -*-
-import importlib
+import maya.cmds as cmds
+import os
+import sys
+import inspect
+# 文件路径
+file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
+# 根路径
+root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
+# 版本号
+maya_version = cmds.about(version=True)
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
 import ui_edit
 importlib.reload(ui_edit)
@@ -39,7 +64,7 @@ class Window(QtWidgets.QMainWindow):
         # 版本号
         self.maya_version = cmds.about(version=True)
         # 库路径
-        self.library_path = self.root_path + '\\' + self.maya_version
+        self.library_path = self.root_path + '\\' + maya_version
         self.library_path_reverse = '/'.join(self.library_path.split('\\'))
 
         try:
@@ -50,7 +75,7 @@ class Window(QtWidgets.QMainWindow):
 
         super(Window, self).__init__(parent)
         self.maya_version = cmds.about(version=True)
-        self.setWindowTitle('BS编辑（仅开发了UI）(Maya'+self.maya_version+')')
+        self.setWindowTitle('BS编辑(Maya'+self.maya_version+')')
 
         self.ui_edit = UiEdit()
         self.maya_common = MayaCommon()

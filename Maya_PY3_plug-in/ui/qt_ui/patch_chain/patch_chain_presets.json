@@ -1,0 +1,31 @@
+{
+ "DB_Normal": {
+  "segments": 2,
+  "width": 2.0,
+  "rot": 0,
+  "mode": "连续面片",
+  "wrap": false,
+  "anchor": "上一根骨骼权重=1",
+  "falloff": "平滑",
+  "span": 0,
+  "lock_root": true,
+  "lock_end": true,
+  "bez": [
+   0.33,
+   0.0,
+   0.67,
+   1.0
+  ],
+  "lat_seg": 3,
+  "lat_anchor": "就近骨骼权重=1",
+  "lat_falloff": "平滑",
+  "lat_span": 0,
+  "lat_bez": [
+   0.33,
+   0.0,
+   0.67,
+   1.0
+  ],
+  "prune": 0.01
+ }
+}

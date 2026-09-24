@@ -1,0 +1,1 @@
+API错误: HTTP状态码 400 - {"error":{"message":"Failed to deserialize the JSON body into the target type: messages[0]: unknown variant `image_url`, expected `text` at line 1 column 141935","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}

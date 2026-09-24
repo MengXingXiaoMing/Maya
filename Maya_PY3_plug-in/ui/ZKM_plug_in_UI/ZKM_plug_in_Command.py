@@ -2,9 +2,6 @@
 import os
 import sys
 import maya.cmds as cmds
-import maya.mel as mel
-import importlib
-import webbrowser
 import inspect
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
@@ -12,12 +9,26 @@ file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda:
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-3]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library_path = root_path + '\\' + maya_version
-# 库添加到系统路径
-sys.path.append(library_path)
+maya_version_int = int(maya_version)
+for i in range(30):
+    maya_version_int_a = maya_version_int - i
+    # 库路径
+    maya_version = str(maya_version_int_a)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    # print('library_path',library_path)
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        # print(library_path)
+        print("文件夹存在")
+        break
+
 import others_library
 from others_library import *
+
+import weight
+from weight import *
 
 class ZKM_plug_in_Class():
     def __init__(self):
@@ -92,7 +103,7 @@ class ZKM_plug_in_Class():
         cmds.menuItem(label='文件清理',
                     c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\clear_files\',\'clear_files_window\',\'window.show()\')')
         cmds.menuItem(label='权重处理',
-                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\weight_processing\',\'weight_processing_window\',\'window.show()\')')
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\weight_processing\',\'weight_processing_window\',\'window.show();\')')
         cmds.menuItem(label='控制器处理',
                       c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\controller_processing\',\'controller_processing_window\',\'window.show()\')')
         # cmds.menuItem(subMenu=True, label='控制器处理')
@@ -118,6 +129,22 @@ class ZKM_plug_in_Class():
                       c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\bs_convert_drver\',\'bs_convert_drver_window\',\'window.show()\')')
         cmds.menuItem(label='手动加驱动裙子',
                       c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\skirt_drver\',\'skirt_drver_window\',\'window.show()\')')
+        cmds.menuItem(label='变形器处理',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\edit_deform_layer\',\'edit_deform_layer_window\',\'window.show()\')')
+        cmds.menuItem(label='创建洞',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\create_hole\',\'create_hole_window\',\'window.show()\')')
+        cmds.menuItem(label='新绳子',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\new_rope\',\'new_rope_window\',\'window.show()\')')
+        cmds.menuItem(label='动画导入导出工具（矩阵版，测试中）',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\RedirectCurve\',\'redirect_curve_window\',\'window.show()\')')
+        cmds.menuItem(label='卷曲工具',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\scroll\',\'scroll_window\',\'window.show()\')')
+        cmds.menuItem(label='拉链生成',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\zipper\',\'zipper_window\',\'window.show()\')')
+        cmds.menuItem(label='体积',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\volume\',\'volume_window\',\'window.show()\')')
+        cmds.menuItem(label='面片链',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\patch_chain\',\'patch_chain_window\',\'window.show()\')')
         '''cmds.menuItem(subMenu=True, label='预置模板')
         cmds.menuItem(label='《—主窗口ヾ(^▽^*)))',
                     c='ZKM_plug_in_Class().open_run_py_window(r\'' + FilePath + '\\Maya_WindowUI\\PresetTemplateFile\',\'PresetTemplateWindow\',\'ShowWindow.ZKM_Window()\')')
@@ -132,5 +159,6 @@ class ZKM_plug_in_Class():
         # cmds.menuItem(divider=True, l='功能未完善╮(╯▽╰)╭')
         cmds.menuItem(label="打开文档(我是懒狗，压根没写哈哈哈)", i='fileOpen.png', c='ZKM_plug_in_Class().open_document()')
         cmds.menuItem(optionBox=True)
-        cmds.menuItem(label="帮助(目前为空)", i='help.png', c='ZKM_plug_in_Class().help()')
+        cmds.menuItem(label="帮助", i='help.png',
+                      c='ZKM_plug_in_Class().open_run_py_window(r\'' + self.root_path + '\\qt_ui\\help\',\'help_window\',\'window.show()\')')
         cmds.menuItem(label="访问UP主页(按住ctrl可进入GitHub))", i='implicitSphere.svg', c='ZKM_plug_in_Class().open_web()')

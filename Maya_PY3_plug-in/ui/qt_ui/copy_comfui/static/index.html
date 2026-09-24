@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>High-Res Node Editor</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/litegraph.js@0.7.10/css/litegraph.css">
+    <style>
+        body, html { margin: 0; background: #0f0f0f; overflow: hidden; height: 100%; width: 100%; font-family: sans-serif; }
+        #toolbar { height: 50px; background: #1a1a1a; color: white; display: flex; align-items: center; padding: 0 20px; gap: 15px; border-bottom: 1px solid #333; box-sizing: border-box; }
+        #canvas_container { width: 100vw; height: calc(100vh - 50px); background: #000; }
+        canvas { width: 100%; height: 100%; display: block; }
+        select, button { background: #333; color: white; border: 1px solid #555; padding: 5px 12px; border-radius: 4px; cursor: pointer; }
+        #filename { background: #333; color: white; border: 1px solid #555; padding: 5px 12px; border-radius: 4px; width: 200px; }
+        /* 链接样式 */
+        .litegraph.links line {
+            stroke: #4af !important;
+            stroke-width: 3 !important;
+        }
+        .litegraph.links .link-point {
+            fill: #4af !important;
+        }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <b style="color: #4af;">ComfyLite Pro</b>
+        <select id="fileList"><option>扫描中...</option></select>
+        <button onclick="fetchWorkflow()">📂📂 确认加载</button>
+        <input type="text" id="filename" placeholder="输入保存文件名（不含.json）">
+        <button onclick="saveWorkflow()">💾 保存工作流</button>
+    </div>
+    <div id="canvas_container"><canvas id="mainCanvas"></canvas></div>
+
+    <script src="https://unpkg.com/litegraph.js@0.7.10/build/litegraph.min.js"></script>
+    <script src="/static/editor.js"></script>
+</body>
+</html>

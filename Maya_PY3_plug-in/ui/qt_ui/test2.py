@@ -641,3 +641,343 @@ center, radii = ellipsoid_fit(points)
 # 复制代码
 print("椭球中心:", center)
 print("椭球半径:", radii)'''
+
+
+
+
+
+# 修复对称
+def fix_symmetry():
+    # 判断必须插件是否获取
+    pluginInfo = cmds.pluginInfo(listPlugins=True, q=True)
+    have_meshReorder = 0
+    for p in pluginInfo:
+        if 'meshReorder' == p:
+            have_meshReorder = 1
+    if have_meshReorder == 0:
+        cmds.loadPlugin('meshReorder')
+    # 关闭基础设置
+    mel.eval('reflectionSetMode none;')
+
+    sel = cmds.ls(sl=1)
+    all_point = cmds.ls(sel[0] + '.vtx[*]', fl=1)
+    point_dic_list = []
+    for p in all_point:
+        pos = cmds.xform(p, q=1, ws=1, t=1)
+        dic = {'point': p, 'num': pos}
+        point_dic_list.append(dic)
+    range_num = 0.001
+    mirror_point = []
+    while point_dic_list:
+        p_1_dic = point_dic_list.pop()
+        if (0 - range_num) <= p_1_dic['num'][0] <= (0 + range_num):
+            mirror_point.append(p_1_dic['point'])
+        else:
+            for p_2_dic in point_dic_list:
+                if (-1 * p_1_dic['num'][0] - range_num) <= p_2_dic['num'][0] <= (-1 * p_1_dic['num'][0] + range_num):
+                    if (p_1_dic['num'][1] - range_num) <= p_2_dic['num'][1] <= (p_1_dic['num'][1] + range_num):
+                        if (p_1_dic['num'][2] - range_num) <= p_2_dic['num'][2] <= (p_1_dic['num'][2] + range_num):
+                            mirror_point.append(p_1_dic['point'])
+                            mirror_point.append(p_2_dic['point'])
+                            point_dic_list.remove(p_2_dic)
+
+    if len(mirror_point) > 3:
+        cmds.refresh()
+        cmds.select(mirror_point, r=1)
+        mel.eval('ConvertSelectionToFaces;')
+        # 获取对称的面
+        mirror_face = cmds.ls(sl=1,fl=1)
+        # 在对称的面中查询四个坐标的x轴都在z轴负方向上
+        l_one_face_point = []
+        for f in mirror_face:
+            cmds.select(f)
+            mel.eval('ConvertSelectionToVertices;')
+            correction_point_sequence_point = cmds.ls(sl=1, fl=1)
+            i = 0
+            for p in correction_point_sequence_point:
+                pos = cmds.xform(p, q=1, ws=1, t=1)
+                if pos[0] >= 0:
+                    i = 1
+                    break
+            if i == 0:
+                # 选择需要矫正点序列的一半点
+                l_one_face_point = correction_point_sequence_point
+                break
+        cmds.select(l_one_face_point)
+        mel.eval('reflectionSetMode objectx;')
+        r_one_face_point = []
+        for i in range(0, 3):
+            cmds.select(l_one_face_point[i], sym=1, r=1)
+            two_point = cmds.ls(sl=1, fl=1)
+            other_point = [item for item in two_point if item not in l_one_face_point[i]]
+            if other_point:
+                r_one_face_point.append(other_point[0])
+        mel.eval('reflectionSetMode none;')
+        # 拆解数字
+        r_one_face_point_num = []
+        for i in range(0, 3):
+            r_one_face_point_num.append(r_one_face_point[i].split('[')[-1][:-1])
+        # 复制模型
+        cmds.select(sel)
+        cmds.duplicate(rr=1)
+        copy_model = cmds.ls(sl=1, fl=1)
+        cmds.setAttr((copy_model[0] + '.scaleX'), -1)
+        cmds.makeIdentity(n=0, s=1, r=1, t=1, apply=True, pn=1)
+        shape = cmds.listRelatives(copy_model[0], s=1)
+        cmds.meshRemap(l_one_face_point[0], l_one_face_point[1], l_one_face_point[2],
+                       (shape[0] + '.vtx[' + r_one_face_point_num[0] + ']'),
+                       (shape[0] + '.vtx[' + r_one_face_point_num[1] + ']'),
+                       (shape[0] + '.vtx[' + r_one_face_point_num[2] + ']'))
+        # 查询x轴负方向点
+        all_point_L = []
+        for p in all_point:
+            pos = cmds.xform(p, q=1, ws=1, t=1)
+            if pos[0] > 0:
+                all_point_L.append(p)
+        # 建立混合变形
+        blendShape = cmds.blendShape(copy_model[0], all_point_L, frontOfChain=1, tc=0)
+        cmds.setAttr((blendShape[0] + '.' + copy_model[0]), 1)
+        cmds.select(sel)
+        mel.eval('DeleteHistory;')
+        cmds.delete(copy_model)
+        cmds.select(sel)
+        ffd = cmds.lattice(divisions=(2, 2, 2), ldv=(2, 2, 2), objectCentered=True)
+        cmds.select(ffd[1])
+        mel.eval('DeleteHistory;')
+        cmds.delete(ffd)
+        cmds.select(sel)
+        cmds.warning('对称修复完成。')
+    else:
+        cmds.warning('模型至少需要有一个三角面对称。')
+    cmds.undoInfo(ock=1)
+    '''sel_f = cmds.ls(sl=1, fl=1)
+    mesh = sel_f[0].split('.')[0]
+    cmds.select(mesh)
+    mesh = cmds.ls(sl=1)
+    copy_mesh = cmds.duplicate(mesh)
+
+    cmds.setAttr(mesh[0] + '.rotatePivot', 0, 0, 0)
+    cmds.setAttr(mesh[0] + '.scalePivot', 0, 0, 0)
+    cmds.select(mesh[0] + '.f[*]')
+    cmds.scale(1e-05, 0, 0, r=1, ws=1)
+
+    blendShape = cmds.blendShape(copy_mesh, mesh)
+
+    cmds.setAttr(blendShape[0] + '.' + copy_mesh[0], 1)
+    cmds.select(cl=1)
+    cmds.symmetricModelling(sel_f[0], e=1, ts=True)
+    cmds.select(sel_f)
+    cmds.blendShape(blendShape[0] + '.' + copy_mesh[0], ss=0, md=1, sa="x", e=1, mt=(0, 0))
+    cmds.select(mesh)
+    cmds.DeleteHistory()
+    cmds.delete(copy_mesh)
+    cmds.symmetricModelling(s=0)'''
+
+    cmds.select(cl=1)
+    cmds.undoInfo(cck=1)
+fix_symmetry()
+
+
+
+all_name = cmds.ls(dag=True)
+cmds.select(all_name)
+all_name = cmds.ls(sl=1)
+duplicate_name = []
+for name in all_name:
+    duplicate = name.split('|')
+    if len(duplicate) > 1:
+        duplicate_name.append(name)
+print(duplicate_name)
+# if duplicate_name:
+#     for i in range(0, len(duplicate_name)):
+#         name = duplicate_name[len(duplicate_name) - i - 1].split('|')[-1]
+#         cmds.rename(duplicate_name[len(duplicate_name) - i - 1], name + '_' + str(len(duplicate_name) - i - 1))
+
+if duplicate_name:
+    for i in range(0, len(duplicate_name)):
+        num = []
+        base_name = []
+        name = duplicate_name[len(duplicate_name) - i - 1].split('|')[-1]
+        for j in range(0, len(name)):
+            if name[len(name) - 1 - j].isdigit() == False:
+                num = name[len(name) - j:]
+                base_name = name[:len(name) - j]
+                break
+        cmds.select('*|' + base_name + '*')
+        name_list = cmds.ls(sl=1)
+        all_num = [0]
+        for name in name_list:
+            for j in range(0, len(name)):
+                if name[len(name) - 1 - j].isdigit() == False:
+                    num = name[len(name) - j:]
+                    if num:
+                        all_num.append(int(num))
+                    break
+        cmds.rename(duplicate_name[len(duplicate_name) - i - 1], (str(base_name) + str(max(all_num) + 1)))
+    cmds.warning('已经去除重复名称')
+
+
+
+cmds.undoInfo(ock=1)
+sel = cmds.ls(sl=1)
+# 清理模型显示
+cmds.polyOptions(ae=1, cm='diffuse', uvt=0, dcv=0, cs=0, gl=1, suv=4, duv=0, dn=0, bc=1, dce=0, db=0,
+                 din=(0, 0, 0, 0), dc=0, dv=0, dw=0, dt=0, dmb=0, mb='overwrite', dif=1, sv=3, facet=1,
+                 sn=0.4,
+                 sb=3, bcv=1)
+mel.eval('updateSMPAttrs(0, 0, 2, 0, 1, 1, 0, 1, 0, 0, 1);')
+# 重置模型显示
+cmds.PolyDisplayReset()
+# maya自带模型清理
+cmds.select(sel)
+mel.eval(
+    'polyCleanupArgList 4 { "0","1","1","0","1","1","1","0","1","1e-05","1","1e-05","0","1e-05","0","1","1","1" };')
+cmds.select(sel)
+mel.eval('DeleteHistory;')
+ffd = cmds.lattice(divisions=(2, 2, 2), ldv=(2, 2, 2), objectCentered=True)
+cmds.select(ffd[1])
+mel.eval('DeleteHistory;')
+cmds.delete(ffd)
+cmds.warning('简单清理模型完成。')
+cmds.select(sel)
+cmds.undoInfo(cck=1)
+
+
+
+
+# 体素化
+def voxelization():
+    cmds.undoInfo(ock=1)
+    # 创建bifrost
+    mesh = cmds.ls(sl=1)
+
+    if mesh:
+        bbox = cmds.xform(mesh, query=True, boundingBox=True, worldSpace=True)
+
+        # 计算尺寸（宽度=X轴差值，高度=Y轴差值，深度=Z轴差值）
+        width = bbox[3] - bbox[0]  # X 轴长度
+        height = bbox[4] - bbox[1]  # Y 轴长度
+        depth = bbox[5] - bbox[2]  # Z 轴长度
+        num = max(width, height, depth)
+        num = int(num / 10)
+
+        shape = cmds.listRelatives(mesh[0], s=1, type='mesh')
+        cmds.select(shape)
+
+        # 创建样条生成命令
+        mel.eval('CreateNewBifrostGraph;')
+        Bifrost = cmds.ls(sl=1)
+        cmds.setAttr(Bifrost[0] + '.visibility', 0)
+        # mel.eval('vnnNode '+Bifrost[0]+' "/input" -createOutputPort "mesh" "Object" -portOptions "pathinfo={path=pSphereShape1;setOperation=+;active=true;channels=*;normalsPerFaceVertex=true;normalsPerPoint=true;normalsPerFace=false;componentTags=*}";')
+        mel.eval('vnnCompound ' + Bifrost[0] + ' "/" -addNode "BifrostGraph,Geometry::Converters,mesh_to_level_set";')
+        mel.eval('vnnConnect     ' + Bifrost[0] + ' ".mesh" "/mesh_to_level_set.mesh";')
+        mel.eval('vnnCompound ' + Bifrost[0] + ' "/" -addNode "BifrostGraph,Geometry::Converters,volume_to_mesh" -connectTo "mesh_to_level_set";')
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/volume_to_mesh" -createInputPort "volumes.level_set" "auto";')
+        mel.eval('vnnConnect ' + Bifrost[0] + ' "/mesh_to_level_set.level_set" "/volume_to_mesh.volumes.level_set";')
+
+
+        # 额外添加属性
+        cmds.addAttr(Bifrost, ln='ex', at='double', dv=0)
+        cmds.setAttr(Bifrost[0] + '.ex', e=1, keyable=1)
+        expression_text = Bifrost[0] + '.ex = 0;\n'
+
+        cmds.addAttr(Bifrost[0], ln="mesh_to_level_set", en="_:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.mesh_to_level_set', e=1, channelBox=True)
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "detail_size" "float";')
+        mel.eval('vnnConnect ' + Bifrost[0] + ' ".detail_size" "/mesh_to_level_set.detail_size" -copyMetaData;')
+        cmds.setAttr(Bifrost[0] + '.detail_size', num)
+
+        cmds.addAttr(Bifrost[0], ln='volume_mode', en='Solid:Shell:', at="enum")
+        cmds.setAttr(Bifrost[0] + '.volume_mode', e=1, keyable=True)
+        text = ('int $i = ' + Bifrost[0] + '.volume_mode;\n'
+                                           'vnnNode ' + Bifrost[
+                    0] + ' "/mesh_to_level_set" -setPortDefaultValues "volume_mode" $i;\n')
+        expression_text += text
+
+        cmds.addAttr(Bifrost[0], ln="adaptivity", en="Optimized:VariedFromProperty:Off:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.adaptivity', e=1, keyable=True)
+        cmds.setAttr(Bifrost[0] + '.adaptivity', 2)
+        text = ('$i = ' + Bifrost[0] + '.adaptivity;\n'
+                                       'vnnNode ' + Bifrost[
+                    0] + ' "/mesh_to_level_set" -setPortDefaultValues "adaptivity" $i;\n')
+        expression_text += text
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "max_relative_error" "float";')
+        mel.eval('vnnConnect ' + Bifrost[
+            0] + ' ".max_relative_error" "/mesh_to_level_set.max_relative_error" -copyMetaData;')
+        cmds.setAttr(Bifrost[0] + '.max_relative_error', 0.1)
+
+        cmds.addAttr(Bifrost[0], ln="volume_subdivision_structure", en="Automatic:Power2:Power5:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.volume_subdivision_structure', e=1, keyable=True)
+        text = ('$i = ' + Bifrost[0] + '.volume_subdivision_structure;\n'
+                                       'vnnNode ' + Bifrost[
+                    0] + ' "/mesh_to_level_set" -setPortDefaultValues "volume_subdivision_structure" $i;\n')
+        expression_text += text
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "min_hole_radius" "float";')
+        mel.eval(
+            'vnnConnect ' + Bifrost[0] + ' ".min_hole_radius" "/mesh_to_level_set.min_hole_radius" -copyMetaData;')
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "thickening" "float";')
+        mel.eval('vnnConnect ' + Bifrost[0] + ' ".thickening" "/mesh_to_level_set.thickening" -copyMetaData;')
+        cmds.setAttr(Bifrost[0] + '.thickening', 1)
+
+        ####
+        cmds.addAttr(Bifrost[0], ln="volume_to_mesh", en="_:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.volume_to_mesh', e=1, channelBox=True)
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "level_set_threshold" "float";')
+        mel.eval('vnnConnect ' + Bifrost[
+            0] + ' ".level_set_threshold" "/volume_to_mesh.level_set_threshold" -copyMetaData;')
+
+        cmds.addAttr(Bifrost[0], ln="mesh_mode", en="Automatic:Custom:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.mesh_mode', e=1, keyable=True)
+        text = ('$i = ' + Bifrost[0] + '.mesh_mode;\n'
+                                       'vnnNode ' + Bifrost[
+                    0] + ' "/volume_to_mesh" -setPortDefaultValues "mesh_mode" $i;\n')
+        expression_text += text
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "property_threshold" "float";')
+        mel.eval('vnnConnect ' + Bifrost[
+            0] + ' ".property_threshold" "/volume_to_mesh.property_threshold" -copyMetaData;')
+
+        cmds.addAttr(Bifrost[0], ln="custom_interior_mode", en="less:Greater:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.custom_interior_mode', e=1, keyable=True)
+        cmds.setAttr(Bifrost[0] + '.custom_interior_mode', 1)
+        text = ('$i = ' + Bifrost[0] + '.custom_interior_mode;\n'
+                                       'vnnNode ' + Bifrost[
+                    0] + ' "/volume_to_mesh" -setPortDefaultValues "custom_interior_mode" $i;\n')
+        expression_text += text
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "detail_size_scale" "float";')
+        mel.eval(
+            'vnnConnect ' + Bifrost[0] + ' ".detail_size_scale" "/volume_to_mesh.detail_size_scale" -copyMetaData;')
+        cmds.setAttr(Bifrost[0] + '.detail_size_scale', 1)
+
+        cmds.addAttr(Bifrost[0], ln="adaptivity_", en="Automatic:VariedFromProperty:Off:", at="enum")
+        cmds.setAttr(Bifrost[0] + '.adaptivity_', e=1, keyable=True)
+        text = ('$i = ' + Bifrost[0] + '.adaptivity_;\n'
+                                       'vnnNode ' + Bifrost[
+                    0] + ' "/volume_to_mesh" -setPortDefaultValues "adaptivity" $i;\n')
+        expression_text += text
+
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/input" -createOutputPort "smoothing" "float";')
+        mel.eval('vnnConnect ' + Bifrost[0] + ' ".smoothing" "/volume_to_mesh.smoothing" -copyMetaData;')
+        cmds.setAttr(Bifrost[0] + '.smoothing', 0.1)
+
+        cmds.expression(s=expression_text, ae=1, uc='all', o='')
+        # 输出
+        mel.eval('vnnNode ' + Bifrost[0] + ' "/output" -createInputPort "meshes" "array<Object>";')
+        mel.eval('vnnConnect ' + Bifrost[0] + ' "/volume_to_mesh.meshes" ".meshes";')
+        # 外部链接
+        bifrostGeoToMaya = cmds.createNode('bifrostGeoToMaya')
+        cmds.connectAttr(Bifrost[0] + '.meshes', bifrostGeoToMaya + '.bifrostGeo')
+        polyCube = cmds.polyCube(ch=0)
+        shape = cmds.listRelatives(polyCube, s=1)
+        cmds.connectAttr(bifrostGeoToMaya + '.mayaMesh[0]', shape[0] + '.inMesh')
+    else:
+        cmds.warning('请选择模型')
+    cmds.undoInfo(cck=1)
+
+

@@ -1,17 +1,30 @@
 # -*- coding: utf-8 -*-
-import inspect
-import os
-from functools import partial
-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
 import maya.cmds as cmds
-import ast
-import importlib
+import os
+import sys
+import inspect
+# 文件路径
+file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
+# 根路径
+root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
+# 版本号
+maya_version = cmds.about(version=True)
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
 import ui_edit
 importlib.reload(ui_edit)
@@ -35,7 +48,7 @@ class Window(QtWidgets.QMainWindow):
         # 版本号
         self.maya_version = cmds.about(version=True)
         # 库路径
-        self.library_path = self.root_path + '\\' + self.maya_version
+        self.library_path = self.root_path + '\\' + maya_version
         self.library_path_reverse = '/'.join(self.library_path.split('\\'))
 
         try:
@@ -137,6 +150,7 @@ class Window(QtWidgets.QMainWindow):
         self.button_9.clicked.connect(self.delete_self_tire)
 
     # 修改adv的轮胎表达式
+    @Withdraw
     def modify_the_ADV_wheel_expression(self):
         cmds.undoInfo(ock=1)
         # 获取要删除的节点
@@ -248,11 +262,11 @@ class Window(QtWidgets.QMainWindow):
                  '            if(frame>=$start_frame){\n'
                  '                string $tire[]=`ls ($soure[0]+".tire")`;\n'
                  '                string $tires[]=`listConnections -d 1 $tire[0]`;\n'
-                 '                for($j=0;$j<size($tires);$j++){\n'
-                 '                    float $tire_num=`getAttr ($tires[$j]+".calculate_tire_num")`;\n'
-                 '                    setKeyframe ($tires[$j]+".baking_wheel");\n'
-                 '                    setAttr ($tires[$j]+".baking_wheel") $tire_num;\n'
-                 '                    setKeyframe ($tires[$j]+".baking_wheel");\n'
+                 '                for($tirej=0;$tirej<size($tires);$tirej++){\n'
+                 '                    float $tire_num=`getAttr ($tires[$tirej]+".calculate_tire_num")`;\n'
+                 '                    setKeyframe ($tires[$tirej]+".baking_wheel");\n'
+                 '                    setAttr ($tires[$tirej]+".baking_wheel") $tire_num;\n'
+                 '                    setKeyframe ($tires[$tirej]+".baking_wheel");\n'
                  '                }\n'
                  '            }\n'
                  '        }\n'
@@ -272,6 +286,7 @@ class Window(QtWidgets.QMainWindow):
         cmds.undoInfo(cck=1)
 
     # 从零开始创建轮胎表达式
+    @Withdraw
     def create_tire(self):
         # 获取要删除的节点
         need_delete = []
@@ -452,11 +467,12 @@ class Window(QtWidgets.QMainWindow):
                  '            if(frame>=$start_frame){\n'
                  '                string $tire[]=`ls ($soure[0]+".tire")`;\n'
                  '                string $tires[]=`listConnections -d 1 $tire[0]`;\n'
-                 '                for($j=0;$j<size($tires);$j++){\n'
-                 '                    float $tire_num=`getAttr ($tires[$j]+".calculate_tire_num")`;\n'
-                 '                    setKeyframe ($tires[$j]+".baking_wheel");\n'
-                 '                    setAttr ($tires[$j]+".baking_wheel") $tire_num;\n'
-                 '                    setKeyframe ($tires[$j]+".baking_wheel");\n'
+                 '                int $tires_num = size($tires); \n'
+                 '                for($tirej=0;$tirej<$tires_num;$tirej++){\n'
+                 '                    float $tire_num=`getAttr ($tires[$tirej]+".calculate_tire_num")`;\n'
+                 '                    setKeyframe ($tires[$tirej]+".baking_wheel");\n'
+                 '                    setAttr ($tires[$tirej]+".baking_wheel") $tire_num;\n'
+                 '                    setKeyframe ($tires[$tirej]+".baking_wheel");\n'
                  '                }\n'
                  '            }\n'
                  '        }\n'
@@ -474,6 +490,7 @@ class Window(QtWidgets.QMainWindow):
 
 
     # 删除轮胎
+    @Withdraw
     def delete_adv_tire(self):
         # 获取总控制器
         general_controller = cmds.ls(sl=1)
@@ -515,6 +532,7 @@ class Window(QtWidgets.QMainWindow):
                 pass
         cmds.deleteAttr(general_controller[0] + '.node')
 
+    @Withdraw
     def delete_self_tire(self):
         cmds.undoInfo(ock=1)
         # 加载总控制器

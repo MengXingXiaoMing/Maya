@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <link rel="stylesheet" href="https://unpkg.com/litegraph.js@0.7.10/css/litegraph.css">
+    <style>
+        body { margin:0; background:#111; overflow:hidden; }
+        #toolbar { height:40px; background:#222; display:flex; align-items:center; padding:0 20px; border-bottom:1px solid #333; }
+        #canvas_container { width:100vw; height:calc(100vh - 40px); }
+        canvas { width:100%; height:100%; }
+    </style>
+</head>
+<body>
+    <div id="toolbar">
+        <button onclick="loadWorkflow('demo_complex.json')">加载复杂案例</button>
+    </div>
+    <div id="canvas_container"><canvas id="mainCanvas"></canvas></div>
+    
+    <script src="https://unpkg.com/litegraph.js@0.7.10/build/litegraph.min.js"></script>
+    <script src="/static/editor.js"></script>
+</body>
+</html>

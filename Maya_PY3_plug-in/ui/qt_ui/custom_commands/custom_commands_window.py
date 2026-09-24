@@ -1,27 +1,31 @@
 # coding=gbk
-import random
 import maya.cmds as cmds
-import maya.mel as mel
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-from maya.app.general.mayaMixin import MayaQWidgetDockableMixin
 import os
 import sys
 import inspect
-
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library_path = root_path + '\\' + maya_version
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
-# 库添加到系统路径
-sys.path.append(library_path)
 import others_library
 from others_library import *
 importlib.reload(others_library)
@@ -67,7 +71,7 @@ class Command():
 
         help_menu = self.menu_bar.addMenu('帮助')
 
-        self.help_action = QtWidgets.QAction('关于')
+        self.help_action = QAction('关于')
         help_menu.addAction(self.help_action)
 
         self.Label_1 = QtWidgets.QLabel('路径:')
@@ -238,7 +242,7 @@ class Command():
     def show_display_ui(self):
         self.display_ui = []
         for type in self.all_file_type:
-            display_shape_action = QtWidgets.QAction(type, checkable=True)
+            display_shape_action = QAction(type, checkable=True)
             self.display_ui.append(display_shape_action)
             display_shape_action.setChecked(True)
             self.display_menu.addAction(display_shape_action)
@@ -369,8 +373,13 @@ class Command():
         self.refresh_tree_widget()
     # 读取基本设置
     def read_base_set(self):
+        wight_file_path = cmds.iconTextButton('MayaWindow_menu_Process_formLayout1_AddButton', q=1, ann=1)
+        path_split = wight_file_path.split('\\')
+        path = path_split[0]
+        for i in range(1, len(path_split)):
+            path = path + '/' + path_split[i]
         # 打开文件，使用'r'表示读取模式
-        with open(self.file_path+'\\base_set.txt', 'r', encoding='utf-8') as file:
+        with open(wight_file_path+'\\base_set.txt', 'r', encoding='utf-8') as file:
             # 逐行读取文件内容
             lines = file.readlines()
             # 打印每一行
@@ -379,7 +388,7 @@ class Command():
             self.ui_path = file_path[:-1]
             if not os.path.exists(self.ui_path):
                 print('文件路径不存在，已修改为默认。')
-                self.ui_path = self.library_path_reversal + '/custom_commands'
+                self.ui_path = path + '/custom_commands'
             file_path = lines[1]
             if file_path == '\n':
                 self.depth = 1

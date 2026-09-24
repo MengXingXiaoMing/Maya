@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
+from PySide6 import QtWidgets, QtCore, QtGui
+from PySide6.QtGui import *
+from PySide6.QtWidgets import *
+from PySide6.QtCore import *
 import maya.OpenMayaUI as Omui
 from shiboken2 import wrapInstance
 import maya.cmds as cmds

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>Advanced Node Flow Editor</title>
+    <link rel="stylesheet" type="text/css" href="https://unpkg.com/litegraph.js@0.7.10/css/litegraph.css">
+    <script type="text/javascript" src="https://unpkg.com/litegraph.js@0.7.10/build/litegraph.min.js"></script>
+    <style>
+        body { margin: 0; background: #0f0f0f; font-family: "Inter", sans-serif; overflow: hidden; }
+        #toolbar { height: 50px; background: #1a1a1a; color: white; display: flex; align-items: center; padding: 0 20px; border-bottom: 1px solid #333; gap: 15px; }
+        #canvas_container { width: 100vw; height: calc(100vh - 50px); }
+        canvas { width: 100%; height: 100%; }
+        button { cursor: pointer; background: #007bff; color: white; border: none; padding: 6px 16px; border-radius: 4px; font-weight: 500; }
+        button:hover { background: #0056b3; }
+        code { color: #888; background: #222; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+
+<div id="toolbar">
+    <div style="font-size: 18px; font-weight: bold; margin-right: 10px;">ComfyLite <span style="font-weight: normal; font-size: 12px; color: #666;">v1.0</span></div>
+    <button onclick="loadComplexWorkflow()">🚀 加载复杂链路工作流</button>
+    <span style="font-size: 12px; color: #888;">路径: <code>/project/workflows/complex_chain.json</code></span>
+</div>
+
+<div id="canvas_container">
+    <canvas id="mainCanvas"></canvas>
+</div>
+
+<script>
+    // --- 1. 唯一创建节点函数 ---
+    function defineNode(type, inputs, outputs, logic) {
+        function NewNode() {
+            if (inputs) inputs.forEach(i => this.addInput(i.name, i.type));
+            if (outputs) outputs.forEach(o => this.addOutput(o.name, o.type));
+            this.size = [180, 60];
+            this.properties = { enabled: true };
+        }
+        NewNode.prototype.onExecute = function() {
+            const data = inputs ? inputs.map((_, i) => this.getInputData(i)) : [];
+            const res = logic.call(this, data);
+            if (res) res.forEach((v, i) => this.setOutputData(i, v));
+        };
+        LiteGraph.registerNodeType(type, NewNode);
+    }
+
+    // --- 2. 丰富节点库 (模拟图像生成链路) ---
+    defineNode("loaders/image_loader", [], [{name:"IMAGE",type:"image"}, {name:"METADATA",type:"string"}], function() {
+        return ["image_data_buffer", "Res: 1024x1024"];
+    });
+
+    defineNode("params/int_slider", [], [{name:"VAL",type:"int"}], function() {
+        return [this.properties.value || 50];
+    });
+
+    defineNode("processing/filter",
+        [{name:"IMG",type:"image"}, {name:"STRENGTH",type:"int"}],
+        [{name:"IMG",type:"image"}],
+        (d) => [d[0] + "_filtered_" + d[1]]
+    );
+
+    defineNode("processing/mask_gen",
+        [{name:"IMG",type:"image"}],
+        [{name:"MASK",type:"mask"}],
+        (d) => [d[0] + "_mask"]
+    );
+
+    defineNode("output/preview",
+        [{name:"IN",type:null}], [],
+        function(d) { this.title = d[0] ? "PREVIEW: " + d[0] : "Empty"; }
+    );
+
+    // --- 3. 高清渲染修复逻辑 ---
+    const graph = new LGraph();
+    const canvasElement = document.getElementById("mainCanvas");
+    const lCanvas = new LGraphCanvas("#mainCanvas", graph);
+
+    function resize() {
+        const dpr = window.devicePixelRatio || 1;
+        const container = document.getElementById("canvas_container");
+        canvasElement.width = container.clientWidth * dpr;
+        canvasElement.height = container.clientHeight * dpr;
+        lCanvas.ds.scale = dpr; // 关键：让 LiteGraph 内部缩放跟随 DPR
+        lCanvas.draw(true);
+    }
+
+    window.addEventListener('resize', resize);
+    setTimeout(resize, 50);
+
+    // --- 4. 复杂的 JSON 工作流案例 (包含长链条和分支) ---
+    function loadComplexWorkflow() {
+        const complexJson = {
+            "last_node_id": 8,
+            "nodes": [
+                { "id": 1, "type": "loaders/image_loader", "pos": [50, 100] },
+                { "id": 2, "type": "params/int_slider", "pos": [50, 250], "properties": { "value": 85 } },
+                { "id": 3, "type": "processing/filter", "pos": [300, 100] },
+                { "id": 4, "type": "processing/mask_gen", "pos": [550, 50] },
+                { "id": 5, "type": "processing/filter", "pos": [550, 200], "title": "Second Pass" },
+                { "id": 6, "type": "params/int_slider", "pos": [300, 300], "properties": { "value": 10 } },
+                { "id": 7, "type": "output/preview", "pos": [850, 50], "title": "Mask View" },
+                { "id": 8, "type": "output/preview", "pos": [850, 200], "title": "Final Render" }
+            ],
+            "links": [
+                [1, 1, 0, 3, 0, "image"],     // Loader -> Filter 1
+                [2, 2, 0, 3, 1, "int"],       // Slider 1 -> Filter 1
+                [3, 3, 0, 4, 0, "image"],     // Filter 1 -> Mask Gen
+                [3, 3, 0, 5, 0, "image"],     // Filter 1 -> Filter 2 (分支)
+                [6, 6, 0, 5, 1, "int"],       // Slider 2 -> Filter 2
+                [4, 4, 0, 7, 0, "mask"],      // Mask Gen -> Preview 1
+                [5, 5, 0, 8, 0, "image"]      // Filter 2 -> Preview 2
+            ]
+        };
+
+        graph.configure(complexJson);
+        resize(); // 加载后刷新渲染
+    }
+
+    graph.start();
+</script>
+</body>
+</html>

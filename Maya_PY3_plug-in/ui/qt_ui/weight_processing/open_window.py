@@ -20,3 +20,4 @@ import weight_processing_window
 importlib.reload(weight_processing_window)
 from weight_processing_window import *
 window.show()
+# window.resize(900, 100)

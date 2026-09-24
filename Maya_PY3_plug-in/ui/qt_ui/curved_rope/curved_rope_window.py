@@ -1,28 +1,30 @@
 # -*- coding: utf-8 -*-
-import math
-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
 import maya.cmds as cmds
 import os
-import inspect
-import importlib
 import sys
-
+import inspect
 # 文件路径
 file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
 # 根路径
 root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
 # 版本号
 maya_version = cmds.about(version=True)
-# 库路径
-library_path = root_path + '\\' + maya_version
-# 库添加到系统路径
-sys.path.append(library_path)
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
 import curve
 importlib.reload(curve)
@@ -49,17 +51,17 @@ class Window(QtWidgets.QMainWindow):
             pass
         super(Window, self).__init__(parent)
         # maya版本
-        self.maya_version = cmds.about(version=True)
+        self.maya_version = maya_version
         # 文件路径
         self.file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
         # 根路径
         self.root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
-        # 版本号
-        self.maya_version = cmds.about(version=True)
+
         # 库路径
         self.library_path = self.root_path + '\\' + maya_version
         # 样条库路径
         self.curve_library_path = self.library_path+ '\curve_library'
+        print(self.curve_library_path)
 
         self.curve_library = CreateAndEditCurve()
         self.controller = CurveControllerEdit()
@@ -109,10 +111,28 @@ class Window(QtWidgets.QMainWindow):
 
         self.slider_2 = QtWidgets.QSlider(Qt.Horizontal)
         self.slider_2.setMinimum(0)
-        self.slider_2.setMaximum(4)
+        self.slider_2.setMaximum(3)
         self.slider_2.setValue(0)
         self.button_6 = QtWidgets.QPushButton('创建基础')
         self.button_6.setStyleSheet('color:rgb(0,0,0);background:rgb(255,102,102)')
+
+        self.check_box_9 = QtWidgets.QCheckBox('添加fk')
+
+        self.check_box_1 = QtWidgets.QCheckBox('曲面')
+        self.check_box_2 = QtWidgets.QCheckBox('滑动FK')
+        self.check_box_3 = QtWidgets.QCheckBox('拖拽')
+        self.check_box_4 = QtWidgets.QCheckBox('传统')
+        self.check_box_5 = QtWidgets.QCheckBox('反向滑动FK')
+        self.check_box_6 = QtWidgets.QCheckBox('路径')
+
+        self.splitter_3 = QtWidgets.QSplitter()
+        self.splitter_3.setFixedHeight(1)
+        self.splitter_3.setFrameStyle(1)
+
+        self.check_box_7 = QtWidgets.QCheckBox('拉伸')
+        self.check_box_8 = QtWidgets.QCheckBox('收缩')
+        # self.check_box_9 = QtWidgets.QCheckBox('滑动缩放')
+
         self.label_1 = QtWidgets.QLabel('请记得矫正骨骼轴向')
 
         self.splitter_2 = QtWidgets.QSplitter()
@@ -120,11 +140,11 @@ class Window(QtWidgets.QMainWindow):
         self.splitter_2.setFrameStyle(1)
 
         self.label_2 = QtWidgets.QLabel('骨骼')
-        self.line_edit_2 = QtWidgets.QLineEdit()
+        self.line_edit_2 = QtWidgets.QLineEdit('joint1')
         self.button_7 = QtWidgets.QPushButton('加载')
 
         self.label_3 = QtWidgets.QLabel('样条')
-        self.line_edit_3 = QtWidgets.QLineEdit()
+        self.line_edit_3 = QtWidgets.QLineEdit('curve1')
         self.button_8 = QtWidgets.QPushButton('加载')
 
         #self.label_4 = QtWidgets.QLabel('一端拖拽控制器数：')
@@ -138,14 +158,16 @@ class Window(QtWidgets.QMainWindow):
         self.label_5 = QtWidgets.QLabel('滑动缩放控制器数：')
         self.line_edit_5 = QtWidgets.QLineEdit()
         self.line_edit_5.setFixedWidth(30)
-        self.line_edit_5.setText('1')
+        self.line_edit_5.setText('0')
         self.slider_3 = QtWidgets.QSlider(Qt.Horizontal)
-        self.slider_3.setMinimum(1)
+        self.slider_3.setMinimum(0)
         self.slider_3.setMaximum(10)
 
         self.label_6 = QtWidgets.QLabel('前缀')
+
         self.line_edit_6 = QtWidgets.QLineEdit('Rope_')
 
+        self.button_99 = QtWidgets.QPushButton('测试')
     def create_layouts(self):
         self.central_widget = QtWidgets.QWidget(self)
         self.setCentralWidget(self.central_widget)
@@ -176,6 +198,35 @@ class Window(QtWidgets.QMainWindow):
         main_layout.addLayout(v_box_layout_1)
         v_box_layout_1.addWidget(self.slider_2)
         v_box_layout_1.addWidget(self.button_6)
+        h_Box_layout_10 = QtWidgets.QHBoxLayout(self)
+        v_box_layout_1.addLayout(h_Box_layout_10)
+        h_Box_layout_10.addWidget(self.check_box_9)
+        self.check_box_9.setVisible(0)
+
+        h_Box_layout_6 = QtWidgets.QHBoxLayout(self)
+        # main_layout.addLayout(h_Box_layout_6)
+        v_box_layout_2 = QtWidgets.QVBoxLayout(self)
+        h_Box_layout_6.addLayout(v_box_layout_2)
+        v_box_layout_2.addWidget(self.check_box_1)
+        v_box_layout_2.addWidget(self.check_box_4)
+        v_box_layout_3 = QtWidgets.QVBoxLayout(self)
+        h_Box_layout_6.addLayout(v_box_layout_3)
+        v_box_layout_3.addWidget(self.check_box_2)
+        v_box_layout_3.addWidget(self.check_box_5)
+        v_box_layout_4 = QtWidgets.QVBoxLayout(self)
+        h_Box_layout_6.addLayout(v_box_layout_4)
+        v_box_layout_4.addWidget(self.check_box_3)
+        v_box_layout_4.addWidget(self.check_box_6)
+
+        # main_layout.addWidget(self.splitter_3)
+
+        h_Box_layout_9 = QtWidgets.QHBoxLayout(self)
+        # main_layout.addLayout(h_Box_layout_7)
+        h_Box_layout_9.addWidget(self.check_box_7)
+        h_Box_layout_9.addWidget(self.check_box_8)
+        # h_Box_layout_7.addWidget(self.check_box_9)
+
+
         h_Box_layout_3 = QtWidgets.QHBoxLayout(self)
         v_box_layout_1.addLayout(h_Box_layout_3)
         h_Box_layout_3.addStretch(1)
@@ -215,11 +266,14 @@ class Window(QtWidgets.QMainWindow):
         h_Box_layout_7.addWidget(self.line_edit_6)
 
         # 置顶
-        #main_layout.addStretch(0)
+        # main_layout.addStretch(0)
+        # main_layout.addLayout(h_Box_layout_6)
+        # main_layout.addLayout(h_Box_layout_9)
+        # main_layout.addWidget(self.button_99)
 
     def create_connect(self):
         self.button_1.clicked.connect(self.create_test)
-        self.button_2.clicked.connect(self.others_library.create_centre_joint)
+        self.button_2.clicked.connect(self.others_library.establishing_a_bone_chain_at_the_midline)
         self.button_3.clicked.connect(self.others_library.joint_transformation_curve)
         self.button_4.clicked.connect(self.create_positioning_loc)
         self.slider_1.valueChanged.connect(self.create_joint_num)
@@ -230,6 +284,7 @@ class Window(QtWidgets.QMainWindow):
         self.button_8.clicked.connect(lambda :self.ui_edit.load_select_for_ui_text(self.line_edit_3,['QLineEdit']))
         self.slider_3.valueChanged.connect(self.adjusting_the_number_of_sliding_controllers)
 
+        self.button_99.clicked.connect(self.test)
     # 按样条创建骨骼链
     def create_joint_num(self):
         num = self.ui_edit.automatically_adjust_the_slider_range_and_return_the_value(self.slider_1, 'QSlider')
@@ -247,22 +302,28 @@ class Window(QtWidgets.QMainWindow):
     def implementation_progress(self):
         step = self.slider_2.value()
         txt = ""
-        Text = ["创建基础", ",添加拉伸",",添加收缩", ",添加FK", ",添加拖拽"]
+        Text = ["创建基础", ",添加拉伸",",添加收缩", ",添加拖拽"]
         for i in range(0, len(Text)):
             if step >= i:
                 txt = txt + Text[i]
                 self.button_6.setText(txt)
+        if step >= 2:
+            self.check_box_9.setVisible(1)
+        else:
+            self.check_box_9.setChecked(0)
+            self.check_box_9.setVisible(0)
 
     # 调整滑动控制器数量
     def adjusting_the_number_of_sliding_controllers(self):
         num = self.ui_edit.automatically_adjust_the_slider_range_and_return_the_value(self.slider_3, 'QSlider')
-        if num<1:
-            num = 1
+        if num<0:
+            num = 0
             self.slider_3.setValue(num)
-            self.slider_3.setMinimum(1)
+            self.slider_3.setMinimum(0)
         self.line_edit_5.setText(str(num))
 
     # 生成朝向骨骼
+    @Withdraw
     def create_positioning_loc(self):
         Curve = cmds.ls(sl=1)
         cmds.select(Curve[0] + '.cv[*]')
@@ -309,7 +370,6 @@ class Window(QtWidgets.QMainWindow):
             self.slide_zoom = int(self.line_edit_5.text())  # 加载滑动控制器数量
             self.prefix = self.line_edit_6.text()  # 加载前缀
 
-
             # 重载骨骼
             cmds.select(joint)
             cmds.SelectHierarchy()
@@ -325,16 +385,20 @@ class Window(QtWidgets.QMainWindow):
             self.top_grp = self.prefix + 'TotalControl'
             top_grp_curve = self.top_grp + '_Curve'
 
+
             # 创建基础
             if step > -1:
                 self.create_base()
+                move_num = 0
+                if self.slide_zoom == 0:
+                    move_num = -1
                 cmds.addAttr(top_grp_curve, ln='_000', en='█████:', at='enum', nn="█████████████")
                 cmds.setAttr(top_grp_curve+'._000', e=1, keyable=True)
-                for i in range(0,4):
+                for i in range(0,4+move_num):
                     self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve+'._000'])
                 cmds.addAttr(top_grp_curve, ln="_001", en="█████:", at="enum", nn="█████████████")
                 cmds.setAttr(top_grp_curve+'._001', e=1, keyable=True)
-                for i in range(0, 2):
+                for i in range(0, 2+move_num):
                     self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve+'._001'])
             # 添加拉伸s
             if step > 0:
@@ -348,17 +412,23 @@ class Window(QtWidgets.QMainWindow):
                 self.add_contract()
                 for i in range(0,4):
                     self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve+'.Contract'])
+                for i in range(0, 4):
+                    self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve + '.Zoom_End_joint'])
             # 添加FK
-            if step > 2:
+            # if step > 2:
+            if self.check_box_9.isChecked():
                 cmds.addAttr(top_grp_curve, ln="_003", en="█████:", at="enum", nn="█████████████")
                 cmds.setAttr(top_grp_curve+'._003', e=1, keyable=True)
                 self.add_fk()
             # 添加拖拽
-            if step > 3:
+            if step > 2:
+                move_num_2 = 0
+                if self.check_box_9.isChecked() == 0:
+                    move_num_2 = -3
                 self.add_drag()
-                for i in range(0,4):
+                for i in range(0,4+move_num_2):
                     self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve+'.IK_Drag'])
-                for i in range(0,4):
+                for i in range(0,4+move_num_2):
                     self.others_library.get_move_up_dn_attrs_proc(1, [top_grp_curve+'.IK_DragSecondary'])
             if cmds.objExists(top_grp_curve+'._000'):
                 cmds.setAttr(top_grp_curve+'._000', lock=True)
@@ -379,7 +449,10 @@ class Window(QtWidgets.QMainWindow):
     # 创建基础
     def create_base(self):
         # 创建基础
-        all_base_controller_grp = cmds.group(em=1, n=(self.prefix + 'All_BaseController_Grp'))
+        all_base_controller_cluster_grp = cmds.group(em=1, n=(self.prefix + 'All_BaseController_cluster_Grp'))
+        all_base_controller_grp = cmds.group(n=(self.prefix + 'All_BaseController_Grp'))
+        cmds.setAttr((all_base_controller_cluster_grp + '.inheritsTransform'), 0)
+        cmds.setAttr((all_base_controller_cluster_grp + '.visibility'), 0)
         # 创建基础控制器
         i = 0
         for point in self.curve_point:
@@ -394,7 +467,19 @@ class Window(QtWidgets.QMainWindow):
             cmds.group(n=(self.prefix + str(i) + '_BaseController_Grp2'))
             TopGrp = cmds.group(n=(self.prefix + str(i) + '_BaseController_Grp1'))
             cmds.delete(cmds.parentConstraint(('LocJoint_'+str(i)), TopGrp, w=1))
-            cmds.parent(Cluster[1], total_control[0])
+            # cmds.parent(Cluster[1], total_control[0])
+            grp = cmds.group(em=1, n=(self.prefix + str(i) + '_cluster'))
+            cmds.delete(cmds.parentConstraint(total_control[0], grp, w=1))
+            cmds.parent(grp, all_base_controller_cluster_grp)
+            cmds.parent(Cluster[1], (self.prefix + str(i) + '_cluster'))
+            loc = cmds.spaceLocator(n=(self.prefix + str(i) + '_Loc'))
+            cmds.parent(loc, all_base_controller_grp)
+            cmds.parentConstraint(total_control[0], loc, w=1)
+            cmds.connectAttr((loc[0] + '.translate'), (grp + '.translate'))
+            cmds.connectAttr((loc[0] + '.rotate'), (grp + '.rotate'))
+            cmds.connectAttr((loc[0] + '.scale'), (grp + '.scale'))
+            cmds.setAttr((loc[0] + '.visibility'), 0)
+
             cmds.parent(TopGrp, all_base_controller_grp)
             i = i + 1
 
@@ -412,12 +497,17 @@ class Window(QtWidgets.QMainWindow):
         cmds.extrude(self.curve, upn=1, dl=3, ch=0, rotation=0, length=0.01, scale=1, et=0, rn=False, po=0, n=(self.curve + '_Surface'))
         surface = cmds.ls(sl=1)
         cmds.setAttr(surface[0]+'.visibility',0)
+        surface_A = surface
+
         # 创建控制曲面的蔟
         for i in range(0, len(self.curve_point)):
             cmds.select(surface[0] + '.cv[' + str(i) + '][0:*]')
             cluster = cmds.cluster()
             cmds.setAttr((cluster[1] + '.v'), 0)
-            cmds.parent(cluster[1], (self.prefix + str(i) + '_BaseController'))
+            # cmds.parent(cluster[1], (self.prefix + str(i) + '_BaseController'))
+
+            # print(cluster[1])
+            cmds.parent(cluster[1], (self.prefix + str(i) + '_cluster'))
         # 重建曲面
         rebuildSurface = cmds.rebuildSurface(surface, rt=0, kc=0, fr=0, ch=1, end=1, sv=1, su=(len(self.curve_point) - 1) * 3, kr=0, dir=2, kcp=0, tol=0.01, dv=3, du=3, rpo=1, n=(self.curve[0] + '_Surface'))
 
@@ -425,8 +515,8 @@ class Window(QtWidgets.QMainWindow):
         all_joint_follicle_grp = cmds.group(em=1, n=(self.prefix + 'All_JointFollicle_Grp'))
         shape = cmds.listRelatives(surface, s=1)
         curve_shape = cmds.listRelatives(self.curve, s=1)
-        curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
-        cmds.connectAttr((curve_shape[0] + '.worldSpace[0]'), (curveInfo + '.inputCurve'), force=1)
+        self.curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
+        cmds.connectAttr((curve_shape[0] + '.worldSpace[0]'), (self.curveInfo + '.inputCurve'), force=1)
 
         copy_curve = cmds.duplicate(self.curve)
         copy_curve_shape = cmds.listRelatives(copy_curve[0], s=1)
@@ -441,7 +531,8 @@ class Window(QtWidgets.QMainWindow):
             follicleShape = cmds.createNode('follicle', n=(self.joint[i] + '_follicleShape'))
             follicle = cmds.listRelatives(follicleShape, p=1)
             cmds.connectAttr((shape[0] + '.worldSpace[0]'), (self.joint[i] + '_follicleShape' + '.inputSurface'), f=1)
-            cmds.connectAttr((shape[0] + '.worldMatrix[0]'), (self.joint[i] + '_follicleShape' + '.inputWorldMatrix'),f=1)
+            cmds.connectAttr((shape[0] + '.matrix'), (self.joint[i] + '_follicleShape' + '.inputWorldMatrix'),f=1)
+            # worldMatrix[0]
             cmds.connectAttr((self.joint[i] + '_follicleShape' + ".outTranslate"),
                              (self.joint[i] + '_follicle' + '.translate'),f=1)
             cmds.connectAttr((self.joint[i] + '_follicleShape' + ".outRotate"),
@@ -452,8 +543,7 @@ class Window(QtWidgets.QMainWindow):
             skin_joint = cmds.joint(p=(0, 0, 0), n=(self.joint[i] + 'SkinJoint'))
             cmds.delete(cmds.parentConstraint(follicle[0], skin_joint))
             cmds.parent(follicle[0], all_joint_follicle_grp)
-        # 创建滑动缩放控制器
-        all_u_curve_grp = []
+
         # 创建总控制器
         self.curve_library.create_curve(self.curve_library_path, '四边方向箭')
         self.controller.modify_vontroller_shape('scale', 0.5, 0.5, 0.5)
@@ -463,7 +553,8 @@ class Window(QtWidgets.QMainWindow):
         self.curve_library.change_curve_color('Index', total_control, [0, 0, 0], 13)
         cmds.group(n=(self.prefix + 'TotalControl_Grp2'))
         cmds.group(n=(self.prefix + 'TotalControl_Grp1'))
-
+        # 创建滑动缩放控制器
+        all_u_curve_grp = []
         for slide_controller_num in range(0,self.slide_zoom):
             self.curve_library.create_curve(self.curve_library_path, '圆片拉线')
             cmds.rename(self.prefix + 'slide_zoom_curve' + str(slide_controller_num))
@@ -546,8 +637,10 @@ class Window(QtWidgets.QMainWindow):
 
         # 整理文件
         cmds.group(copy_curve[0], path_constraint_loc[0], self.joint[0], self.curve, IK[0], n=(self.prefix + 'SpineIkSys_Grp'))
-        cmds.group((self.joint[0] + 'SkinJoint'), n=(self.prefix + self.joint[0] + '_SkinJoint_Grp'))
-        for i in range(1, len(self.joint)):
+        # cmds.group((self.joint[0] + 'SkinJoint'), n=(self.prefix + self.joint[0] + '_SkinJoint_Grp'))
+        cmds.joint(n=(self.prefix + self.joint[0] + '_SkinJoint_Grp'))
+        cmds.setAttr((self.prefix + self.joint[0] + '_SkinJoint_Grp.drawStyle'), 2)
+        for i in range(0, len(self.joint)):
             cmds.parent((self.joint[i] + 'SkinJoint'), (self.prefix + self.joint[0] + '_SkinJoint_Grp'))
         cmds.setAttr(self.prefix + self.joint[0] + '_SkinJoint_Grp.useOutlinerColor', True)
         cmds.setAttr(self.prefix + self.joint[0] + '_SkinJoint_Grp.outlinerColor', 1, 0, 0)
@@ -559,21 +652,31 @@ class Window(QtWidgets.QMainWindow):
                                           (self.prefix + 'TotalControl_Grp1'), w=1))
         cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), (self.prefix + 'BasicPart_Grp'), mo=1, w=1)
         cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), (self.prefix + 'BasicPart_Grp'), mo=1)
-        cmds.setAttr((self.curve + '.inheritsTransform'), 0)
+        # cmds.setAttr((self.curve + '.inheritsTransform'), 0)
         cmds.setAttr((self.prefix + 'follicleAttachmentSys_Grp.inheritsTransform'), 0)
 
         all_slide_zoom_grp = cmds.group(n=(self.prefix + 'All_Slide_Zoom_Grp'),em=1)
-        cmds.parent(all_u_curve_grp,all_slide_zoom_grp)
+        if all_u_curve_grp:
+            cmds.parent(all_u_curve_grp,all_slide_zoom_grp)
 
         all_grp = cmds.group(all_slide_zoom_grp, (self.prefix + 'TotalControl_Grp1'), (self.prefix + 'BasicPart_Grp'), n=(self.prefix + 'All_Grp'))
+        if not all_u_curve_grp:
+            cmds.delete(all_slide_zoom_grp)
         cmds.setAttr((self.prefix + 'SpineIkSys_Grp.v'), 0)
         cmds.setAttr((self.prefix + 'All_JointFollicle_Grp.v'), 0)
         cmds.setAttr((self.prefix + 'All_Grp.inheritsTransform'), 0)
 
-
+        # 创建约束并提取
+        parentConstraint = cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), surface_A[0], mo=1)
+        scaleConstraint = cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), surface_A[0], mo=1)
+        # cmds.parent(parentConstraint[0], scaleConstraint[0], (self.prefix + 'follicleAttachmentSys_Grp'))
+        # 创建约束并提取
+        parentConstraint = cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), self.curve, mo=1)
+        scaleConstraint = cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), self.curve, mo=1)
+        cmds.parent(parentConstraint[0], scaleConstraint[0], (self.prefix + 'SpineIkSys_Grp'))
 
         #添加精度优化属性
-        cmds.addAttr((self.prefix + 'TotalControl_Curve'), ln='Accuracy', min=1, dv=3, at='long')
+        cmds.addAttr((self.prefix + 'TotalControl_Curve'), ln='Accuracy', min=1, max=9, dv=3, at='long')
         cmds.setAttr((self.prefix + 'TotalControl_Curve.Accuracy'), e=1, keyable=True)
         multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
         cmds.connectAttr((self.prefix + 'TotalControl_Curve.Accuracy'), (multiplyDivide + '.input1X'), force=1)
@@ -594,14 +697,19 @@ class Window(QtWidgets.QMainWindow):
         cmds.parent(surface[0], (self.prefix + 'follicleAttachmentSys_Grp'))
         cmds.select(surface[0] + '.cv[0:][0]')
         point = cmds.ls(sl=1, fl=1)
-
+        # 创建约束并提取
+        parentConstraint = cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), surface[0], mo=1)
+        scaleConstraint  = cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), surface[0], mo=1)
+        # cmds.parent(parentConstraint[0], scaleConstraint[0], (self.prefix + 'follicleAttachmentSys_Grp'))
         #创建控制曲面的蔟
         for i in range(0, len(point)):
             cmds.select(surface[0] + '.cv[' + str(i) + '][0:*]')
             Cluster = cmds.cluster()
             cmds.setAttr((Cluster[1] + '.v'), 0)
             cmds.delete(cmds.parentConstraint((self.prefix + str(i) + '_BaseController'), Cluster[1], weight=1))
-            cmds.parent(Cluster[1], (self.prefix + str(i) + '_BaseController'), )
+            # cmds.parent(Cluster[1], (self.prefix + str(i) + '_BaseController'))
+            # print(Cluster[1])
+            cmds.parent(Cluster[1], (self.prefix + str(i) + '_cluster'))
         rebuildSurface = cmds.rebuildSurface(surface, rt=0, kc=0, fr=0, ch=1, end=1, sv=1, su=(len(self.joint) - 1) * 3, kr=0,
                                              dir=2, kcp=0, tol=0.01, dv=3, du=3, rpo=1)
         cmds.connectAttr((multiplyDivide + '.outputX'), (rebuildSurface[1] + '.spansU'), force=1)
@@ -614,13 +722,465 @@ class Window(QtWidgets.QMainWindow):
         cmds.addAttr((self.prefix + 'TotalControl_Curve'), ln='Basic_IK', at='bool')
         cmds.setAttr((self.prefix + 'TotalControl_Curve.Basic_IK'), e=1, keyable=True)
         cmds.connectAttr((self.prefix + 'TotalControl_Curve.Basic_IK'), (self.prefix + 'All_BaseController_Grp.visibility'), force=1)
+        if all_u_curve_grp:
+            # 添加滑动缩放控制器显示隐藏
+            cmds.addAttr(total_control[0], ln='Slide_Zoom', at='bool')
+            cmds.setAttr((total_control[0] + '.Slide_Zoom'), e=1, keyable=True)
+            cmds.connectAttr((total_control[0] + '.Slide_Zoom'),
+                             (all_slide_zoom_grp + '.visibility'), force=1)
 
-        # 添加滑动缩放控制器显示隐藏
-        cmds.addAttr(total_control[0], ln='Slide_Zoom', at='bool')
-        cmds.setAttr((total_control[0] + '.Slide_Zoom'), e=1, keyable=True)
-        cmds.connectAttr((total_control[0] + '.Slide_Zoom'),
-                         (all_slide_zoom_grp + '.visibility'), force=1)
+    ########################################################################
+    ########################################################################
+    ########################################################################
+    # # 创建基础链接层
+    # def create_base_link_layer(self):
+    #     cmds.undoInfo(ock=1)
+    #     step = self.slider_2.value()  # 步骤
+    #     joint = self.line_edit_2.text()  # 加载顶骨骼
+    #     self.curve = self.line_edit_3.text()  # 加载样条
+    #     self.slide_zoom = int(self.line_edit_5.text())  # 加载滑动控制器数量
+    #     self.prefix = self.line_edit_6.text()  # 加载前缀
+    #
+    #     # 重载骨骼
+    #     cmds.select(joint)
+    #     cmds.SelectHierarchy()
+    #     self.joint = cmds.ls(sl=1, type='joint')
+    #
+    #     # 获取样条
+    #     self.curve_point = cmds.ls(f"{self.curve}.cv[*]", flatten=True)  # 加载样条点
+    #
+    #     self.drag_controllers_num = int(len(self.curve_point)) // 2  # 加载一段控制器数量
+    #
+    #     # 顶组名称
+    #     self.top_grp = self.prefix + 'TotalControl'
+    #     top_grp_curve = self.top_grp + '_Curve'
+    #
+    #     # 创建基础
+    #     self.add_bese()
+    #
+    #     if self.check_box_1.isChecked():
+    #         print('创建曲面补充')
+    #         self.add_curved_surface_add()
+    #
+    #     if self.check_box_4.isChecked():
+    #         print('创建传统补充')
+    #         self.add_tradition_add()
+    #
+    #     if self.check_box_2.isChecked():
+    #         print('创建滑动fk')
+    #         self.add_slide_FK_in_curved_surface()
+    #
+    #     # 输出元素约束蒙皮骨骼
+    #     for i in range(len(self.out_control_source)):
+    #         cmds.parentConstraint(self.out_control_source[i], self.all_skin_joint[i], mo=1)
+    #
+    #     cmds.undoInfo(cck=1)
 
+    # 创建基础
+    # def add_bese(self):
+    #     # 创建基础
+    #     self.all_base_controller_grp = cmds.group(em=1, n=(self.prefix + 'All_BaseController_Grp'))
+    #     # 创建基础控制器
+    #     i = 0
+    #     for point in self.curve_point:
+    #         cmds.select(point)
+    #         Cluster = cmds.cluster()
+    #         cmds.setAttr((Cluster[1] + '.v'), 0)
+    #         self.curve_library.create_curve(self.curve_library_path, '正方形')
+    #         self.controller.modify_vontroller_shape('scale', 1.5, 1.5, 1.5)
+    #         cmds.rename((self.prefix + str(i) + '_BaseController'))
+    #         total_control = cmds.ls(sl=1)
+    #         self.curve_library.change_curve_color('Index', total_control, [0, 0, 0], 18)
+    #         cmds.group(n=(self.prefix + str(i) + '_BaseController_Grp2'))
+    #         TopGrp = cmds.group(n=(self.prefix + str(i) + '_BaseController_Grp1'))
+    #         cmds.delete(cmds.parentConstraint(('LocJoint_' + str(i)), TopGrp, w=1))
+    #         cmds.parent(Cluster[1], total_control[0])
+    #         cmds.parent(TopGrp, self.all_base_controller_grp)
+    #         i = i + 1
+    #
+    #     # 创建路径约束,用于跟随曲线
+    #     path_constraint_loc = cmds.spaceLocator(n=(self.prefix + 'path_constraint_loc'))
+    #     cmds.setAttr((path_constraint_loc[0] + '.inheritsTransform'), 0)
+    #
+    #     self.path_constraint = self.others_library.path_constraint(self.curve, path_constraint_loc[0])
+    #     # 创建IK
+    #     cmds.select(self.joint[0], self.joint[-1], self.curve)
+    #     cmds.ikHandle(ccv=False, sol='ikSplineSolver', roc=False, pcv=False, n=(self.prefix + 'ikHandle'))
+    #     IK = cmds.ls(sl=1)
+    #     cmds.parentConstraint(path_constraint_loc, self.joint[0], w=1)
+    #     # 整理文件
+    #     self.SpineIkSys_Grp = cmds.group(path_constraint_loc[0], self.joint[0], self.curve, IK[0], n=(self.prefix + 'SpineIkSys_Grp'))
+    #
+    #     # 创建总控制器
+    #     self.curve_library.create_curve(self.curve_library_path, '四边方向箭')
+    #     self.controller.modify_vontroller_shape('scale', 0.5, 0.5, 0.5)
+    #     self.controller.modify_vontroller_shape('rotate', 0, 90, 90)
+    #     cmds.rename((self.prefix + 'TotalControl_Curve'))
+    #     self.TotalControl_Curve = cmds.ls(sl=1)
+    #     self.curve_library.change_curve_color('Index', self.TotalControl_Curve, [0, 0, 0], 13)
+    #     cmds.group(n=(self.prefix + 'TotalControl_Grp2'))
+    #     TotalControl_Grp1 = cmds.group(n=(self.prefix + 'TotalControl_Grp1'))
+    #
+    #     cmds.delete(cmds.parentConstraint((self.prefix + str(len(self.curve_point) - 1) + '_BaseController'),
+    #                                       (self.prefix + 'TotalControl_Grp1'), w=1))
+    #
+    #     self.BasicPart_Grp = cmds.group(self.all_base_controller_grp,self.SpineIkSys_Grp,n=(self.prefix + 'BasicPart_Grp'))
+    #
+    #     cmds.parentConstraint(self.TotalControl_Curve, self.BasicPart_Grp, mo=1, w=1)
+    #     cmds.scaleConstraint(self.TotalControl_Curve, self.BasicPart_Grp, mo=1)
+    #     cmds.setAttr((self.curve + '.inheritsTransform'), 0)
+    #
+    #     all_grp = cmds.group(TotalControl_Grp1, self.BasicPart_Grp, n=(self.prefix + 'All_Grp'))
+    #     cmds.setAttr((self.SpineIkSys_Grp + '.v'), 0)
+    #     cmds.setAttr((self.prefix + 'All_Grp.inheritsTransform'), 0)
+    #
+    #     # # 添加底层控制器显示隐藏
+    #     cmds.addAttr(self.TotalControl_Curve, ln='Basic_IK', at='bool')
+    #     cmds.setAttr((self.TotalControl_Curve[0] + '.Basic_IK'), e=1, keyable=True)
+    #     cmds.connectAttr((self.TotalControl_Curve[0] + '.Basic_IK'),
+    #                      (self.all_base_controller_grp + '.visibility'), force=1)
+    #     self.out_control_source = []
+
+    # # 添加曲面补充
+    # def add_curved_surface_add(self):
+    #     # 创建曲面
+    #     cmds.extrude(self.curve, upn=1, dl=3, ch=0, rotation=0, length=0.01, scale=1, et=0, rn=False, po=0,
+    #                  n=(self.curve + '_Surface'))
+    #     surface = cmds.ls(sl=1)
+    #     cmds.setAttr(surface[0] + '.visibility', 0)
+    #     # 创建控制曲面的蔟
+    #     for i in range(0, len(self.curve_point)):
+    #         cmds.select(surface[0] + '.cv[' + str(i) + '][0:*]')
+    #         cluster = cmds.cluster()
+    #         cmds.setAttr((cluster[1] + '.v'), 0)
+    #         cmds.parent(cluster[1], (self.prefix + str(i) + '_BaseController'))
+    #     # 重建曲面
+    #     rebuildSurface = cmds.rebuildSurface(surface, rt=0, kc=0, fr=0, ch=1, end=1, sv=1,
+    #                                          su=(len(self.curve_point) - 1) * 3, kr=0, dir=2, kcp=0, tol=0.01, dv=3,
+    #                                          du=3, rpo=1, n=(self.curve[0] + '_Surface'))
+    #
+    #     # 创建毛囊附着表面跟随骨骼
+    #     all_joint_follicle_grp = cmds.group(em=1, n=(self.prefix + 'All_JointFollicle_Grp'))
+    #     self.base_surface_shape = cmds.listRelatives(surface, s=1)
+    #     self.curve_shape = cmds.listRelatives(self.curve, s=1)
+    #     curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
+    #     cmds.connectAttr((self.curve_shape[0] + '.worldSpace[0]'), (curveInfo + '.inputCurve'), force=1)
+    #
+    #     self.all_skin_joint = []
+    #     for i in range(0, len(self.joint)):
+    #         cpom = cmds.createNode('closestPointOnSurface', n=(self.joint[i] + 'closestPointOnSurface'))
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldSpace[0]'), (cpom + '.inputSurface'), f=1)
+    #         decomposeMatrix = cmds.shadingNode('decomposeMatrix', asUtility=1)
+    #         cmds.connectAttr((self.joint[i] + '.worldMatrix[0]'), (decomposeMatrix + '.inputMatrix'), force=1)
+    #         cmds.connectAttr((decomposeMatrix + '.outputTranslate'), (cpom + '.inPosition'), force=1)
+    #         follicleShape = cmds.createNode('follicle', n=(self.joint[i] + '_follicleShape'))
+    #         follicle = cmds.listRelatives(follicleShape, p=1)
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldSpace[0]'), (self.joint[i] + '_follicleShape' + '.inputSurface'), f=1)
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldMatrix[0]'), (self.joint[i] + '_follicleShape' + '.inputWorldMatrix'),
+    #                          f=1) # worldMatrix[0]
+    #         cmds.connectAttr((self.joint[i] + '_follicleShape' + ".outTranslate"),
+    #                          (self.joint[i] + '_follicle' + '.translate'), f=1)
+    #         cmds.connectAttr((self.joint[i] + '_follicleShape' + ".outRotate"),
+    #                          (self.joint[i] + '_follicle' + ".rotate"), f=1)
+    #         cmds.connectAttr((cpom + '.parameterU'), (self.joint[i] + '_follicle' + '.parameterU'), f=1)
+    #         cmds.setAttr((self.joint[i] + '_follicle' + '.parameterV'), 0)
+    #         cmds.select(cl=1)
+    #         skin_joint = cmds.joint(p=(0, 0, 0), n=(self.joint[i] + '_SkinJoint'))
+    #         self.all_skin_joint.append(skin_joint)
+    #         cmds.delete(cmds.parentConstraint(follicle[0], skin_joint))
+    #         cmds.parent(follicle[0], all_joint_follicle_grp)
+    #         self.out_control_source.append(follicle[0])
+    #
+    #     # 添加精度优化属性
+    #     cmds.addAttr(self.TotalControl_Curve, ln='Accuracy', min=1, dv=3, at='long')
+    #     cmds.setAttr((self.TotalControl_Curve[0] + '.Accuracy'), e=1, keyable=True)
+    #     multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #     cmds.connectAttr((self.TotalControl_Curve[0] + '.Accuracy'), (multiplyDivide + '.input1X'), force=1)
+    #     cmds.setAttr((multiplyDivide + '.input2X'), (len(self.curve_point) - 1))
+    #     cmds.connectAttr((multiplyDivide + '.outputX'), (rebuildSurface[1] + '.spansU'), force=1)
+    #
+    #     SkinJoint_Grp = cmds.group(self.all_skin_joint[0], n=(self.prefix + self.joint[0] + '_SkinJoint_Grp'))
+    #     for i in range(1, len(self.joint)):
+    #         cmds.parent(self.all_skin_joint[i], SkinJoint_Grp)
+    #     cmds.setAttr(SkinJoint_Grp + '.useOutlinerColor', True)
+    #     cmds.setAttr(SkinJoint_Grp + '.outlinerColor', 1, 0, 0)
+    #     follicleAttachmentSys_Grp = cmds.group(surface[0], all_joint_follicle_grp, n=(self.prefix + 'follicleAttachmentSys_Grp'))
+    #
+    #     cmds.parent(SkinJoint_Grp, follicleAttachmentSys_Grp, self.BasicPart_Grp)
+    #
+    #     cmds.setAttr((follicleAttachmentSys_Grp + '.inheritsTransform'), 0)
+    #
+    #     # 创建显示优化曲面
+    #     cmds.extrude(self.curve, upn=1, dl=3, ch=0, rotation=0, length=1, scale=1, et=0, rn=False, po=0)
+    #     surface_optimize = cmds.ls(sl=1)
+    #     cmds.select(surface_optimize[0] + '.cv[0:][0]')
+    #     point = cmds.ls(sl=1, fl=1)
+    #     cmds.parent(surface_optimize[0], follicleAttachmentSys_Grp)
+    #     # 创建控制曲面的蔟
+    #     for i in range(0, len(point)):
+    #         cmds.select(surface_optimize[0] + '.cv[' + str(i) + '][0:*]')
+    #         Cluster = cmds.cluster()
+    #         cmds.setAttr((Cluster[1] + '.v'), 0)
+    #         cmds.delete(cmds.parentConstraint((self.prefix + str(i) + '_BaseController'), Cluster[1], weight=1))
+    #         cmds.parent(Cluster[1], (self.prefix + str(i) + '_BaseController'))
+    #     rebuildSurface = cmds.rebuildSurface(surface_optimize, rt=0, kc=0, fr=0, ch=1, end=1, sv=1, su=(len(self.joint) - 1) * 3,
+    #                                          kr=0,dir=2, kcp=0, tol=0.01, dv=3, du=3, rpo=1)
+    #     cmds.connectAttr((multiplyDivide + '.outputX'), (rebuildSurface[1] + '.spansU'), force=1)
+    #
+    #     # 添加优化
+    #     cmds.addAttr(self.TotalControl_Curve, ln='optimize', at='bool')
+    #     cmds.setAttr((self.TotalControl_Curve[0] + '.optimize'), e=1, keyable=True)
+    #     shadingNode = cmds.shadingNode('condition', asUtility=1)
+    #     cmds.setAttr((shadingNode + '.colorIfFalseR'), 2)
+    #     cmds.connectAttr((self.TotalControl_Curve[0] + '.optimize'), (shadingNode + '.firstTerm'), force=1)
+    #     cmds.connectAttr((shadingNode + '.outColorR'), (self.base_surface_shape[0] + '.nodeState'), force=1)
+    #     cmds.connectAttr((self.TotalControl_Curve[0] + '.optimize'), (surface_optimize[0] + '.visibility'), force=1)
+    #     cmds.setAttr((surface_optimize[0] + '.overrideEnabled'), 1)
+    #     cmds.setAttr((surface_optimize[0] + '.overrideDisplayType'), 2)
+
+    # # 添加传统方式补充
+    # def add_tradition_add(self):
+    #     self.all_skin_joint = []
+    #     for i in range(0, len(self.joint)):
+    #         skin_joint = cmds.joint(p=(0, 0, 0), n=(self.joint[i] + '_SkinJoint'))
+    #         self.all_skin_joint.append(skin_joint)
+    #         cmds.delete(cmds.parentConstraint(self.joint[i], skin_joint))
+    #     SkinJoint_Grp = cmds.group(self.all_skin_joint[0], n=(self.prefix + self.joint[0] + '_SkinJoint_Grp'))
+    #     for i in range(1, len(self.joint)):
+    #         cmds.parent(self.all_skin_joint[i], SkinJoint_Grp)
+    #     cmds.setAttr(SkinJoint_Grp + '.useOutlinerColor', True)
+    #     cmds.setAttr(SkinJoint_Grp + '.outlinerColor', 1, 0, 0)
+    #     # cmds.scaleConstraint(self.TotalControl_Curve, SkinJoint_Grp)
+    #     self.out_control_source = self.joint
+    #
+    # # 添加滑动fk
+    # def add_slide_FK_in_curved_surface(self):
+    #     # 创建数值清理组
+    #     out_loc = []
+    #     SlideFK_CleanUp = cmds.group(em=1, n=(self.prefix + 'SlideFK_CleanUp_Grp'))
+    #     self.all_loc_num_sum_node = []
+    #     for i in range(0, len(self.out_control_source)):
+    #         # 创建输出定位器
+    #         loc = cmds.spaceLocator(n=(self.prefix + 'SlideFK_output_Loc' + str(i)))
+    #         cmds.delete(cmds.parentConstraint(self.out_control_source[i], loc, w=1))
+    #         cmds.parent(loc, self.out_control_source[i])
+    #         plusMinusAverage = cmds.shadingNode('plusMinusAverage', asUtility=1)
+    #         self.all_loc_num_sum_node.append(plusMinusAverage)
+    #         cmds.connectAttr((plusMinusAverage + '.output3D'), (loc[0] + '.translate'), f=1)
+    #         plusMinusAverage = cmds.shadingNode('plusMinusAverage', asUtility=1)
+    #         self.all_loc_num_sum_node.append(plusMinusAverage)
+    #         cmds.connectAttr((plusMinusAverage + '.output3D'), (loc[0] + '.rotate'), f=1)
+    #         out_loc.append(loc)
+    #
+    #     # 创建正反fk链条用作数值赋予
+    #     all_joint_A = []
+    #     all_joint_B = []
+    #     count_group = cmds.group(em=1, n=(self.prefix + 'SlideFK_count_Grp'))
+    #     # 添加统一X轴缩放属性
+    #     cmds.addAttr(count_group, ln='X_axis_scaling', dv=1, at='double')
+    #     cmds.setAttr((count_group + '.X_axis_scaling'), e=1, keyable=True)
+    #     self.all_out_SlideFK_joint = []
+    #     for i in range(0, len(self.out_control_source)):
+    #         # 创建控制骨骼链
+    #         joint = cmds.joint(n=(self.prefix + 'SlideFK_joint' + str(i)), p=(0, 0, 0))
+    #         self.all_out_SlideFK_joint.append(joint)
+    #         all_joint_A.append(joint)
+    #         if i > 0:
+    #             cmds.parent(joint, all_joint_A[-2])
+    #         cmds.delete(cmds.parentConstraint(self.out_control_source[i], joint, w=1))
+    #         cmds.makeIdentity(joint, n=0, s=1, r=1, t=1, apply=True, pn=1)
+    #         cmds.connectAttr((count_group + '.X_axis_scaling'), (joint + '.scaleX'))
+    #         cmds.select(cl=1)
+    #         # 创建缩放后数值清理骨骼链
+    #         joint = cmds.joint(n=(self.prefix + 'SlideFK_reduce_joint' + str(i)), p=(0, 0, 0))
+    #         all_joint_B.append(joint)
+    #         if i > 0:
+    #             cmds.parent(joint, all_joint_B[-2])
+    #         else:
+    #             cmds.parent(all_joint_B[0], count_group)
+    #         cmds.delete(cmds.parentConstraint(self.out_control_source[i], joint, w=1))
+    #         cmds.makeIdentity(joint,n=0, s=1, r=1, t=1, apply=True, pn=1)
+    #         cmds.connectAttr((count_group + '.X_axis_scaling'), (joint + '.scaleX'))
+    #         # 创建缩放后数值清理组和定位器
+    #         count_loc = cmds.spaceLocator(n=(self.prefix + 'SlideFK_reduce_Loc' + str(i)))
+    #         count_loc_grp = cmds.group(count_loc, n=(self.prefix + 'SlideFK_reduce_Loc_Grp' + str(i)))
+    #         cmds.delete(cmds.parentConstraint(self.out_control_source[i], count_loc_grp, w=1))
+    #         # 开始约束
+    #         cmds.pointConstraint(all_joint_B[-1], count_loc_grp, w=1)
+    #         cmds.parentConstraint(all_joint_A[-1], count_loc, w=1)
+    #         cmds.parent(count_loc_grp, count_group)
+    #         # 输出数值到定位器
+    #         all_attribute = cmds.ls(self.all_loc_num_sum_node[i*2]+'.input3D[*]')
+    #         cmds.connectAttr((count_loc[0] + '.translate'), (self.all_loc_num_sum_node[i*2] + '.input3D['+str(len(all_attribute))+']'), f=1)
+    #         all_attribute = cmds.ls(self.all_loc_num_sum_node[i * 2+1] + '.input3D[*]')
+    #         cmds.connectAttr((count_loc[0] + '.rotate'), (self.all_loc_num_sum_node[i*2+1] + '.input3D['+str(len(all_attribute))+']'), f=1)
+    #     self.out_control_source = out_loc
+    #
+    #     # 创建附着样条
+    #     copy_curve = cmds.duplicate(self.curve)
+    #     copy_curve_shape = cmds.listRelatives(copy_curve[0], s=1)
+    #     # copy_curve_curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
+    #     # cmds.connectAttr((copy_curve_shape[0] + '.worldSpace[0]'), (copy_curve_curveInfo + '.inputCurve'), force=1)
+    #
+    #     u_curve_all_grp = cmds.group(n=self.prefix + 'slide_zoom_curve_all_grp', em=1)
+    #     u_curve_all_loc = cmds.group(n=self.prefix + 'slide_zoom_curve_all_loc_grp', em=1)
+    #     u_curve_all_follicle = cmds.group(n=self.prefix + 'slide_zoom_curve_all_follicle_grp', em=1)
+    #     # 创建滑动缩放控制器
+    #     all_u_curve_grp = []
+    #     for slide_controller_num in range(0, self.slide_zoom):
+    #         self.curve_library.create_curve(self.curve_library_path, '圆片拉线')
+    #         cmds.rename(self.prefix + 'slide_zoom_curve' + str(slide_controller_num))
+    #         u_curve = cmds.ls(sl=1)
+    #         self.controller.modify_vontroller_shape('scale', 5.0, 5.0, 5.0)
+    #         self.curve_library.change_curve_color('Index', u_curve, [0, 0, 0], 20)
+    #
+    #         u_curve_grp = cmds.group(n=self.prefix + 'slide_zoom_curve_grp' + str(slide_controller_num), em=1)
+    #         cmds.parent(u_curve_grp, u_curve_all_grp)
+    #         u_curve_loc = cmds.spaceLocator(n=self.prefix + 'slide_zoom_curve_loc' + str(slide_controller_num))
+    #         cmds.parent(u_curve_loc, u_curve_all_loc)
+    #         # '''
+    #         ####### 用定位器替换
+    #         cmds.parent(u_curve[0], u_curve_grp)
+    #         all_u_curve_grp.append(u_curve_loc)
+    #         cmds.addAttr(u_curve[0], ln='uValue', min=0, max=100, dv=0, at='double')
+    #         cmds.setAttr((u_curve[0] + '.uValue'), e=1, keyable=True)
+    #         cmds.addAttr(u_curve[0], ln='slide_range', dv=50, min=0, at='double')
+    #         cmds.setAttr((u_curve[0] + '.slide_range'), e=1, keyable=True)
+    #         cmds.addAttr(u_curve[0], ln='slide_size', dv=0, min=0, at='double')
+    #         cmds.setAttr((u_curve[0] + '.slide_size'), e=1, keyable=True)
+    #         cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_loc[0] + '.scaleX'), f=1)
+    #         cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_loc[0] + '.scaleY'), f=1)
+    #         cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_loc[0] + '.scaleZ'), f=1)
+    #
+    #         path_constraint = self.others_library.path_constraint(self.curve, u_curve_loc[0])
+    #         cmds.setAttr(path_constraint + '.fractionMode', 0)
+    #         u_curve_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #         cmds.connectAttr((u_curve[0] + '.uValue'), (u_curve_multiplyDivide + '.input1X'), f=1)
+    #         cmds.setAttr((u_curve_multiplyDivide + '.input2X'), 0.01)
+    #         cmds.connectAttr((u_curve_multiplyDivide + '.outputX'), (path_constraint + '.uValue'), f=1)
+    #         # 创建附着毛囊
+    #         cpom = cmds.createNode('closestPointOnSurface', n=(self.joint[i] + 'closestPointOnSurface'))
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldSpace[0]'), (cpom + '.inputSurface'), f=1)
+    #         decomposeMatrix = cmds.shadingNode('decomposeMatrix', asUtility=1)
+    #         cmds.connectAttr((u_curve_loc[0] + '.worldMatrix[0]'), (decomposeMatrix + '.inputMatrix'), force=1)
+    #         cmds.connectAttr((decomposeMatrix + '.outputTranslate'), (cpom + '.inPosition'), force=1)
+    #         follicleShape = cmds.createNode('follicle', n=(u_curve_loc[0] + '_follicleShape'))
+    #         follicle = cmds.listRelatives(follicleShape, p=1)
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldSpace[0]'), (u_curve_loc[0] + '_follicleShape.inputSurface'), f=1)
+    #         cmds.connectAttr((self.base_surface_shape[0] + '.worldMatrix[0]'), (u_curve_loc[0] + '_follicleShape.inputWorldMatrix'),f=1)
+    #         cmds.connectAttr((u_curve_loc[0] + '_follicleShape' + ".outTranslate"),
+    #                          (u_curve_loc[0] + '_follicle' + '.translate'), f=1)
+    #         cmds.connectAttr((u_curve_loc[0] + '_follicleShape' + ".outRotate"),
+    #                          (u_curve_loc[0] + '_follicle' + ".rotate"), f=1)
+    #         cmds.connectAttr((cpom + '.parameterU'), (u_curve_loc[0] + '_follicle' + '.parameterU'), f=1)
+    #         cmds.setAttr((u_curve_loc[0] + '_follicle' + '.parameterV'), 0)
+    #         cmds.parent(follicle, u_curve_all_follicle)
+    #         cmds.parentConstraint(follicle, u_curve_grp, w=1)
+    #         # 建立当前弧长
+    #         now_arcLengthDimension = cmds.arcLengthDimension(copy_curve_shape[0] + '.u[0.5]')
+    #         cmds.connectAttr((u_curve_multiplyDivide + '.outputX'), (now_arcLengthDimension + '.uParamValue'), f=1)
+    #         self.all_drver_node = []
+    #         self.all_out_rotate_plusMinusAverage_t = []
+    #         self.all_out_rotate_plusMinusAverage_r = []
+    #         for i in range(0, len(self.joint)):
+    #             # 建立弧长
+    #             arcLengthDimension = cmds.arcLengthDimension(copy_curve_shape[0] + '.u[0.5]')
+    #             cmds.connectAttr((self.joint[i] + '_follicle' + '.parameterU'),
+    #                              (arcLengthDimension + '.uParamValue'), f=1)
+    #             # 开始添加缩放计算
+    #             plusMinusAverage = cmds.shadingNode('plusMinusAverage', asUtility=1)
+    #             cmds.setAttr((plusMinusAverage + '.operation'), 2)
+    #             cmds.connectAttr((now_arcLengthDimension + '.arcLength'), (plusMinusAverage + '.input1D[0]'), f=1)
+    #             cmds.connectAttr((arcLengthDimension + '.arcLength'), (plusMinusAverage + '.input1D[1]'), f=1)
+    #
+    #             imp_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #             #################################################################################################
+    #             multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #             cmds.setAttr((multiplyDivide + '.operation'), 2)
+    #             cmds.connectAttr((u_curve[0] + '.slide_range'), (multiplyDivide + '.input1X'), f=1)
+    #             cmds.connectAttr((self.TotalControl_Curve[0] + '.scaleX'), (multiplyDivide + '.input2X'), f=1)
+    #             cmds.connectAttr((multiplyDivide + '.outputX'), (imp_multiplyDivide + '.input1X'), f=1)
+    #             # cmds.connectAttr((u_curve[0] + '.slide_range'), (imp_multiplyDivide + '.input1X'), f=1)
+    #             #################################################################################################
+    #             cmds.connectAttr((plusMinusAverage + '.output1D'), (imp_multiplyDivide + '.input2X'), f=1)
+    #
+    #             out_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #             cmds.connectAttr((u_curve[0] + '.slide_size'), (out_multiplyDivide + '.input1X'), f=1)
+    #             # 创建驱动节点
+    #             cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+    #                                    currentDriver=(imp_multiplyDivide + '.outputX'), dv=-100, v=0)
+    #             cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+    #                                    currentDriver=(imp_multiplyDivide + '.outputX'), dv=0, v=1)
+    #             cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+    #                                    currentDriver=(imp_multiplyDivide + '.outputX'), dv=100, v=0)
+    #
+    #
+    #
+    #             # 获取最大值
+    #             floatMath = cmds.shadingNode('floatMath', asUtility=1)
+    #             cmds.setAttr((floatMath + '.operation'), 5)
+    #             cmds.connectAttr((out_multiplyDivide + '.outputX'), (floatMath + '.floatA'), f=1)
+    #
+    #             have_floatMath = cmds.listConnections((self.joint[i] + '_SkinJoint.scaleY'), d=False, s=True)
+    #
+    #             if have_floatMath:
+    #                 new_floatMath = []
+    #                 while have_floatMath:
+    #                     new_floatMath = have_floatMath
+    #                     have_floatMath = cmds.listConnections((have_floatMath[0] + '.floatB'), d=False, s=True)
+    #                 have_floatMath = new_floatMath
+    #                 cmds.connectAttr((floatMath + '.outFloat'), (have_floatMath[0] + '.floatB'), f=1)
+    #             else:
+    #                 cmds.connectAttr((floatMath + '.outFloat'), (self.joint[i] + '_SkinJoint.scaleY'), f=1)
+    #                 cmds.connectAttr((floatMath + '.outFloat'), (self.joint[i] + '_SkinJoint.scaleZ'), f=1)
+    #
+    #             # 获取驱动节点
+    #             drver_node = cmds.listConnections((imp_multiplyDivide + '.outputX'), s=1)
+    #             self.all_drver_node.append(drver_node)
+    #
+    #             # out_rotate_multiplyDivide_t = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #             # # out_rotate_plusMinusAverage_t = cmds.shadingNode('plusMinusAverage', asUtility=1)
+    #             # cmds.connectAttr((u_curve[0] + '.translate'), (out_rotate_multiplyDivide_t + '.input1'),
+    #             #                  f=1)  # 获取控制器旋转数值
+    #             # # cmds.connectAttr((out_rotate_plusMinusAverage_t + '.output1D'), (out_rotate_multiplyDivide_t + '.input2X'), f=1)
+    #             # # cmds.connectAttr((out_rotate_plusMinusAverage_t + '.output1D'), (out_rotate_multiplyDivide_t + '.input2Y'), f=1)
+    #             # # cmds.connectAttr((out_rotate_plusMinusAverage_t + '.output1D'), (out_rotate_multiplyDivide_t + '.input2Z'), f=1)
+    #             # cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_t + '.input2X'), f=1)
+    #             # cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_t + '.input2Y'), f=1)
+    #             # cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_t + '.input2Z'), f=1)
+    #             # cmds.connectAttr((out_rotate_multiplyDivide_t + '.output'),
+    #             #                  (self.all_out_SlideFK_joint[i] + '.translate'), f=1)
+    #
+    #             out_rotate_multiplyDivide_r = cmds.shadingNode('multiplyDivide', asUtility=1)
+    #             # out_rotate_plusMinusAverage_r = cmds.shadingNode('plusMinusAverage', asUtility=1)
+    #             cmds.connectAttr((u_curve[0] + '.rotate'), (out_rotate_multiplyDivide_r + '.input1'), f=1)
+    #             # cmds.connectAttr((out_rotate_plusMinusAverage_r + '.output1D'), (out_rotate_multiplyDivide_r + '.input2X'), f=1)
+    #             # cmds.connectAttr((out_rotate_plusMinusAverage_r + '.output1D'), (out_rotate_multiplyDivide_r + '.input2Y'), f=1)
+    #             # cmds.connectAttr((out_rotate_plusMinusAverage_r + '.output1D'), (out_rotate_multiplyDivide_r + '.input2Z'), f=1)
+    #             cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_r + '.input2X'), f=1)
+    #             cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_r + '.input2Y'), f=1)
+    #             cmds.connectAttr((drver_node[0] + '.output'), (out_rotate_multiplyDivide_r + '.input2Z'), f=1)
+    #             cmds.connectAttr((out_rotate_multiplyDivide_r + '.output'),
+    #                              (self.all_out_SlideFK_joint[i] + '.rotate'), f=1)
+    #             # self.all_out_rotate_plusMinusAverage_t.append(out_rotate_plusMinusAverage_t)
+    #             # self.all_out_rotate_plusMinusAverage_r.append(out_rotate_plusMinusAverage_r)
+    #         # 混合动态权重
+    #         # for i in range(0, len(self.all_out_rotate_plusMinusAverage_t)):
+    #         #     for j in range(0, self.all_drver_node):
+    #         #         cmds.connectAttr((self.all_drver_node[j] + '.output'), (self.all_out_rotate_plusMinusAverage_t[j] + '.input1D['+str(j)+']'), f=1)
+    #
+    #         # '''
+    #
+    # # 添加反向滑动fk
+    # def add_reverse_slide_FK_in_curved_surface(self):
+    #     pass
+
+
+
+
+    ########################################################################
+    ########################################################################
+    ########################################################################
     # 添加拉伸
     def add_stretch(self):
         # 添加拉伸
@@ -694,7 +1254,11 @@ class Window(QtWidgets.QMainWindow):
                 new_floatMath = have_floatMath
                 have_floatMath = cmds.listConnections((have_floatMath[0] + '.floatB'), d=False, s=True)
             have_floatMath = new_floatMath
-            cmds.connectAttr((setRange + '.outValueX'), (have_floatMath[0] + '.floatB'), f=1)
+            have_floatMath = new_floatMath
+            if have_floatMath:
+                cmds.connectAttr((setRange + '.outValueX'), (have_floatMath[0] + '.floatB'), f=1)
+            else:
+                cmds.connectAttr((setRange + '.outValueX'), (self.joint[i] + 'SkinJoint.scaleY'), f=1)
 
     # 添加收缩
     def add_contract(self):
@@ -716,6 +1280,9 @@ class Window(QtWidgets.QMainWindow):
         cmds.delete(CopyCurveShape_child)
 
         cmds.reverseCurve(reverse_curve[0], ch=0, rpo=1)
+        # # 创建约束并提取
+        # parentConstraint = cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), reverse_curve[0], mo=1)
+        # scaleConstraint = cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), reverse_curve[0], mo=1)
         #reverse_curve = cmds.ls(sl=1)
         for i in range(0,len(self.joint)):
             cmds.select(cl=1)
@@ -740,10 +1307,36 @@ class Window(QtWidgets.QMainWindow):
         multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
         cmds.setAttr((multiplyDivide + '.input2X'), 0.01)
         cmds.connectAttr((self.prefix + 'TotalControl_Curve.Contract'), (multiplyDivide + '.input1X'), f=1)
-        cmds.connectAttr((multiplyDivide + '.outputX'), (path_constraint_reverse + '.uValue'), f=1)
+        # 创建按位置混合
+        decomposeMatrix = cmds.shadingNode('decomposeMatrix', asUtility=1)
+        cmds.connectAttr((self.joint[-1] + '.worldMatrix[0]'), (decomposeMatrix + '.inputMatrix'), force=1)
+        nearestPointOnCurve = cmds.shadingNode('nearestPointOnCurve', asUtility=1)
+        cmds.connectAttr((decomposeMatrix + '.outputTranslate'), (nearestPointOnCurve + '.inPosition'), force=1)
+        cmds.connectAttr((CopyCurveShape[0] + '.worldSpace[0]'), (nearestPointOnCurve + '.inputCurve'), force=1)
+        plusMinusAverage = cmds.shadingNode('plusMinusAverage', asUtility=1)
+        # cmds.connectAttr((CopyCurveShape[0] + '.worldMatrix[1]'), (nearestPointOnCurve + '.inputCurve'), force=1)
+        condition = cmds.shadingNode('condition', asUtility=1)
+        cmds.connectAttr((self.prefix + 'TotalControl_Curve.stretch'), (condition + '.firstTerm'),force=1)
+        cmds.setAttr(condition + '.operation', 1)
+        cmds.connectAttr((nearestPointOnCurve + '.parameter'), (condition + '.colorIfFalse.colorIfFalseR'), force=1)
+        # 创建位置转比例计算
+        # cmds.connectAttr((condition + '.outColor.outColorR'), (plusMinusAverage + '.input1D[0]'), force=1)
+        arcLengthDimension = cmds.arcLengthDimension(CopyCurveShape[0] + '.u[0.5]')
+        cmds.connectAttr((condition + '.outColor.outColorR'), (arcLengthDimension + '.uParamValue'), f=1)
+        cmds.connectAttr((multiplyDivide + '.outputX'), (plusMinusAverage + '.input1D[1]'), f=1)
+        cmds.connectAttr((plusMinusAverage + '.output1D'), (path_constraint_reverse + '.uValue'), f=1)
+
+        multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+        cmds.setAttr((multiplyDivide + '.operation'), 2)
+        cmds.connectAttr((self.curveInfo + '.arcLength'), (multiplyDivide + '.input2X'), f=1)
+        cmds.connectAttr((arcLengthDimension + '.arcLength'), (multiplyDivide + '.input1X'), f=1)
+        cmds.connectAttr((multiplyDivide + '.output.outputX'), (plusMinusAverage + '.input1D[0]'), force=1)
+
+
+
 
         shape = cmds.listRelatives((self.curve+'_Surface'), s=1)
-
+        all_condition = []
         for i in range(0, len(self.joint)):
             cpom = cmds.createNode('closestPointOnSurface',n=(self.joint[i] + '_Reverse_closestPointOnSurface'))
             cmds.connectAttr((shape[0] + '.worldSpace[0]'), (cpom + '.inputSurface'), f=1)
@@ -752,11 +1345,61 @@ class Window(QtWidgets.QMainWindow):
             cmds.connectAttr((decomposeMatrix + '.outputTranslate'), (cpom + '.inPosition'), force=1)
 
             condition = cmds.shadingNode('condition', asUtility=1)
+
             cmds.connectAttr((self.prefix + 'TotalControl_Curve.Contract'), (condition + '.firstTerm'), f=1)
             cmds.setAttr((condition+'.operation'), 2)
             cmds.connectAttr((self.joint[i] + 'closestPointOnSurface.parameterU'), (condition+'.colorIfFalseR'), f=1)
             cmds.connectAttr((cpom + '.parameterU'), (condition+'.colorIfTrueR'), f=1)
             cmds.connectAttr((condition+'.outColorR'), (self.joint[i] + '_follicleShape.parameterU'), f=1)
+            all_condition.append(condition)
+        # end_condition = cmds.shadingNode('condition', asUtility=1)
+        # cmds.setAttr(end_condition + '.operation', 3)
+        # cmds.connectAttr((self.prefix + 'TotalControl_Curve.Contract'), end_condition + '.firstTerm', f=1)
+        # # 添加正向溢出修正
+        # for i in range(0, len(self.joint)-1):
+        #     first_condition = all_condition[i]
+        #     latter_condition = all_condition[i+1]
+        #     value_condition = cmds.shadingNode('condition', asUtility=1)
+        #     cmds.connectAttr(latter_condition+'.outColorR', value_condition+'.firstTerm', f=1)
+        #     cmds.setAttr(value_condition + '.colorIfTrueR', 1)
+        #     cmds.setAttr(value_condition + '.operation', 3)
+        #     # cmds.connectAttr(latter_condition + '.outColorR', value_condition + '.colorIfFalseR', f=1)
+        #     cmds.connectAttr(first_condition+'.outColorR', value_condition+'.colorIfTrueR', f=1)
+        #     cmds.connectAttr(first_condition+'.outColorR', value_condition+'.secondTerm', f=1)
+        #
+        #     cmds.connectAttr(value_condition + '.outColorR', (self.joint[i] + '_follicleShape.parameterU'), f=1)
+        #
+        #     cmds.connectAttr(end_condition + '.outColorR', value_condition + '.colorIfFalseR', f=1)
+        #
+        # first_condition = all_condition[len(self.joint)-2]
+        # latter_condition = all_condition[len(self.joint)-1]
+        # value_condition = cmds.shadingNode('condition', asUtility=1)
+        # cmds.connectAttr(latter_condition + '.outColorR', value_condition + '.secondTerm', f=1)
+        # cmds.connectAttr(latter_condition + '.outColorR', value_condition + '.colorIfFalseR', f=1)
+        # cmds.setAttr(value_condition + '.colorIfTrueR', 1)
+        # cmds.setAttr(value_condition + '.operation', 3)
+        # cmds.setAttr(value_condition + '.colorIfTrueR', 1)
+        # # cmds.connectAttr(latter_condition + '.outColorR', value_condition + '.colorIfFalseR', f=1)
+        # # cmds.connectAttr(first_condition + '.outColorR', value_condition + '.colorIfFalseR', f=1)
+        # cmds.connectAttr(first_condition + '.outColorR', value_condition + '.firstTerm', f=1)
+        # cmds.connectAttr(end_condition + '.outColorR', value_condition + '.colorIfTrueR', f=1)
+        #
+        # cmds.connectAttr(value_condition + '.outColorR', (self.joint[-1] + '_follicleShape.parameterU'), f=1)
+
+        #
+        #     cmds.setAttr(value_condition+'.operation', 4)
+        #     compare_condition = cmds.shadingNode('condition', asUtility=1)
+        #     cmds.connectAttr((self.prefix + 'TotalControl_Curve.Contract'), value_condition + '.firstTerm', f=1)
+        #     cmds.connectAttr(latter_condition + '.outColorR', compare_condition+'.colorIfFalseR', f=1)
+        #     cmds.connectAttr((self.joint[i] + '_follicleShape.parameterU'), (compare_condition+'.colorIfFalseR'),  f=1)
+        #     cmds.connectAttr(value_condition + '.outColorR', compare_condition+'.colorIfTrueR', f=1)
+        #     # cmds.connectAttr(value_condition + '.outColorR', compare_condition + '.colorIfTrueR', f=1)
+        #     cmds.setAttr(value_condition + '.operation', 5)
+        #     cmds.connectAttr(value_condition + '.outColorR', (self.joint[i] + '_follicleShape.parameterU'), f=1)
+
+        # # 添加反向溢出修正
+        # for i in range(0, len(self.joint)-1):
+        #     pass
         # print reverse_curve
         cmds.select(reverse_curve[0] + '.cv[*]')
         curve_point = cmds.ls(sl=1, fl=1)  # 加载样条点
@@ -764,11 +1407,52 @@ class Window(QtWidgets.QMainWindow):
             cmds.select(curve_point[i])
             Cluster = cmds.cluster()
             cmds.setAttr((Cluster[1] + '.v'), 0)
-            cmds.parent(Cluster[1],(self.prefix + str(len(curve_point)-1-i) + '_BaseController'))
+            # cmds.parent(Cluster[1],(self.prefix + str(len(curve_point)-1-i) + '_BaseController'))
+            cmds.parent(Cluster[1], (self.prefix + str(len(curve_point) - 1 - i) + '_cluster'))
         multiplyDivideStretch = cmds.listConnections((self.joint[0] + '.scaleX'), p=1)
         # print multiplyDivideStretch
         for i in range(0, len(self.joint)):
             cmds.connectAttr(multiplyDivideStretch[0], (self.joint[i] + '_Reverse.scaleX'), f=1)
+        # 添加超出距离骨骼偏移
+        cmds.addAttr((self.prefix + 'TotalControl_Curve'), ln='Zoom_End_joint', dv=0, max=len(self.joint)-1, min=0, at='double')
+        cmds.setAttr((self.prefix + 'TotalControl_Curve.Zoom_End_joint'), e=1, keyable=True)
+        j = len(self.joint)
+        all_setRange = []
+        for i in range(1,len(self.joint)):
+            j = j + -1
+            setRange = cmds.shadingNode('setRange', asUtility=1)
+            all_setRange.append(setRange)
+            num = cmds.getAttr(self.joint[i]+'.translateX')
+            # cmds.setAttr(setRange+".maxX", num)
+            cmds.setAttr(setRange+".minX", num)
+            cmds.setAttr(setRange+".oldMinX", j-1)
+            cmds.setAttr(setRange+".oldMaxX", j)
+            cmds.connectAttr((self.prefix + 'TotalControl_Curve.Zoom_End_joint'),
+                             (setRange + '.value.valueX'), f=1)
+            cmds.connectAttr((setRange + '.outValue.outValueX'),
+                             (self.joint[i] + '.translate.translateX'), f=1)
+
+            condition = cmds.shadingNode('condition', asUtility=1)
+            cmds.connectAttr((self.prefix + 'TotalControl_Curve.Contract'),
+                             (condition + '.firstTerm'), f=1)
+            cmds.setAttr(condition + ".operation", 4)
+            cmds.connectAttr((setRange + '.outValue.outValueX'),
+                             (condition + '.colorIfTrue.colorIfTrueR'), f=1)
+            cmds.setAttr(condition + ".colorIfFalseR", num)
+            cmds.connectAttr((condition + '.outColor.outColorR'),
+                             (self.joint[i] + '.translate.translateX'), f=1)
+
+        for i in range(0, len(self.joint)-1):
+            setRange = all_setRange[i]
+            num = cmds.getAttr(self.joint[i] + '_Reverse.translateX')
+            # cmds.setAttr(setRange+".maxY", num)
+            cmds.setAttr(setRange + ".minY", num)
+            cmds.setAttr(setRange + ".oldMinY", i)
+            cmds.setAttr(setRange + ".oldMaxY", i+1)
+            cmds.connectAttr((self.prefix + 'TotalControl_Curve.Zoom_End_joint'),
+                             (setRange + '.value.valueY'), f=1)
+            cmds.connectAttr((setRange + '.outValue.outValueY'),
+                             (self.joint[i] + '_Reverse.translate.translateX'), f=1)
 
     # 添加FK
     def add_fk(self):
@@ -843,42 +1527,45 @@ class Window(QtWidgets.QMainWindow):
 
     # 添加拖拽
     def add_drag(self):
+        all_drag_controller_cluster_grp = cmds.group(em=1, n=(self.prefix + 'All_DragController_cluster_Grp'))
+        cmds.setAttr((all_drag_controller_cluster_grp + '.inheritsTransform'), 0)
+
         # 修改FK
-        FK_Curve = cmds.curve(p=[(0, 0, 0), (0.2, 0, 0), (0.8, 0, 0), (1, 0, 0)], k=[0, 0, 0, 1, 1, 1], d=3,
-                              n=(self.prefix + 'FKSize'))
-        cmds.addAttr((self.prefix + 'FKSize'), ln='FK_SizeA', dv=0.7, at='double')
-        cmds.setAttr((self.prefix + 'FKSize.FK_SizeA'), e=1, keyable=True)
-        cmds.addAttr((self.prefix + 'FKSize'), ln='FK_SizeB', dv=0.5, at='double')
-        cmds.setAttr((self.prefix + 'FKSize.FK_SizeB'), e=1, keyable=True)
-        cmds.setAttr((FK_Curve + '.v'), 0)
-        cmds.parent(FK_Curve, (self.prefix + 'TotalControl_Curve'))
+        if self.check_box_9.isChecked():
+            FK_Curve = cmds.curve(p=[(0, 0, 0), (0.2, 0, 0), (0.8, 0, 0), (1, 0, 0)], k=[0, 0, 0, 1, 1, 1], d=3,
+                                  n=(self.prefix + 'FKSize'))
+            cmds.addAttr((self.prefix + 'FKSize'), ln='FK_SizeA', dv=0.7, at='double')
+            cmds.setAttr((self.prefix + 'FKSize.FK_SizeA'), e=1, keyable=True)
+            cmds.addAttr((self.prefix + 'FKSize'), ln='FK_SizeB', dv=0.5, at='double')
+            cmds.setAttr((self.prefix + 'FKSize.FK_SizeB'), e=1, keyable=True)
+            cmds.setAttr((FK_Curve + '.v'), 0)
+            cmds.parent(FK_Curve, (self.prefix + 'TotalControl_Curve'))
 
-        curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
-        cmds.connectAttr((FK_Curve + '.worldSpace[0]'), (curveInfo + '.inputCurve'), force=1)
+            curveInfo = cmds.shadingNode('curveInfo', asUtility=1)
+            cmds.connectAttr((FK_Curve + '.worldSpace[0]'), (curveInfo + '.inputCurve'), force=1)
 
-        multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
-        cmds.connectAttr((curveInfo + '.arcLength'), (multiplyDivide + '.input1X'), f=1)
-        cmds.connectAttr((curveInfo + '.arcLength'), (multiplyDivide + '.input1Y'), f=1)
-        cmds.connectAttr((self.prefix + 'FKSize.FK_SizeB'), (multiplyDivide + '.input2Y'), f=1)
-        cmds.connectAttr((self.prefix + 'FKSize.FK_SizeA'), (multiplyDivide + '.input2X'), f=1)
-        for i in range(0, (len(self.curve_point) * 2 - 1)):
-            CopyCurveShape = cmds.listRelatives((self.prefix + 'FKController' + str(i)), s=1)
+            multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+            cmds.connectAttr((curveInfo + '.arcLength'), (multiplyDivide + '.input1X'), f=1)
+            cmds.connectAttr((curveInfo + '.arcLength'), (multiplyDivide + '.input1Y'), f=1)
+            cmds.connectAttr((self.prefix + 'FKSize.FK_SizeB'), (multiplyDivide + '.input2Y'), f=1)
+            cmds.connectAttr((self.prefix + 'FKSize.FK_SizeA'), (multiplyDivide + '.input2X'), f=1)
+            for i in range(0, (len(self.curve_point) * 2 - 1)):
+                CopyCurveShape = cmds.listRelatives((self.prefix + 'FKController' + str(i)), s=1)
+                makeNurbCircle = cmds.listConnections(CopyCurveShape[0] + '.create')
+                if i > (len(self.curve_point) - 1):
+                    cmds.connectAttr((multiplyDivide + '.outputY'), (makeNurbCircle[0] + '.radius'), f=1)
+                else:
+                    cmds.connectAttr((multiplyDivide + '.outputX'), (makeNurbCircle[0] + '.radius'), f=1)
 
-            makeNurbCircle = cmds.listConnections(CopyCurveShape[0] + '.create')
-            if i > (len(self.curve_point) - 1):
-                cmds.connectAttr((multiplyDivide + '.outputY'), (makeNurbCircle[0] + '.radius'), f=1)
-
-            else:
-                cmds.connectAttr((multiplyDivide + '.outputX'), (makeNurbCircle[0] + '.radius'), f=1)
-
-        cmds.delete((self.prefix + 'FKController_Grp1_0_parentConstraint1'),
-                    (self.prefix + 'FKController_Grp1_0_scaleConstraint1'))
+            cmds.delete((self.prefix + 'FKController_Grp1_0_parentConstraint1'),
+                        (self.prefix + 'FKController_Grp1_0_scaleConstraint1'))
         # 拖拽控制器总数量
         Drag_Curve = cmds.curve(p=[(0, 0, 0), (0.2, 0, 0), (0.8, 0, 0), (1, 0, 0)], k=[0, 0, 0, 1, 1, 1], d=3, n=self.prefix + self.curve + '_DragCurve')
         drag_curve_shape = cmds.listRelatives(Drag_Curve, s=1)
 
         cmds.rebuildCurve(Drag_Curve, rt=0, ch=0, end=1, d=3, kr=0, s=(self.drag_controllers_num-1)*2-1, kcp=0, tol=0, kt=0, rpo=1, kep=0)
-
+        cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), Drag_Curve, weight=1, mo=1)
+        cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), Drag_Curve, weight=1, mo=1)
 
 
 
@@ -889,8 +1576,12 @@ class Window(QtWidgets.QMainWindow):
         # cmds.extrude(Drag_Curve, upn=0, dl=1, ch=0, rotation=0, length=1, scale=1, et=0, rn=True,po=0)
         cmds.extrude(a, upn=1, dl=3, ch=0, rotation=0, length=0.01, scale=1, et=0, rn=False, po=0)
         Surface = cmds.ls(sl=1)
+
+
         cmds.rebuildSurface(Surface[0], rt=0, kc=0, fr=0, ch=0, end=1, sv=1, su=(self.drag_controllers_num-1)*2-1, kr=0, dir=2, kcp=0, tol=0,
                           dv=3, du=3, rpo=1)
+        cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), Surface, weight=1, mo=1)
+        cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), Surface, weight=1, mo=1)
         #Surface = cmds.ls(sl=1)
         #cmds.DeleteHistory()
         cmds.delete(a)
@@ -917,8 +1608,9 @@ class Window(QtWidgets.QMainWindow):
             all_drag_cluster.append(Drag_Cluster[1])
             cmds.delete(cmds.parentConstraint((self.prefix + str(Num[len(drag_curve_point)-i-1]) + '_BaseController_Grp1'), Drag_Cluster[1], w=1))
         cmds.select(Drag_Curve)
-        cmds.rebuildCurve(Drag_Curve, rt=0, ch=0, end=1, d=3, kr=0, s=len(self.curve_point)*10, kcp=0, tol=0, kt=0, rpo=1,
+        re_curve = cmds.rebuildCurve(Drag_Curve, rt=0, ch=0, end=1, d=3, kr=0, s=len(self.curve_point)*10, kcp=0, tol=0, kt=0, rpo=1,
                           kep=0)
+        cmds.setAttr((re_curve[1] + '.smooth'), 3)
         #cmds.DeleteHistory()
         cmds.group(em=1,n=(self.prefix + 'all_drag_locator_grp'))
         all_curve_loc = []
@@ -975,12 +1667,27 @@ class Window(QtWidgets.QMainWindow):
             Cluster = cmds.cluster()
             cmds.setAttr((Cluster[1] + '.v'), 0)
             cmds.delete(cmds.parentConstraint((self.prefix + str(i) + '_DragController'), Cluster[1], weight=1))
-            cmds.parent(Cluster[1], (self.prefix + str(i) + '_DragController'))
+            # cmds.parent(Cluster[1], (self.prefix + str(i) + '_DragController'))
+            drag_controller_cluster_grp = cmds.group(em=1, n=(self.prefix + str(i) + '_DragController_cluster_Grp'))
+            loc = cmds.spaceLocator(n=(self.prefix + str(i) + '_DragController_loc'))[0]
+            cmds.parentConstraint((self.prefix + str(i) + '_DragController'), loc, weight=1)
+            cmds.delete(cmds.parentConstraint((self.prefix + str(i) + '_DragController'),drag_controller_cluster_grp, weight=1))
+            cmds.parent(drag_controller_cluster_grp,all_drag_controller_cluster_grp)
+            cmds.parent(loc,Surface)
+            cmds.connectAttr((loc + '.t'), (drag_controller_cluster_grp + '.t'))
+            cmds.connectAttr((loc + '.r'), (drag_controller_cluster_grp + '.r'))
+            cmds.connectAttr((loc + '.s'), (drag_controller_cluster_grp + '.s'))
+            cmds.parent(Cluster[1], drag_controller_cluster_grp)
 
         # 创建毛囊附着表面
         All_DragFollicle_Grp = cmds.group(em=1, n=(self.prefix + 'All_DragFollicle_Grp'))
         All_DragLoc_Grp = cmds.group(em=1, n=(self.prefix + 'All_DragLoc_Grp'))
+        cmds.parentConstraint((self.prefix + 'TotalControl_Curve'), All_DragLoc_Grp, weight=1, mo=1)
+        cmds.scaleConstraint((self.prefix + 'TotalControl_Curve'), All_DragLoc_Grp, weight=1, mo=1)
         shape = cmds.listRelatives(Surface, s=1)
+        if not self.check_box_9.isChecked():
+            cmds.connectAttr((shape[0] + '.worldInverseMatrix[0]'), (All_DragFollicle_Grp + '.offsetParentMatrix'),f=1)
+
         for i in range(0, len(self.curve_point)):
             cpom = cmds.createNode('closestPointOnSurface')
             cmds.connectAttr((shape[0] + '.worldSpace[0]'), (cpom + '.inputSurface'), f=1)
@@ -1011,20 +1718,28 @@ class Window(QtWidgets.QMainWindow):
             cmds.parent(follicle[0], All_DragFollicle_Grp)
             cmds.spaceLocator(p=(0, 0, 0), n=(self.prefix + 'DragLoc' + str(i)))
             cmds.parent((self.prefix + 'DragLoc' + str(i)), (self.prefix + 'All_DragLoc_Grp'))
-            cmds.delete(cmds.parentConstraint((self.prefix + 'FKController' + str(i)), (self.prefix + 'DragLoc' + str(i)), w=1))
+
+            cmds.delete(cmds.parentConstraint((self.prefix + str(i) + '_BaseController_Grp1'), (self.prefix + 'DragLoc' + str(i)), w=1))
+
             cmds.parentConstraint(follicle[0], (self.prefix + 'DragLoc' + str(i)), mo=1, w=1)
+            if self.check_box_9.isChecked() == 0:
+                cmds.parentConstraint(follicle[0], (self.prefix  + str(i) + '_BaseController_Grp1'),w=1)
             # cmds.delete(cpom, decomposeMatrix)
         for i in range(0, len(self.curve_point) - 1):
             cmds.parent((self.prefix + 'DragLoc' + str(i + 1)), (self.prefix + 'DragLoc' + str(i)))
-        for i in range(0, len(self.curve_point)):
-            cmds.connectAttr((self.prefix + 'DragLoc' + str(i) + '.translate'),
-                             (self.prefix + 'FKController_Grp1_' + str(i) + '.translate'), f=1)
-            cmds.connectAttr((self.prefix + 'DragLoc' + str(i) + '.rotate'),
-                             (self.prefix + 'FKController_Grp1_' + str(i) + '.rotate'), f=1)
+        if self.check_box_9.isChecked():
+            for i in range(0, len(self.curve_point)):
+                cmds.connectAttr((self.prefix + 'DragLoc' + str(i) + '.translate'),
+                                 (self.prefix + 'FKController_Grp1_' + str(i) + '.translate'), f=1)
+                cmds.connectAttr((self.prefix + 'DragLoc' + str(i) + '.rotate'),
+                                 (self.prefix + 'FKController_Grp1_' + str(i) + '.rotate'), f=1)
         # 整理文件
+
         for i in range(0, self.drag_controllers_num):
-            cmds.parent(all_drag_cluster[i],self.prefix + str(i) + '_DragController')
-            cmds.parent(all_drag_cluster[self.drag_controllers_num+i], self.prefix + str(self.drag_controllers_num*2-i-1) + '_DragController')
+            cmds.parent(all_drag_cluster[i], self.prefix + str(i) + '_DragController_cluster_Grp')
+            # cmds.parent(all_drag_cluster[i],self.prefix + str(i) + '_DragController')
+            # cmds.parent(all_drag_cluster[self.drag_controllers_num+i], self.prefix + str(self.drag_controllers_num*2-i-1) + '_DragController')
+            cmds.parent(all_drag_cluster[self.drag_controllers_num + i],(self.prefix + str(self.drag_controllers_num*2-i-1) + '_DragController_cluster_Grp'))
 
         #cmds.delete(Drag_Curve)
         for i in range(1, self.drag_controllers_num * 2):
@@ -1032,17 +1747,17 @@ class Window(QtWidgets.QMainWindow):
                 cmds.parent((self.prefix + str(i) + '_DragController_Grp1'), (self.prefix + str(i - 1) + '_DragController'))
             else:
                 cmds.parent((self.prefix + str(i - 1) + '_DragController_Grp1'), (self.prefix + str(i) + '_DragController'))
-        for i in range(1, self.drag_controllers_num * 2):
-            if i > 2 and i < (self.drag_controllers_num * 2 - 3):
-                print((self.drag_controllers_num * 2 - 2))
-                cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateX'),
-                             (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateX'))) * 0.01)
-                cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateY'),
-                             (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateY'))) * 0.01)
-                cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateZ'),
-                             (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateZ'))) * 0.01)
+        # for i in range(1, self.drag_controllers_num * 2):
+        #     if i > 2 and i < (self.drag_controllers_num * 2 - 3):
+        #         print((self.drag_controllers_num * 2 - 2))
+        #         cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateX'),
+        #                      (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateX'))) * 0.01)
+        #         cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateY'),
+        #                      (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateY'))) * 0.01)
+        #         cmds.setAttr((self.prefix + str(i) + '_DragController_Grp1.translateZ'),
+        #                      (cmds.getAttr((self.prefix + str(i) + '_DragController_Grp1.translateZ'))) * 0.01)
         cmds.group((self.prefix + 'all_drag_locator_grp'),Surface,Drag_Curve, All_DragFollicle_Grp, All_DragLoc_Grp, n=(self.prefix + 'All_DragFollicleAttachment_Grp'))
-        cmds.group((self.prefix + 'All_DragFollicleAttachment_Grp'), (self.prefix + '0_DragController_Grp1'),
+        cmds.group(all_drag_controller_cluster_grp,(self.prefix + 'All_DragFollicleAttachment_Grp'), (self.prefix + '0_DragController_Grp1'),
                    (self.prefix + str(self.drag_controllers_num * 2 - 1) + '_DragController_Grp1'),
                    n=(self.prefix + 'All_Drag_Grp'))
         cmds.parent((self.prefix + 'All_Drag_Grp'), (self.prefix + 'All_Grp'))
@@ -1065,6 +1780,11 @@ class Window(QtWidgets.QMainWindow):
         curve = cmds.curve(p=[(-12, 0, 0), (-4, 0, 0), (4, 0, 0), (12, 0, 0)], k=[0, 0, 0, 1, 1, 1], d=3)
         cmds.rebuildCurve(curve, rt=0, ch=0, end=1, d=3, kr=0, s=10, kcp=0, tol=0.01, kt=0, rpo=1, kep=1)
         cmds.polyPlane(cuv=2, sy=1, sx=50, h=1, ch=0, w=24, ax=(0, 1, 0))
+
+    # 测试
+    def test(self):
+        self.create_base_link_layer()
+
 window = Window()
 if __name__ == '__main__':
     window.show()

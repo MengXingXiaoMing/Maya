@@ -1,15 +1,31 @@
 # -*- coding: utf-8 -*-
-from functools import partial
-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
 import maya.cmds as cmds
+import os
+import sys
+import inspect
+# 文件路径
+file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
+# 根路径
+root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
+# 版本号
+maya_version = cmds.about(version=True)
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 
-import importlib
 import controller_processing_window_command
 importlib.reload(controller_processing_window_command)
 from controller_processing_window_command import *
@@ -138,9 +154,9 @@ class Window(QtWidgets.QMainWindow):
         # 版本号
         self.maya_version = cmds.about(version=True)
         # 库路径
-        self.library_path = self.root_path + '\\' + self.maya_version
+        self.library_path = self.root_path + '\\' + maya_version
         self.library_path_reverse = '/'.join(self.library_path.split('\\'))
-
+        self.controller_file_path = cmds.iconTextButton('MayaWindow_menu_Process_formLayout1_AddButton', q=1, ann=1)
         self.command = Command()
         # self.curve_list = self.command.curve_list()
         # self.button_num = len(self.curve_list)
@@ -156,7 +172,7 @@ class Window(QtWidgets.QMainWindow):
         self.maya_version = cmds.about(version=True)
         self.setWindowTitle('控制器处理(Maya'+self.maya_version+')')
         self.setMinimumWidth(50*self.columns_num+30)
-        self.height = 740
+        self.height = 840
         self.setMinimumHeight(self.height)
 
         self.create_widgets()
@@ -242,6 +258,7 @@ class Window(QtWidgets.QMainWindow):
         self.Label_5 = QtWidgets.QLabel()
         self.Label_5.setText('后缀:')
         self.line_edit_5 = QtWidgets.QLineEdit()
+        # self.line_edit_5.setReadOnly(True) # 仅读取
         self.button_5 = QtWidgets.QPushButton('独立创建控制器')
         self.button_5.setStyleSheet('background:rgb(0,0,255)')
 
@@ -264,6 +281,11 @@ class Window(QtWidgets.QMainWindow):
         self.button_10.setStyleSheet('color:rgb(0,0,0);background:rgb(255,255,0)')
         self.button_11 = QtWidgets.QPushButton('归位')
         self.button_11.setStyleSheet('color:rgb(0,0,0);background:rgb(0,255,0)')
+        self.button_35 = QtWidgets.QPushButton('R→L')
+        self.button_35.setStyleSheet('color:rgb(0,0,0);background:rgb(255,255,255)')
+        self.button_36 = QtWidgets.QPushButton('L→R')
+        self.button_36.setStyleSheet('color:rgb(0,0,0);background:rgb(255,255,255)')
+
         self.checkBox_4 = QtWidgets.QCheckBox()
         self.checkBox_4.setChecked(True)
         self.checkBox_4.setText('保持样条形状')
@@ -336,6 +358,16 @@ class Window(QtWidgets.QMainWindow):
 
         self.button_32 = QtWidgets.QPushButton('清理无变化驱动')
         self.button_34 = QtWidgets.QPushButton('打直所有驱动')
+
+        self.button_37 = QtWidgets.QPushButton('选择骨骼，后选模型创建次级')
+
+        self.line_edit_11 = QtWidgets.QLineEdit()
+        self.line_edit_11.setFixedWidth(40)
+        self.line_edit_11.setText('3')
+        self.slider_8 = QtWidgets.QSlider(Qt.Horizontal)
+        self.button_38 = QtWidgets.QPushButton('骨骼过长创建ik')
+
+        self.button_39 = QtWidgets.QPushButton('去除骨骼链一半骨骼')
 
         self.splitter_6 = QtWidgets.QSplitter()
         self.splitter_6.setFixedHeight(1)
@@ -442,6 +474,8 @@ class Window(QtWidgets.QMainWindow):
         v_box_layout_3.addLayout(h_box_layout_11)
         h_box_layout_11.addWidget(self.button_10)
         h_box_layout_11.addWidget(self.button_11)
+        h_box_layout_11.addWidget(self.button_35)
+        h_box_layout_11.addWidget(self.button_36)
         h_box_layout_11.addWidget(self.checkBox_4)
         h_box_layout_11.addWidget(self.button_12)
 
@@ -453,13 +487,21 @@ class Window(QtWidgets.QMainWindow):
 
         scroll_area_2 = QtWidgets.QScrollArea(self)
         scroll_area_2.setWidgetResizable(True)
-        scroll_area_2.setFixedHeight(200)
+        scroll_area_2.setFixedHeight(230)
         scroll_area_2.setFrameShape(QFrame.Shape.NoFrame)
         scroll_area_2.setWidget(QWidget())
+
+        Widget_1 = QtWidgets.QWidget()
+        # Widget_1.high
+        scroll_area_2.setWidget(Widget_1)
+        # Widget_1.setMaximumWidth(100)
+        flow_layout_2 = FlowLayout(Widget_1)
+
         v_box_layout_11.addWidget(scroll_area_2)
-        flow_layout_2 = FlowLayout(scroll_area_2.widget())
+        # flow_layout_2 = FlowLayout(scroll_area_2.widget())
         flow_layout_2.setSpacing(1)
         flow_layout_2.addWidget(self.button_13)
+        flow_layout_2.addWidget(self.button_39)
         widget_1 = QWidget(self)
         radio_button_h_box_layout_1 = QtWidgets.QHBoxLayout(widget_1)  # 创建一个按钮组
         radio_button_h_box_layout_1.setContentsMargins(0,0,0,0)
@@ -537,8 +579,19 @@ class Window(QtWidgets.QMainWindow):
         v_box_layout_12.addLayout(h_box_layout_17)
         h_box_layout_17.addWidget(self.checkBox_3)
         h_box_layout_17.addWidget(self.button_31)
-        flow_layout_2.addWidget(self.button_32)
-        flow_layout_2.addWidget(self.button_34)
+        # flow_layout_2.addWidget(self.button_32)
+        # flow_layout_2.addWidget(self.button_34)
+        h_box_layout_19 = QtWidgets.QHBoxLayout(self)
+        v_box_layout_12.addLayout(h_box_layout_19)
+        h_box_layout_19.setSpacing(0)
+        h_box_layout_19.setContentsMargins(0, 0, 0, 0)
+        h_box_layout_19.addWidget(self.line_edit_11)
+        h_box_layout_19.addWidget(self.slider_8)
+        h_box_layout_19.addWidget(self.button_38)
+
+
+
+        flow_layout_2.addWidget(self.button_37)
 
         v_box_layout_1.addWidget(self.splitter_6)
         # 置顶
@@ -576,6 +629,10 @@ class Window(QtWidgets.QMainWindow):
         self.button_9.clicked.connect(lambda:  self.command.controller.delete_addattr_system(self.comboBox_5.currentText()))  # 删除控制器
         self.button_10.clicked.connect(self.command.controller.switch_controllers)  # 切换控制器
         self.button_11.clicked.connect(self.command.controller.reset_controllers)  # 归零控制器
+
+        self.button_35.clicked.connect(lambda:  self.command.controller.mirror_controllers('RL'))  # 镜像控制器RL
+        self.button_36.clicked.connect(lambda:  self.command.controller.mirror_controllers('LR'))  # 镜像控制器LR
+
         self.button_12.clicked.connect(self.creating_controllers_system) # 创建控制器
         self.button_13.clicked.connect(self.command.others_library.centre_joint) # 在所选线中心建立骨骼链
         self.button_14.clicked.connect(self.mirror_joint)  # 镜像骨骼
@@ -602,10 +659,16 @@ class Window(QtWidgets.QMainWindow):
         self.slider_7.valueChanged.connect(lambda: self.automatically_adjust_the_slider_range_and_return_values_to_ui(self.slider_7,self.line_edit_9))
         self.button_29.clicked.connect(lambda: self.command.others_library.insert_joint(self.line_edit_9.text()))
 
+        self.line_edit_11.textChanged.connect(lambda: self.modify_UI_values_and_provide_feedback_to_the_slider(self.line_edit_11,self.slider_8))  # 修改ui数值反馈给滑块
+        self.slider_8.valueChanged.connect(lambda: self.automatically_adjust_the_slider_range_and_return_values_to_ui(self.slider_8, self.line_edit_11))
+        self.button_38.clicked.connect(lambda: self.create_ik(self.line_edit_11.text()))
+        self.button_37.clicked.connect(self.command.others_library.create_second)
         self.button_30.clicked.connect(lambda: self.command.ui_edit.load_select_for_ui_text(self.line_edit_10, ['QLineEdit']))
         self.button_31.clicked.connect(lambda: self.command.others_library.follicle_constraint(self.line_edit_10.text(),cmds.ls(sl=1),self.checkBox_3.isChecked()))
         #self.button_32.clicked.connect(lambda: self.open_attribute_visibility_window())
         #self.button_34.clicked.connect(lambda: self.open_attribute_visibility_window())
+        self.button_39.clicked.connect(lambda: self.delete_half_joint())
+
 
     # 修改控制器栏宽度
     def resizeEvent(self, event):
@@ -613,11 +676,13 @@ class Window(QtWidgets.QMainWindow):
         self.new_size = event.size()
         move = self.layout_widget.geometry()
         self.layout_widget.setGeometry(move.x(), move.y(), (self.new_size.width()), move.height())
+
     # 自动调整控制器栏横向宽度
     def automatically_adjust_layout(self):
         num = self.scroll_bar_1.value()
         move = self.layout_widget.geometry()
         self.layout_widget.setGeometry(0, (num*-1), (self.new_size.width()), (900+(num*1)))
+
     # 右键处理控制器
     def edit_controller(self,button, point):
         # show context menu
@@ -656,7 +721,8 @@ class Window(QtWidgets.QMainWindow):
 
     # 创建样条
     def create_curve(self,button):
-        self.command.curve.create_curve(self.library_path+'\\curve_library',button.text())
+        # self.command.curve.create_curve(self.library_path+'\\curve_library',button.text())
+        self.command.curve.create_curve(self.controller_file_path + '\\curve_library', button.text())
     # 修改样条
     def modify_curve(self,button):
         palette = self.color_button_1.palette()
@@ -666,8 +732,11 @@ class Window(QtWidgets.QMainWindow):
     # 删除样条
     def delete_curve(self,button):
         button.deleteLater()
-        os.remove(self.library_path+'\\curve_library\\'+button.text()+'.txt')
-        os.remove(self.library_path+'\\curve_library\\'+button.text()+'.jpg')
+        # os.remove(self.library_path+'\\curve_library\\'+button.text()+'.txt')
+        # os.remove(self.library_path+'\\curve_library\\'+button.text()+'.jpg')
+
+        os.remove(self.controller_file_path + '\\curve_library\\' + button.text() + '.txt')
+        os.remove(self.controller_file_path + '\\curve_library\\' + button.text() + '.jpg')
         print('删除：'+button.text())
     # 修改按钮颜色
     def modify_color(self,button, point):
@@ -774,6 +843,10 @@ class Window(QtWidgets.QMainWindow):
     # 添加控制器
     def add_controller(self):
         self.command.curve.upload_file_by_name(self.line_edit_2.text(), self.library_path_reverse + '/curve_library')
+        controller_file_path = cmds.iconTextButton('MayaWindow_menu_Process_formLayout1_AddButton', q=1, ann=1)
+        # print(controller_file_path)
+        path = controller_file_path + '\\curve_library'
+        self.command.curve.upload_file_by_name(self.line_edit_2.text(), path)
         self.scroll_area_1.deleteLater()
         self.create_controller()
 
@@ -800,12 +873,39 @@ class Window(QtWidgets.QMainWindow):
             button.setToolButtonStyle(Qt.ToolButtonTextUnderIcon)
             button.setText(self.curve_list[i])
             # button.setFixedSize(50, 65)
-            button.setIcon(QIcon((self.curve_library_path + self.curve_list[i] + '.jpg')))
+            button.setIcon(QIcon((self.controller_file_path + '\\curve_library\\' + self.curve_list[i] + '.jpg')))
             button.setIconSize(QSize(50, 50))
             # set button context menu policy
             button.setContextMenuPolicy(Qt.CustomContextMenu)
             button.customContextMenuRequested.connect(partial(self.edit_controller, button))
             flow_layout_1.addWidget(button)
+
+    # 创建ik
+    def create_ik(self,number):
+        cmds.warning('请先选择骨骼链条，最后选曲线')
+        sel = cmds.ls(sl=1)
+        joints = sel[:-1]
+        curve = sel[-1]
+        if int(number)>2:
+            self.command.others_library.generate_curve_ik_chain(joints, curve, int(number))
+        else:
+            cmds.warning('骨骼数量不能小于3')
+
+    # 去除一半骨骼
+    def delete_half_joint(self):
+        cmds.SelectHierarchy()
+        sel = cmds.ls(sl=1, type='joint')
+        sel = sel[1::2]
+        for s in sel:
+            try:
+                parent = cmds.listRelatives(s, p=1)
+                child = cmds.listRelatives(s, c=1)
+                cmds.parent(child, parent)
+                cmds.delete(s)
+            except:
+                pass
+
+
 window = Window()
 if __name__ == '__main__':
     window.show()

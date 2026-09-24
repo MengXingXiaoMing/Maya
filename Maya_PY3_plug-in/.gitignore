@@ -1,0 +1,16 @@
+# ===== 临时调试文件（仅本目录根下的 _xxx.py / _xxx.log / _xxx.txt）=====
+/_*.py
+/_*.log
+/_*.txt
+
+# ===== IDE 与系统缓存 =====
+.idea/
+Thumbs.db
+Desktop.ini
+
+# ===== Python 缓存（根仓库 .gitignore 已有同样规则，这里兜底）=====
+__pycache__/
+*.py[cod]
+
+# ===== Maya 运行时暂存数据（权重临时导出等）=====
+**/scratch_file/

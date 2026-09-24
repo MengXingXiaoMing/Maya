@@ -1,18 +1,30 @@
 # -*- coding: utf-8 -*-
-import inspect
-import os
-
-from PySide2 import QtWidgets, QtCore, QtGui
-from PySide2.QtGui import *
-from PySide2.QtWidgets import *
-from PySide2.QtCore import *
-import maya.OpenMayaUI as Omui
-from shiboken2 import wrapInstance
 import maya.cmds as cmds
-
+import os
+import sys
 import inspect
-import importlib
-
+# 文件路径
+file_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-1]))
+# 根路径
+root_path = os.path.join('\\'.join(os.path.abspath(inspect.getsourcefile(lambda: 0)).split('\\')[:-4]))
+# 版本号
+maya_version = cmds.about(version=True)
+maya_version_int = int(maya_version)
+for i in range(30):
+    test_version = maya_version_int - i
+    # 库路径
+    maya_version = str(test_version)
+    library_path = root_path + '\\' + maya_version
+    # 方法2：直接判断是否是目录（更简洁）
+    if os.path.isdir(library_path):
+        # 库添加到系统路径
+        sys.path.append(library_path)
+        maya_version_int = test_version
+        # print("文件夹存在")
+        break
+import general_settings
+from general_settings import *
+importlib.reload(general_settings)
 import ui_edit
 from ui_edit import *
 importlib.reload(ui_edit)
@@ -20,6 +32,18 @@ importlib.reload(ui_edit)
 import maya_common
 from maya_common import *
 importlib.reload(maya_common)
+
+import curve
+from curve import *
+importlib.reload(curve)
+
+import controller
+from controller import *
+importlib.reload(controller)
+
+import others_library
+from others_library import *
+importlib.reload(others_library)
 
 class Window(QtWidgets.QMainWindow):
     def __init__(self, parent=wrapInstance(int(Omui.MQtUtil.mainWindow()), QtWidgets.QWidget)):
@@ -33,6 +57,9 @@ class Window(QtWidgets.QMainWindow):
         self.setWindowTitle('驱动器(Maya'+self.maya_version+')')
         self.ui_edit = UiEdit()
         self.maya_common = MayaCommon()
+        self.curve_library = CreateAndEditCurve()
+        self.controller = CurveControllerEdit()
+        self.others_library = OthersLibrary()
 
         self.create_widgets()
         self.create_layouts()
@@ -45,7 +72,10 @@ class Window(QtWidgets.QMainWindow):
         # 版本号
         self.maya_version = cmds.about(version=True)
         # 库路径
-        self.library_path = self.root_path + '\\' + self.maya_version
+        self.library_path = self.root_path + '\\' + maya_version
+
+        self.curve_library_path = self.library_path + '\\curve_library'
+
     def create_widgets(self):
         # 第一行
         self.button_1 = QtWidgets.QPushButton('选择驱动骨骼')
@@ -77,6 +107,8 @@ class Window(QtWidgets.QMainWindow):
         self.button_12 = QtWidgets.QPushButton('创建球形距离驱动器（如果选择其控制器则添加其定位器）')
         self.button_13 = QtWidgets.QPushButton('选择物体创建不规则物体距离驱动器（如果选择以创建过此驱动的物体则添加其定位器）')
         self.button_14 = QtWidgets.QPushButton('选择物体删除其关联的不规则物体距离驱动器')
+
+        self.button_15 = QtWidgets.QPushButton('选择样条和骨骼创建按样条比例驱动骨骼驱动器')
 
 
 
@@ -139,27 +171,31 @@ class Window(QtWidgets.QMainWindow):
         main_layout.addLayout(h_Box_layout_8)
         h_Box_layout_8.addWidget(self.button_13)
         h_Box_layout_8.addWidget(self.button_14)
+
         main_layout.addStretch(1)
+
+        main_layout.addWidget(self.button_15)
 
     def create_connect(self):
         self.button_1.clicked.connect(lambda :self.maya_common.select_text_target(self.line_edit_1, ['QLineEdit']))
         self.button_2.clicked.connect(lambda :self.ui_edit.load_select_for_ui_text(self.line_edit_1, ['QLineEdit']))
         self.button_3.clicked.connect(lambda: self.maya_common.select_text_target(self.line_edit_2, ['QLineEdit']))
         self.button_4.clicked.connect(lambda: self.ui_edit.load_select_for_ui_text(self.line_edit_2, ['QLineEdit']))
-        self.button_5.clicked.connect(self.create_drver)
+        self.button_5.clicked.connect(self.create_drive)
         self.button_6.clicked.connect(lambda: self.maya_common.select_text_target(self.line_edit_3, ['QLineEdit']))
         self.button_7.clicked.connect(lambda: self.ui_edit.load_select_for_ui_text(self.line_edit_3, ['QLineEdit']))
         self.button_8.clicked.connect(lambda: self.maya_common.select_text_target(self.line_edit_4, ['QLineEdit']))
         self.button_9.clicked.connect(lambda: self.ui_edit.load_select_for_ui_text(self.line_edit_4, ['QLineEdit']))
         self.button_10.clicked.connect(self.connect_attribute)
         self.button_11.clicked.connect(self.create_get_num_loc)
-        self.button_12.clicked.connect(self.create_distance_drver)
+        self.button_12.clicked.connect(self.create_distance_drive)
         self.button_13.clicked.connect(self.create_irregular_object_weight)
         self.button_14.clicked.connect(self.delete_irregular_range_driver)
+        self.button_15.clicked.connect(self.create_curve_weight_driver)
 
     # 创建点积驱动基础
     def create_model(self, num):
-        curve = cmds.curve(n='dot_drver'+str(num),p=[(0, -2, 0), (0, 0, 0), (0, -2, 0)], k=[0, 1, 2], d=1)
+        curve = cmds.curve(n='dot_drive'+str(num),p=[(0, -2, 0), (0, 0, 0), (0, -2, 0)], k=[0, 1, 2], d=1)
 
         all_cluster_grp = []
         all_loc = []
@@ -169,7 +205,7 @@ class Window(QtWidgets.QMainWindow):
             all_cluster_grp.append(grp)
             cmds.setAttr(grp + '.rotatePivot', 0, 0, 0)
             cmds.setAttr(grp + '.scalePivot', 0, 0, 0)
-            loc = cmds.spaceLocator(n=('dot_drver' + str(num) + '_t_loc' +str(i)), p=(0, 0, 0))[0]
+            loc = cmds.spaceLocator(n=('dot_drive' + str(num) + '_t_loc' +str(i)), p=(0, 0, 0))[0]
             cmds.setAttr(loc + '.ty', -2)
             all_loc.append(loc)
             cmds.pointConstraint(cluster[1], loc, offset=(0, 0, 0), weight=1)
@@ -183,7 +219,7 @@ class Window(QtWidgets.QMainWindow):
         sphere = cmds.sphere(n=('dot_sphere_' + str(num)), esw=360, ch=0, d=3, ut=0, ssw=0, p=(0, 0, 0), s=8, r=1,
                              tol=0.01, nsp=4, ax=(0, 1, 0))
         # print(sphere)
-        new_surface = cmds.nurbsBoolean(cone[0], sphere, ch=1, nsf=1, op=2, n='dot_drver_cluster' + str(num))
+        new_surface = cmds.nurbsBoolean(cone[0], sphere, ch=1, nsf=1, op=2, n='dot_drive_cluster' + str(num))
         # print(new_surface)
         cmds.setAttr(new_surface[0] + '.template', 1)
         # 建立数值定位器
@@ -258,7 +294,7 @@ class Window(QtWidgets.QMainWindow):
 
         grp_2 = cmds.group(em=1, n=(curve + '_grp'))
         cmds.parent(curve, grp_2)
-        grp_3 = cmds.group(grp_1, grp_2, n='dot_drver_grp' + str(num))
+        grp_3 = cmds.group(grp_1, grp_2, n='dot_drive_grp' + str(num))
 
         vectorProduct_2 = cmds.createNode('vectorProduct')
         cmds.setAttr(vectorProduct_2 + '.input1Y', -1)
@@ -287,13 +323,13 @@ class Window(QtWidgets.QMainWindow):
         return grp_3, grp_2, ls_loc
 
     # 创建点积驱动
-    def create_drver(self):
-        drver_joint = self.line_edit_1.text()
-        drver_joint_parent = self.line_edit_2.text()
-        all_dot_grp = 'All_dot_drver_grp'
+    def create_drive(self):
+        drive_joint = self.line_edit_1.text()
+        drive_joint_parent = self.line_edit_2.text()
+        all_dot_grp = 'All_dot_drive_grp'
         if not cmds.objExists(all_dot_grp):
             cmds.group(n=all_dot_grp, em=1)
-        all_grp = cmds.ls('dot_drver_grp*')
+        all_grp = cmds.ls('dot_drive_grp*')
         num = 0
         if all_grp:
             all_grp_num = []
@@ -307,14 +343,14 @@ class Window(QtWidgets.QMainWindow):
         top_grp, grp, ls_loc = self.create_model(num)
         cmds.parent(top_grp, all_dot_grp)
 
-        if drver_joint:
-            cmds.pointConstraint(drver_joint, grp, offset=(0, 0, 0), weight=1)
-            cmds.scaleConstraint(drver_joint, grp, mo=1, weight=1)
-            child_joint = cmds.listRelatives(drver_joint, c=1, type='joint')
+        if drive_joint:
+            cmds.pointConstraint(drive_joint, grp, offset=(0, 0, 0), weight=1)
+            cmds.scaleConstraint(drive_joint, grp, mo=1, weight=1)
+            child_joint = cmds.listRelatives(drive_joint, c=1, type='joint')
             if child_joint:
                 cmds.pointConstraint(child_joint[0], ls_loc, weight=1)
-        if drver_joint_parent:
-            cmds.orientConstraint(drver_joint_parent, grp, offset=(0, 0, 0), weight=1)
+        if drive_joint_parent:
+            cmds.orientConstraint(drive_joint_parent, grp, offset=(0, 0, 0), weight=1)
         cmds.select(ls_loc)
         cmds.warning('点积驱动创建完成，请自行构建链接,如果缺少加载则不运行部分约束。')
 
@@ -369,7 +405,7 @@ class Window(QtWidgets.QMainWindow):
 
             cmds.parent(ls_loc, sel)
 
-            all_range_loc = [('dot_drver' + top_num + '_t_loc0'), ('dot_drver' + top_num + '_t_loc2')]
+            all_range_loc = [('dot_drive' + top_num + '_t_loc0'), ('dot_drive' + top_num + '_t_loc2')]
             vectorProduct_1 = cmds.listConnections(all_range_loc[0], d=1, s=1, type='vectorProduct')
             vectorProduct_2 = cmds.listConnections(all_range_loc[1], d=1, s=1, type='vectorProduct')
 
@@ -392,9 +428,9 @@ class Window(QtWidgets.QMainWindow):
             cmds.warning('请选择驱动控制器')
 
     # 创建距离判断基础部分
-    def create_distance_drver(self):
+    def create_distance_drive(self):
         sel = cmds.ls(sl=1)
-        all_range_grp = cmds.ls('distance_drver*_curve')
+        all_range_grp = cmds.ls('distance_drive*_curve')
 
         if not sel or (not sel[0] in all_range_grp):
             num = 0
@@ -417,7 +453,7 @@ class Window(QtWidgets.QMainWindow):
                                    r=1,
                                    tol=0.01, nsp=4, ax=(0, 1, 0))
             cmds.setAttr(sphere_2[0] + '.template', 1)
-            curve = cmds.curve(n=('distance_drver' + str(num) + '_curve'),
+            curve = cmds.curve(n=('distance_drive' + str(num) + '_curve'),
                                p=[(-3.7551395312306146e-17, 1.1053200580606237, -7.566895313483482e-16),
                                   (0.5526600290326463, 0.9572348032834932, -7.566895313483482e-16),
                                   (0.9572348032834932, 0.5526600290326463, -7.566895313483482e-16),
@@ -471,15 +507,15 @@ class Window(QtWidgets.QMainWindow):
             grp_1 = cmds.group(sphere_1, sphere_2, distanceDimShape, curve, loc_2, n=('range_grp_' + str(num)))
             cmds.parentConstraint(curve, sphere_1, mo=1, w=1)
             cmds.parentConstraint(curve, sphere_2, mo=1, w=1)
-            if cmds.objExists('All_range_drver_grp'):
-                cmds.parent(grp_1, 'All_range_drver_grp')
+            if cmds.objExists('All_range_drive_grp'):
+                cmds.parent(grp_1, 'All_range_drive_grp')
             else:
-                cmds.group(grp_1, n='All_range_drver_grp')
+                cmds.group(grp_1, n='All_range_drive_grp')
             cmds.select(curve)
         else:
             num = int(sel[0][14:-6])
             all_num = []
-            all_range_loc_grp = cmds.ls('distance_drver' + str(num) + '_loc1_*', type='locator')
+            all_range_loc_grp = cmds.ls('distance_drive' + str(num) + '_loc1_*', type='locator')
             for loc in all_range_loc_grp:
                 n = int(loc[20 + len(str(num)):-5])
                 all_num.append(n)
@@ -502,9 +538,9 @@ class Window(QtWidgets.QMainWindow):
         cmds.connectAttr((curve + '.range0'), (setRange + '.oldMinX'), f=1)
         cmds.connectAttr((curve + '.range1'), (setRange + '.oldMaxX'), f=1)
         # 创建距离判断
-        loc_1 = cmds.spaceLocator(n='distance_drver' + str(num) + '_loc0_' + str(loc_num))[0]
+        loc_1 = cmds.spaceLocator(n='distance_drive' + str(num) + '_loc0_' + str(loc_num))[0]
         cmds.setAttr((loc_1 + '.visibility'), 0)
-        loc_2 = cmds.spaceLocator(n='distance_drver' + str(num) + '_loc1_' + str(loc_num))[0]
+        loc_2 = cmds.spaceLocator(n='distance_drive' + str(num) + '_loc1_' + str(loc_num))[0]
         distanceDimShape = cmds.createNode('distanceDimShape')
         cmds.setAttr((distanceDimShape + '.visibility'), 0)
         print(distanceDimShape)
@@ -546,7 +582,7 @@ class Window(QtWidgets.QMainWindow):
         if have_range == True: #如果物体有范围显示，则增加定位器
             loc_0, loc_2, distanceDimShape = self.create_distance_show(sel)
             distanceDimShape=cmds.listRelatives(distanceDimShape,p=1)
-            cmds.parent(loc_0, loc_2, distanceDimShape, (sel[0] + '_irregular_object_drver_grp'))
+            cmds.parent(loc_0, loc_2, distanceDimShape, (sel[0] + '_irregular_object_drive_grp'))
         else:
             cmds.addAttr(sel[0], ln='range', min=0.001, dv=1, at='double')
             cmds.setAttr((sel[0] + '.range'), e=1, keyable=True)
@@ -556,9 +592,9 @@ class Window(QtWidgets.QMainWindow):
             sel_shape = cmds.listRelatives(sel, c=1, type='mesh')
             if sel_shape:
                 sel_copy = self.create_mesh_range_indicator(sel, sel_shape)
-                cmds.group(sel_copy, loc_0, loc_2, distanceDimShape, n=sel[0] + '_irregular_object_drver_grp')
+                cmds.group(sel_copy, loc_0, loc_2, distanceDimShape, n=sel[0] + '_irregular_object_drive_grp')
             else:
-                cmds.group(loc_0, loc_2, distanceDimShape, n=sel[0] + '_irregular_object_drver_grp')
+                cmds.group(loc_0, loc_2, distanceDimShape, n=sel[0] + '_irregular_object_drive_grp')
         cmds.select(loc_2)
         cmds.warning('mesh有大致范围显示，曲面没有范围显示，mesh可以缩放，但是其范围指示器不跟随缩放，如有需要请自行调整。')
 
@@ -576,7 +612,7 @@ class Window(QtWidgets.QMainWindow):
     # 创建距离计算
     def create_distance_show(self, sel):
         # 计算定位器添加的数量数值
-        all_loc = cmds.ls(sel[0]+'_drver_num_loc*',type='locator')
+        all_loc = cmds.ls(sel[0]+'_drive_num_loc*',type='locator')
         num = 0
         if all_loc:
             all_loc_num = []
@@ -594,7 +630,7 @@ class Window(QtWidgets.QMainWindow):
         cmds.geometryConstraint(sel, loc_0, weight=1)
         cmds.normalConstraint(sel, loc_0, worldUpType="vector", aimVector=(1, 0, 0), upVector=(0, 1, 0), weight=1,
                               worldUpVector=(0, 1, 0))
-        loc_2 = cmds.spaceLocator(n=sel[0] + '_drver_num_loc'+str(num))[0]
+        loc_2 = cmds.spaceLocator(n=sel[0] + '_drive_num_loc'+str(num))[0]
         cmds.pointConstraint(loc_2, loc_0, weight=1)
         cmds.pointConstraint(loc_2, loc_1, weight=1)
         # 创建点积计算，判断是否在法线正方向
@@ -654,12 +690,145 @@ class Window(QtWidgets.QMainWindow):
     # 删除不规则范围驱动器
     def delete_irregular_range_driver(self):
         sel = cmds.ls(sl=1)
-        if cmds.objExists(sel[0] + '_irregular_object_drver_grp'):
-            cmds.delete(sel[0] + '_irregular_object_drver_grp')
+        if cmds.objExists(sel[0] + '_irregular_object_drive_grp'):
+            cmds.delete(sel[0] + '_irregular_object_drive_grp')
             all_attrs = cmds.listAttr(sel, keyable=True, multi=True, scalar=True, userDefined=True) or []
             for attr in all_attrs:
                 cmds.deleteAttr(sel[0] + '.' + attr)
 
+    # 创建曲线上动态权重驱动器
+    def create_curve_weight_driver(self):
+        cmds.undoInfo(ock=1)
+        curve = cmds.ls(sl=1,fl=1)[0]
+        joint = cmds.ls(sl=1, fl=1,type='joint')
+        curve_shape = cmds.listRelatives(curve, s=1,type='nurbsCurve')
+        # 创建滑动缩放控制器
+        all_u_curve_grp = []
+        self.prefix = curve
+        # 创建总控制器
+        # self.curve_library.create_curve(self.curve_library_path, '四边方向箭')
+        # self.controller.modify_vontroller_shape('scale', 0.5, 0.5, 0.5)
+        # self.controller.modify_vontroller_shape('rotate', 0, 90, 90)
+        # cmds.rename((self.prefix + 'TotalControl_Curve'))
+        # total_control = cmds.ls(sl=1)
+        # self.curve_library.change_curve_color('Index', total_control, [0, 0, 0], 13)
+        # cmds.group(n=(self.prefix + 'TotalControl_Grp2'))
+        # cmds.group(n=(self.prefix + 'TotalControl_Grp1'))
+        ls_num = cmds.ls(self.prefix + 'slide_zoom_curve_grp*',type ='transform')
+        print(ls_num)
+        slide_controller_num = 0
+        if ls_num:
+            base_num = len(self.prefix+ 'slide_zoom_curve_grp')
+            for ls in ls_num:
+                num = int(ls[base_num:])
+                print(ls)
+                print(num)
+                if num == slide_controller_num:
+                    slide_controller_num = num + 1
+                if num > slide_controller_num:
+                    slide_controller_num = num
+
+
+
+        self.curve_library.create_curve(self.curve_library_path, '圆片拉线')
+        cmds.rename(self.prefix + 'slide_zoom_curve' + str(slide_controller_num))
+        u_curve = cmds.ls(sl=1)
+        print(u_curve)
+        self.controller.modify_vontroller_shape('scale', 5.0, 5.0, 5.0)
+        self.curve_library.change_curve_color('Index', u_curve, [0, 0, 0], 20)
+
+        u_curve_grp = cmds.group(n=self.prefix+'slide_zoom_curve_grp' + str(slide_controller_num), em=1)
+        cmds.parent(u_curve[0], u_curve_grp)
+        all_u_curve_grp.append(u_curve_grp)
+        cmds.addAttr(u_curve[0], ln='uValue', min=0, max=100, dv=0, at='double')
+        cmds.setAttr((u_curve[0] + '.uValue'), e=1, keyable=True)
+        cmds.addAttr(u_curve[0], ln='slide_range', dv=50, min=0, at='double')
+        cmds.setAttr((u_curve[0] + '.slide_range'), e=1, keyable=True)
+        cmds.addAttr(u_curve[0], ln='slide_size', dv=1, min=0, at='double')
+        cmds.setAttr((u_curve[0] + '.slide_size'), e=1, keyable=True)
+        cmds.addAttr(u_curve[0], ln='size', dv=1, at='double')
+        cmds.setAttr((u_curve[0] + '.size'), e=1, keyable=True)
+        cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_grp + '.scaleX'), f=1)
+        cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_grp + '.scaleY'), f=1)
+        cmds.connectAttr((u_curve[0] + '.slide_size'), (u_curve_grp + '.scaleZ'), f=1)
+
+        path_constraint = self.others_library.path_constraint(curve, u_curve_grp)
+        cmds.setAttr(path_constraint + '.fractionMode', 0)
+        u_curve_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+        cmds.connectAttr((u_curve[0] + '.uValue'), (u_curve_multiplyDivide + '.input1X'), f=1)
+        cmds.setAttr((u_curve_multiplyDivide + '.input2X'), 0.01)
+        cmds.connectAttr((u_curve_multiplyDivide + '.outputX'), (path_constraint + '.uValue'), f=1)
+        # 建立当前弧长
+        now_arcLengthDimension = cmds.arcLengthDimension(curve_shape[0] + '.u[0.5]')
+        cmds.connectAttr((u_curve_multiplyDivide + '.outputX'), (now_arcLengthDimension + '.uParamValue'), f=1)
+        for i in range(0, len(joint)):
+            # 建立弧长
+            arcLengthDimension = cmds.arcLengthDimension(curve_shape[0] + '.u[0.5]')
+            # 建立实时位置给u值
+            nearestPointOnCurve = cmds.createNode('nearestPointOnCurve')
+            decomposeMatrix = cmds.createNode('decomposeMatrix')
+            cmds.connectAttr((joint[i] + '.worldMatrix'), (decomposeMatrix + '.inputMatrix'), f=1)
+            cmds.connectAttr((decomposeMatrix + '.outputTranslate'), (nearestPointOnCurve + '.inPosition'), f=1)
+            cmds.connectAttr((curve_shape[0] + '.worldSpace'), (nearestPointOnCurve + '.inputCurve'), f=1)
+            # cmds.connectAttr((curve_shape[0] + '.worldSpace'), (arcLengthDimension + '.nurbsGeometry'),f=1)
+            cmds.connectAttr((nearestPointOnCurve + '.result.parameter'), (arcLengthDimension + '.uParamValue'),f=1)
+
+            # 开始添加缩放计算
+            plusMinusAverage = cmds.shadingNode('plusMinusAverage', asUtility=1)
+            cmds.setAttr((plusMinusAverage + '.operation'), 2)
+            cmds.connectAttr((now_arcLengthDimension + '.arcLength'), (plusMinusAverage + '.input1D[0]'), f=1)
+            cmds.connectAttr((arcLengthDimension + '.arcLength'), (plusMinusAverage + '.input1D[1]'), f=1)
+
+            imp_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+            #################################################################################################
+            multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+            cmds.setAttr((multiplyDivide + '.operation'), 2)
+            cmds.connectAttr((u_curve[0] + '.slide_range'), (multiplyDivide + '.input1X'), f=1)
+
+            cmds.connectAttr((u_curve[0] + '.size'), (multiplyDivide + '.input2X'), f=1)
+            cmds.connectAttr((multiplyDivide + '.outputX'), (imp_multiplyDivide + '.input1X'), f=1)
+            # cmds.connectAttr((u_curve[0] + '.slide_range'), (imp_multiplyDivide + '.input1X'), f=1)
+            #################################################################################################
+            cmds.connectAttr((plusMinusAverage + '.output1D'), (imp_multiplyDivide + '.input2X'), f=1)
+
+            out_multiplyDivide = cmds.shadingNode('multiplyDivide', asUtility=1)
+            cmds.connectAttr((u_curve[0] + '.slide_size'), (out_multiplyDivide + '.input1X'), f=1)
+            # 创建驱动节点
+            cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+                                   currentDriver=(imp_multiplyDivide + '.outputX'), dv=-100, v=0)
+            cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+                                   currentDriver=(imp_multiplyDivide + '.outputX'), dv=0, v=1)
+            cmds.setDrivenKeyframe((out_multiplyDivide + '.input2X'),
+                                   currentDriver=(imp_multiplyDivide + '.outputX'), dv=100, v=0)
+            # 为骨骼添加属性
+            if not cmds.objExists(joint[i]+'.weight'):
+                cmds.addAttr(joint[i], ln='weight', dv=0, at='double')
+                cmds.setAttr((joint[i] + '.weight'), e=1, keyable=True)
+            # 获取最大值
+            floatMath = cmds.shadingNode('floatMath', asUtility=1)
+            cmds.setAttr((floatMath + '.operation'), 5)
+            cmds.connectAttr((out_multiplyDivide + '.outputX'), (floatMath + '.floatA'), f=1)
+
+            have_floatMath = cmds.listConnections((joint[i] + '.weight'), d=False, s=True)
+            # have_floatMath = cmds.lis tConnections((joint[i] + '.scaleZ'), d=False, s=True)
+            if have_floatMath:
+                new_floatMath = []
+                while have_floatMath:
+                    new_floatMath = have_floatMath
+                    have_floatMath = cmds.listConnections((have_floatMath[0] + '.floatB'), d=False, s=True)
+                have_floatMath = new_floatMath
+                cmds.connectAttr((floatMath + '.outFloat'), (have_floatMath[0] + '.floatB'), f=1)
+            else:
+                cmds.connectAttr((floatMath + '.outFloat'), (joint[i] + '.weight'), f=1)
+                # cmds.connectAttr((floatMath + '.outFloat'), (joint[i] + '.scaleZ'), f=1)
+        if not cmds.objExists(joint[0] + '_skin'):
+            for i in range(len(joint)):
+                jon = cmds.joint(n = joint[i] + '_skin')
+                cmds.connectAttr((joint[i] + '.weight'), (jon + '.scaleZ'), f=1)
+                cmds.parentConstraint(joint[i], jon)
+                cmds.select(cl=1)
+
+        cmds.undoInfo(cck=1)
 window = Window()
 if __name__ == '__main__':
     window.show()
